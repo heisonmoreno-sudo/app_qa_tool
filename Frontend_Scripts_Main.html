@@ -1,0 +1,397 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     FRONTEND_SCRIPTS_MAIN.HTML
+     JavaScript principal del sistema QA Management
+     ═══════════════════════════════════════════════════════════════════════════ -->
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────── 
+// FUNCIONES DE SPINNER Y LOADING
+// ─────────────────────────────────────────────────────────────────────────── 
+
+function mostrarSpinner() {
+  const overlay = document.getElementById('loadingOverlay');
+  if (overlay) {
+    overlay.classList.add('active');
+    
+    // Mensajes aleatorios de carga
+    const mensajes = [
+      'Preparando tu arsenal de testing...',
+      'Cargando casos de prueba...',
+      'Sincronizando con el servidor...',
+      'Configurando workspace...',
+      'Casi listo...',
+      'Verificando permisos...',
+      'Conectando con Google Sheets...'
+    ];
+    
+    const tips = [
+      '💡 Tip: Organiza tus casos por módulos',
+      '💡 Tip: Usa etiquetas descriptivas en tus bugs',
+      '💡 Tip: Los casos críticos van primero',
+      '💡 Tip: Documenta los pasos claramente',
+      '💡 Tip: Adjunta evidencias a tus ejecuciones'
+    ];
+    
+    const mensajeAleatorio = mensajes[Math.floor(Math.random() * mensajes.length)];
+    const tipAleatorio = tips[Math.floor(Math.random() * tips.length)];
+    
+    const loadingMessage = document.getElementById('loadingMessage');
+    const loadingTip = document.getElementById('loadingTip');
+    
+    if (loadingMessage) loadingMessage.textContent = mensajeAleatorio;
+    if (loadingTip) loadingTip.textContent = tipAleatorio;
+  }
+}
+
+function ocultarSpinner() {
+  const overlay = document.getElementById('loadingOverlay');
+  if (overlay) {
+    overlay.classList.remove('active');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────── 
+// FUNCIONES DE NOTIFICACIONES
+// ─────────────────────────────────────────────────────────────────────────── 
+
+function mostrarToast(mensaje, tipo = 'success', duracion = 3000) {
+  const notification = document.getElementById('notification');
+  const icon = document.getElementById('notificationIcon');
+  const messageEl = document.getElementById('notificationMessage');
+  
+  if (!notification) return;
+  
+  // Configurar icono según tipo
+  const iconos = {
+    'success': '✓',
+    'error': '✕',
+    'warning': '⚠️',
+    'info': 'ℹ️'
+  };
+  
+  // Aplicar estilos según tipo
+  notification.className = 'notification show ' + tipo;
+  icon.textContent = iconos[tipo] || '✓';
+  messageEl.textContent = mensaje;
+  
+  // Mostrar notificación
+  setTimeout(() => {
+    notification.classList.add('show');
+  }, 100);
+  
+  // Ocultar después de la duración
+  setTimeout(() => {
+    notification.classList.remove('show');
+  }, duracion);
+}
+
+// ─────────────────────────────────────────────────────────────────────────── 
+// FUNCIONES DE MODALES
+// ─────────────────────────────────────────────────────────────────────────── 
+
+function abrirModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function cerrarModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.remove('active');
+    document.body.style.overflow = 'auto';
+  }
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────── 
+// FUNCIONES DE UTILIDAD
+// ─────────────────────────────────────────────────────────────────────────── 
+
+function getBadgePrioridad(prioridad) {
+  const badges = {
+    'Critica': 'badge-danger',
+    'Alta': 'badge-warning', 
+    'Media': 'badge-info',
+    'Baja': 'badge-success'
+  };
+  return badges[prioridad] || 'badge-primary';
+}
+
+function getBadgeEstado(estado) {
+  const badges = {
+    'OK': 'badge-success',
+    'No_OK': 'badge-danger',
+    'Pendiente': 'badge-warning',
+    'En diseño': 'badge-info',
+    'En diseno': 'badge-info',
+    'Ejecutando': 'badge-primary'
+  };
+  return badges[estado] || 'badge-primary';
+}
+
+function formatearFecha(fecha) {
+  if (!fecha) return '-';
+  const date = typeof fecha === 'string' ? new Date(fecha) : fecha;
+  return date.toLocaleDateString('es-ES');
+}
+
+// ─────────────────────────────────────────────────────────────────────────── 
+// MANEJO DE ERRORES GLOBAL
+// ─────────────────────────────────────────────────────────────────────────── 
+
+window.onerror = function(msg, url, lineNo, columnNo, error) {
+  console.error('Error global:', msg, 'en línea:', lineNo);
+  return false;
+};
+
+// ───────────────────────────────────────────────────────────────────────────
+// SEGURIDAD: SANITIZACIÓN DE HTML (Prevención XSS)
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Escapa caracteres HTML para prevenir XSS
+ * @param {string} text - Texto a sanitizar
+ * @returns {string} - Texto seguro sin HTML
+ */
+function escapeHtml(text) {
+  if (!text) return '';
+
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+    '/': '&#x2F;'
+  };
+
+  return String(text).replace(/[&<>"'\/]/g, function(m) {
+    return map[m];
+  });
+}
+
+/**
+ * Sanitiza HTML permitiendo solo tags seguros específicos
+ * @param {string} html - HTML a sanitizar
+ * @param {Array} allowedTags - Tags permitidos (por defecto: br, strong, em, p)
+ * @returns {string} - HTML sanitizado
+ */
+function sanitizeHtml(html, allowedTags) {
+  if (!html) return '';
+
+  allowedTags = allowedTags || ['br', 'strong', 'em', 'p', 'b', 'i', 'u'];
+
+  // Primero escapar todo
+  let safe = escapeHtml(html);
+
+  // Luego permitir solo tags específicos
+  allowedTags.forEach(function(tag) {
+    const openRegex = new RegExp('&lt;' + tag + '&gt;', 'gi');
+    const closeRegex = new RegExp('&lt;\\/' + tag + '&gt;', 'gi');
+    safe = safe.replace(openRegex, '<' + tag + '>');
+    safe = safe.replace(closeRegex, '</' + tag + '>');
+  });
+
+  return safe;
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// VALIDACIÓN EN TIEMPO REAL
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Valida un campo de formulario en tiempo real
+ * @param {HTMLElement} input - El elemento input/textarea a validar
+ * @param {Object} options - Opciones de validación
+ */
+function validarCampoEnTiempoReal(input, options) {
+  if (!input) return;
+
+  options = options || {};
+  const minLength = options.minLength || input.getAttribute('minlength') || 0;
+  const maxLength = options.maxLength || input.getAttribute('maxlength') || Infinity;
+  const required = options.required !== undefined ? options.required : input.hasAttribute('required');
+  const pattern = options.pattern || input.getAttribute('pattern');
+  const customValidator = options.validator; // Función personalizada
+
+  const value = input.value || '';
+  const currentLength = value.length;
+
+  // Encontrar o crear elementos de feedback
+  let errorDiv = input.nextElementSibling;
+  if (!errorDiv || !errorDiv.classList.contains('form-error')) {
+    errorDiv = document.createElement('div');
+    errorDiv.className = 'form-error hidden';
+    input.parentNode.insertBefore(errorDiv, input.nextSibling);
+  }
+
+  let counterSpan = input.parentNode.querySelector('.char-counter');
+
+  // Array de errores
+  const errors = [];
+
+  // Validar requerido
+  if (required && currentLength === 0) {
+    errors.push('Este campo es obligatorio');
+  }
+
+  // Validar longitud mínima (solo si hay contenido)
+  if (currentLength > 0 && currentLength < minLength) {
+    errors.push(`Mínimo ${minLength} caracteres (tienes ${currentLength})`);
+  }
+
+  // Validar longitud máxima
+  if (currentLength > maxLength) {
+    errors.push(`Máximo ${maxLength} caracteres (tienes ${currentLength})`);
+  }
+
+  // Validar patrón
+  if (pattern && currentLength > 0) {
+    const regex = new RegExp(pattern);
+    if (!regex.test(value)) {
+      errors.push(options.patternMessage || 'Formato inválido');
+    }
+  }
+
+  // Validación personalizada
+  if (customValidator && typeof customValidator === 'function') {
+    const customError = customValidator(value);
+    if (customError) {
+      errors.push(customError);
+    }
+  }
+
+  // Mostrar/ocultar errores
+  if (errors.length > 0) {
+    errorDiv.textContent = errors[0]; // Mostrar primer error
+    errorDiv.classList.remove('hidden');
+    input.classList.add('error');
+    input.setCustomValidity(errors[0]); // HTML5 validation API
+  } else {
+    errorDiv.classList.add('hidden');
+    input.classList.remove('error');
+    input.setCustomValidity(''); // Limpiar error HTML5
+  }
+
+  // Actualizar contador si existe
+  if (counterSpan) {
+    const currentSpan = counterSpan.querySelector('.current');
+    if (currentSpan) {
+      currentSpan.textContent = currentLength;
+
+      // Color del contador
+      if (currentLength >= minLength) {
+        currentSpan.classList.add('valid');
+      } else {
+        currentSpan.classList.remove('valid');
+      }
+    }
+  }
+
+  return errors.length === 0;
+}
+
+/**
+ * Configura validación en tiempo real para un formulario completo
+ * @param {string|HTMLElement} formIdOrElement - ID del formulario o elemento
+ * @param {Object} fieldsConfig - Configuración de cada campo
+ */
+function configurarValidacionFormulario(formIdOrElement, fieldsConfig) {
+  const form = typeof formIdOrElement === 'string'
+    ? document.getElementById(formIdOrElement)
+    : formIdOrElement;
+
+  if (!form) return;
+
+  // Para cada campo configurado
+  Object.keys(fieldsConfig).forEach(function(fieldId) {
+    const input = document.getElementById(fieldId);
+    if (!input) return;
+
+    const config = fieldsConfig[fieldId];
+
+    // Agregar evento input para validación en tiempo real
+    input.addEventListener('input', function() {
+      validarCampoEnTiempoReal(input, config);
+    });
+
+    // Agregar evento blur para validar al salir del campo
+    input.addEventListener('blur', function() {
+      validarCampoEnTiempoReal(input, config);
+    });
+  });
+
+  // Prevenir submit si hay errores
+  form.addEventListener('submit', function(e) {
+    let hasErrors = false;
+
+    Object.keys(fieldsConfig).forEach(function(fieldId) {
+      const input = document.getElementById(fieldId);
+      if (!input) return;
+
+      const isValid = validarCampoEnTiempoReal(input, fieldsConfig[fieldId]);
+      if (!isValid) {
+        hasErrors = true;
+      }
+    });
+
+    if (hasErrors) {
+      e.preventDefault();
+      mostrarToast('Por favor corrige los errores antes de continuar', 'warning');
+    }
+  });
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// FUNCIONES DE DEPURACIÓN
+// ───────────────────────────────────────────────────────────────────────────
+
+function debugLog(mensaje, datos) {
+  console.log(`[DEBUG] ${mensaje}`, datos || '');
+}
+
+// Verificar que las funciones críticas estén disponibles
+window.addEventListener('DOMContentLoaded', function() {
+  debugLog('DOM cargado completamente');
+  
+  // Verificar funciones críticas
+  const funcionesCriticas = [
+    'mostrarSpinner',
+    'ocultarSpinner',
+    'mostrarToast',
+    'abrirModal',
+    'cerrarModal'
+  ];
+  
+  funcionesCriticas.forEach(func => {
+    if (typeof window[func] === 'function') {
+      debugLog(`✅ Función ${func} disponible`);
+    } else {
+      console.error(`❌ Función ${func} NO disponible`);
+    }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────── 
+// INICIALIZACIÓN SEGURA
+// ─────────────────────────────────────────────────────────────────────────── 
+
+// Asegurar que las funciones estén disponibles globalmente
+window.mostrarSpinner = mostrarSpinner;
+window.ocultarSpinner = ocultarSpinner;
+window.mostrarToast = mostrarToast;
+window.abrirModal = abrirModal;
+window.cerrarModal = cerrarModal;
+window.getBadgePrioridad = getBadgePrioridad;
+window.getBadgeEstado = getBadgeEstado;
+window.formatearFecha = formatearFecha;
+window.escapeHtml = escapeHtml;
+window.sanitizeHtml = sanitizeHtml;
+window.validarCampoEnTiempoReal = validarCampoEnTiempoReal;
+window.configurarValidacionFormulario = configurarValidacionFormulario;
+
+console.log('✅ Frontend Scripts Main cargado correctamente');
+</script>

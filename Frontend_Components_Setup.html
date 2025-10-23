@@ -1,0 +1,378 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     FRONTEND_COMPONENTS_SETUP.HTML
+     Componente para configuración inicial de workspace
+     REFACTORIZADO: Solo estilos y lógica específica de setup
+     ═══════════════════════════════════════════════════════════════════════════ -->
+
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────── */
+  /* ESTILOS ESPECÍFICOS DE SETUP (no duplicados de Styles_Base)                */
+  /* ─────────────────────────────────────────────────────────────────────────── */
+  
+  .setup-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+  
+  .option-card {
+    background: white;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-align: center;
+  }
+  
+  .option-card:hover {
+    border-color: var(--accent-color);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(59, 130, 246, 0.2);
+  }
+  
+  .option-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+  
+  .option-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+  }
+  
+  .option-description {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+  }
+  
+  .config-status {
+    background: #fef3c7;
+    border-left: 4px solid var(--warning-color);
+    padding: 1rem 1.5rem;
+    border-radius: var(--radius-md);
+    margin: 1.5rem 0;
+  }
+  
+  .config-status.success {
+    background: #dcfce7;
+    border-left-color: var(--success-color);
+  }
+  
+  .config-status.error {
+    background: #fee2e2;
+    border-left-color: var(--error-color);
+  }
+  
+  .checklist {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+  }
+  
+  .checklist li {
+    padding: 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  
+  .checklist li::before {
+    content: '⏳';
+    font-size: 1.25rem;
+  }
+  
+  .checklist li.done::before {
+    content: '✅';
+  }
+  
+  .progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--border-color);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin: 1rem 0;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-color) 0%, var(--accent-hover) 100%);
+    transition: width var(--transition-base);
+  }
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!-- PANTALLA DE SETUP                                                           -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+<div id="setupScreen" class="hidden">
+  <div class="card" style="max-width: 900px; margin: 2rem auto;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <div style="font-size: 3rem; margin-bottom: 1rem;">⚙️</div>
+      <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">
+        Configurar Workspace
+      </h2>
+      <p style="color: var(--text-secondary); font-size: 1.1rem;">
+        Tu Google Sheet necesita configuración inicial
+      </p>
+    </div>
+
+    <!-- Estado de configuración -->
+    <div id="configStatus" class="config-status">
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <div style="font-size: 2rem;">⚠️</div>
+        <div>
+          <strong>Configuración necesaria</strong>
+          <p id="configMessage" style="margin: 0.5rem 0 0 0; color: var(--text-secondary);">
+            El Sheet no tiene la estructura necesaria para funcionar
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Checklist de lo que falta -->
+    <div id="checklistContainer" style="display: none;">
+      <h3 style="font-size: 1.25rem; font-weight: 600; margin: 1.5rem 0 1rem;">
+        📋 Lo que se creará:
+      </h3>
+      <ul class="checklist" id="configChecklist">
+        <li>Hoja de Configuración (Config)</li>
+        <li>Hoja de Casos de Prueba</li>
+        <li>Hoja de Bugs</li>
+        <li>Hoja de Ejecuciones</li>
+        <li>Hoja de Regresiones</li>
+      </ul>
+    </div>
+
+    <!-- Botones de acción -->
+    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+      <button 
+        class="btn btn-primary" 
+        style="flex: 1;" 
+        onclick="autoConfigurarSheet()"
+        id="btnAutoConfigurar"
+      >
+        <span>⚡</span>
+        <span>Auto-Configurar Sheet</span>
+      </button>
+      
+      <button 
+        class="btn btn-secondary" 
+        style="flex: 1;" 
+        onclick="volverAlDashboard()"
+      >
+        <span>←</span>
+        <span>Volver</span>
+      </button>
+    </div>
+
+    <!-- Progreso de configuración -->
+    <div id="progressContainer" style="display: none; margin-top: 2rem;">
+      <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">
+        Configurando workspace...
+      </h3>
+      <div class="progress-bar">
+        <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+      </div>
+      <p id="progressMessage" style="text-align: center; color: var(--text-secondary); margin-top: 0.5rem;">
+        Iniciando...
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL NUEVO WORKSPACE                                                       -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+<div id="modalNuevoWorkspace" class="modal-overlay">
+  <div class="modal" style="max-width: 600px;">
+    <div class="modal-header">
+      <h3 class="modal-title">🆕 Crear Nuevo Workspace</h3>
+      <button class="modal-close" onclick="cerrarModalNuevoWorkspace()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <form id="formNuevoWorkspace" onsubmit="crearNuevoWorkspace(); return false;">
+        <div class="form-group">
+          <label class="form-label required">Nombre del Workspace</label>
+          <input 
+            type="text" 
+            id="nombreNuevoWorkspace" 
+            class="form-input" 
+            required 
+            placeholder="Ej: QA Proyecto X"
+            minlength="3"
+          >
+          <p class="form-help">
+            Se creará un nuevo Google Sheet con este nombre
+          </p>
+        </div>
+
+        <div style="background: var(--bg-secondary); padding: 1rem; border-radius: var(--radius-md); margin: 1.5rem 0;">
+          <strong style="display: block; margin-bottom: 0.5rem;">✨ Se creará automáticamente:</strong>
+          <ul style="margin: 0.5rem 0 0 1.5rem; color: var(--text-secondary);">
+            <li>Google Sheet nuevo</li>
+            <li>Todas las hojas necesarias (Config, Casos, Bugs, etc.)</li>
+            <li>Headers y estructura completa</li>
+            <li>Configuración lista para usar</li>
+          </ul>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button type="submit" form="formNuevoWorkspace" class="btn btn-primary">
+        🚀 Crear Workspace
+      </button>
+      <button type="button" class="btn btn-secondary" onclick="cerrarModalNuevoWorkspace()">
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!-- SCRIPTS ESPECÍFICOS DE SETUP                                                -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+<script>
+  // ===================================================================
+  // FUNCIONES DE CONFIGURACIÓN DE WORKSPACE
+  // ===================================================================
+
+  function mostrarPantallaSetup(sheetUrl, infoVerificacion) {
+    currentSheetUrl = sheetUrl;
+    
+    document.getElementById('welcomeScreen').classList.add('hidden');
+    document.getElementById('setupScreen').classList.remove('hidden');
+    
+    const configStatus = document.getElementById('configStatus');
+    const configMessage = document.getElementById('configMessage');
+    
+    if (infoVerificacion.hojasFaltantes && infoVerificacion.hojasFaltantes.length > 0) {
+      configMessage.textContent = 'Faltan hojas: ' + infoVerificacion.hojasFaltantes.join(', ');
+      document.getElementById('checklistContainer').style.display = 'block';
+    } else {
+      configMessage.textContent = infoVerificacion.mensaje || 'El Sheet necesita configuración';
+    }
+  }
+
+  function autoConfigurarSheet() {
+    if (!currentSheetUrl) {
+      mostrarToast('No hay Sheet seleccionado', 'error');
+      return;
+    }
+    
+    const btn = document.getElementById('btnAutoConfigurar');
+    btn.disabled = true;
+    btn.textContent = 'Configurando...';
+    
+    document.getElementById('progressContainer').style.display = 'block';
+    actualizarProgreso(20, 'Verificando acceso al Sheet...');
+    
+    google.script.run
+      .withSuccessHandler(function(response) {
+        if (response.success) {
+          actualizarProgreso(100, 'Configuración completada!');
+          
+          setTimeout(function() {
+            mostrarToast('Workspace configurado exitosamente!', 'success');
+            
+            const configStatus = document.getElementById('configStatus');
+            configStatus.className = 'config-status success';
+            configStatus.innerHTML = '<div style="display: flex; align-items: center; gap: 1rem;"><div style="font-size: 2rem;">✅</div><div><strong>Configuración completada</strong><p style="margin: 0.5rem 0 0 0; color: #166534;">Hojas creadas: ' + response.hojasCreadas.join(', ') + '</p></div></div>';
+            
+            const checklist = document.getElementById('configChecklist');
+            const items = checklist.getElementsByTagName('li');
+            for (let i = 0; i < items.length; i++) {
+              items[i].classList.add('done');
+            }
+            
+            btn.textContent = 'Ir a Casos';
+            btn.disabled = false;
+            btn.onclick = function() {
+              mostrarPantallaCasos(currentSheetUrl);
+            };
+            
+          }, 1000);
+          
+        } else {
+          actualizarProgreso(0, 'Error en configuración');
+          mostrarToast('Error: ' + response.error, 'error');
+          btn.disabled = false;
+          btn.innerHTML = '<span>⚡</span><span>Reintentar</span>';
+        }
+      })
+      .withFailureHandler(function(error) {
+        actualizarProgreso(0, 'Error de conexión');
+        mostrarToast('Error: ' + error.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<span>⚡</span><span>Reintentar</span>';
+      })
+      .configurarWorkspace(currentSheetUrl);
+  }
+
+  function actualizarProgreso(porcentaje, mensaje) {
+    const progressFill = document.getElementById('progressFill');
+    const progressMessage = document.getElementById('progressMessage');
+    
+    progressFill.style.width = porcentaje + '%';
+    progressMessage.textContent = mensaje;
+  }
+
+  function abrirModalNuevoWorkspace() {
+    abrirModal('modalNuevoWorkspace');
+    document.getElementById('nombreNuevoWorkspace').value = '';
+    document.getElementById('nombreNuevoWorkspace').focus();
+  }
+
+  function cerrarModalNuevoWorkspace() {
+    cerrarModal('modalNuevoWorkspace');
+  }
+
+  function crearNuevoWorkspace() {
+    const nombre = document.getElementById('nombreNuevoWorkspace').value.trim();
+    
+    if (!nombre) {
+      mostrarToast('Ingresa un nombre para el workspace', 'warning');
+      return;
+    }
+    
+    cerrarModalNuevoWorkspace();
+    
+    mostrarSpinner();
+    
+    google.script.run
+      .withSuccessHandler(function(response) {
+        ocultarSpinner();
+        
+        if (response.success) {
+          mostrarToast('✅ Workspace creado: ' + response.nombreSheet, 'success');
+          
+          document.getElementById('sheetUrlInput').value = response.sheetUrl;
+          currentSheetUrl = response.sheetUrl;
+          
+          setTimeout(function() {
+            mostrarPantallaCasos(response.sheetUrl);
+          }, 1500);
+          
+        } else {
+          mostrarToast('Error: ' + response.error, 'error');
+        }
+      })
+      .withFailureHandler(function(error) {
+        ocultarSpinner();
+        mostrarToast('Error al crear workspace: ' + error.message, 'error');
+      })
+      .crearNuevoWorkspace(nombre);
+  }
+
+  function iniciarCreacionWorkspace() {
+    abrirModalNuevoWorkspace();
+  }
+</script>

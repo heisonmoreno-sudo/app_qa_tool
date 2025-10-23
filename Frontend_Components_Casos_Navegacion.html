@@ -1,0 +1,273 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     FRONTEND_COMPONENTS_CASOS_NAVEGACION.HTML
+     Navegación, helpers y utilidades globales para casos
+     Responsabilidad: Navegación entre pantallas, gestión de URL, confirmaciones
+     ═══════════════════════════════════════════════════════════════════════════ -->
+
+<script>
+  // ===================================================================
+  // INICIALIZACIÓN DE VARIABLES GLOBALES
+  // ===================================================================
+  
+  (function() {
+    // Variables globales que otros módulos necesitan
+    if (!window.casosActuales) window.casosActuales = [];
+    if (!window.casosFiltrados) window.casosFiltrados = [];
+    if (!window.currentSheetUrl) window.currentSheetUrl = null;
+    if (!window.casoActualDetalle) window.casoActualDetalle = null;
+    if (!window.mostrarEliminados) window.mostrarEliminados = false;
+    if (!window.formularioTieneCambios) window.formularioTieneCambios = false;
+    
+    console.log('✅ Variables globales de Casos inicializadas (Navegacion)');
+  })();
+
+  // ===================================================================
+  // GESTIÓN DE URL DEL SHEET
+  // ===================================================================
+  
+  /**
+   * Guarda la URL del Sheet actual en memoria y sessionStorage
+   */
+  function guardarCurrentSheetUrl(url) {
+    console.log('💾 [Navegacion] Guardando currentSheetUrl:', url);
+    window.currentSheetUrl = url;
+    
+    try {
+      sessionStorage.setItem('qaSheetUrl', url);
+    } catch (e) {
+      console.warn('⚠️ No se pudo guardar en sessionStorage:', e);
+    }
+  }
+  
+  /**
+   * Recupera la URL del Sheet desde múltiples fuentes
+   */
+  function recuperarSheetUrl() {
+    // 1. Intentar desde window
+    if (window.currentSheetUrl) {
+      return window.currentSheetUrl;
+    }
+    
+    // 2. Intentar desde sessionStorage
+    try {
+      const urlFromStorage = sessionStorage.getItem('qaSheetUrl');
+      if (urlFromStorage) {
+        window.currentSheetUrl = urlFromStorage;
+        return urlFromStorage;
+      }
+    } catch (e) {
+      console.warn('⚠️ No se pudo leer de sessionStorage:', e);
+    }
+    
+    // 3. Intentar desde el input
+    const inputUrl = document.getElementById('sheetUrlInput');
+    if (inputUrl && inputUrl.value) {
+      return inputUrl.value.trim();
+    }
+    
+    console.error('❌ No se pudo recuperar la URL del Sheet');
+    return null;
+  }
+
+  // ===================================================================
+  // NAVEGACIÓN ENTRE PANTALLAS
+  // ===================================================================
+  
+  /**
+   * Conecta a un Sheet desde el welcome screen
+   */
+  function irACasos() {
+    const sheetUrl = document.getElementById('sheetUrlInput').value.trim();
+    
+    if (!sheetUrl) {
+      mostrarToast('Por favor ingresa la URL de tu Google Sheet', 'warning');
+      return;
+    }
+    
+    console.log('🔗 [Navegacion] Conectando a Sheet:', sheetUrl);
+    mostrarSpinner();
+    
+    google.script.run
+      .withSuccessHandler(function(response) {
+        ocultarSpinner();
+        
+        if (response.success) {
+          if (response.tieneConfig) {
+            mostrarToast('Sheet verificado: ' + response.nombreSheet, 'success');
+            mostrarPantallaCasos(sheetUrl);
+          } else {
+            mostrarToast('Sheet encontrado, necesita configuración', 'warning');
+            
+            // Llamar a función de Setup si existe
+            if (typeof mostrarPantallaSetup === 'function') {
+              mostrarPantallaSetup(sheetUrl, response);
+            } else {
+              mostrarToast('Error: Módulo de Setup no disponible', 'error');
+            }
+          }
+        }
+      })
+      .withFailureHandler(function(error) {
+        ocultarSpinner();
+        mostrarToast('Error: ' + error.message, 'error');
+      })
+      .verificarConfiguracionSheet(sheetUrl);
+  }
+
+  /**
+ * Muestra la pantalla de gestión de casos
+ */
+function mostrarPantallaCasos(sheetUrl) {
+  if (!sheetUrl || sheetUrl === '') {
+    mostrarToast('Error: URL inválida', 'error');
+    return;
+  }
+  
+  console.log('📊 [Navegacion] Mostrando pantalla de casos');
+  
+  // Guardar URL
+  guardarCurrentSheetUrl(sheetUrl);
+  
+  // Actualizar input si existe
+  const inputUrl = document.getElementById('sheetUrlInput');
+  if (inputUrl) {
+    inputUrl.value = sheetUrl;
+  }
+  
+  // Cambiar pantallas
+  const welcomeScreen = document.getElementById('welcomeScreen');
+  const casosScreen = document.getElementById('casosScreen');
+  
+  if (welcomeScreen) welcomeScreen.classList.add('hidden');
+  if (casosScreen) casosScreen.classList.remove('hidden');
+  
+  // Cargar datos (funciones definidas en otros módulos)
+  if (typeof cargarHojasDisponibles === 'function') {
+    cargarHojasDisponibles();
+  }
+  
+  if (typeof cargarTodosLosCasos === 'function') {
+    cargarTodosLosCasos();
+  }
+  
+  // ✅ CRÍTICO: Guardar sheetUrl en backend ANTES de actualizar indicador
+  google.script.run
+    .withSuccessHandler(function() {
+      console.log('✅ sheetUrl preparada en backend');
+      
+      // Ahora sí actualizar indicador
+      setTimeout(function() {
+        if (typeof actualizarIndicadorConfig === 'function') {
+          console.log('🔄 Llamando a actualizarIndicadorConfig()');
+          actualizarIndicadorConfig();
+        }
+      }, 300);
+    })
+    .withFailureHandler(function(error) {
+      console.error('❌ Error preparando sheetUrl:', error);
+    })
+    .prepararSheetUrl(sheetUrl);
+}
+  
+
+  /**
+   * Vuelve al dashboard/welcome screen
+   */
+  function volverAlDashboard() {
+    console.log('🏠 [Navegacion] Volviendo al dashboard');
+    
+    const casosScreen = document.getElementById('casosScreen');
+    const welcomeScreen = document.getElementById('welcomeScreen');
+    
+    if (casosScreen) casosScreen.classList.add('hidden');
+    if (welcomeScreen) welcomeScreen.classList.remove('hidden');
+  }
+
+  // ===================================================================
+  // SISTEMA DE CONFIRMACIÓN PERSONALIZADO
+  // ===================================================================
+  
+  /**
+   * Muestra un modal de confirmación personalizado
+   * @param {Object} opciones - Configuración del modal
+   * @returns {Promise<boolean>} true si confirma, false si cancela
+   */
+  function mostrarConfirmacionApp(opciones) {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('modalConfirmApp');
+      
+      if (!modal) {
+        console.error('❌ Modal de confirmación no encontrado');
+        resolve(false);
+        return;
+      }
+      
+      // Configurar contenido
+      document.getElementById('confirmAppIcon').textContent = opciones.icono || '⚠️';
+      document.getElementById('confirmAppTitle').textContent = opciones.titulo || 'Confirmar';
+      document.getElementById('confirmAppMessage').innerHTML = opciones.mensaje || '¿Deseas continuar?';
+      document.getElementById('confirmAppBtnOk').textContent = opciones.textoOk || 'Aceptar';
+      document.getElementById('confirmAppBtnCancel').textContent = opciones.textoCancelar || 'Cancelar';
+      
+      // Mostrar modal
+      modal.classList.add('active');
+      
+      // Limpiar listeners previos clonando botones
+      const btnOk = document.getElementById('confirmAppBtnOk');
+      const btnCancel = document.getElementById('confirmAppBtnCancel');
+      
+      const newBtnOk = btnOk.cloneNode(true);
+      const newBtnCancel = btnCancel.cloneNode(true);
+      btnOk.parentNode.replaceChild(newBtnOk, btnOk);
+      btnCancel.parentNode.replaceChild(newBtnCancel, btnCancel);
+      
+      // Handlers
+      newBtnOk.onclick = function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        modal.classList.remove('active');
+        resolve(true);
+      };
+      
+      newBtnCancel.onclick = function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        modal.classList.remove('active');
+        resolve(false);
+      };
+      
+      // Prevenir cierre con click en overlay
+      modal.onclick = function(e) {
+        if (e.target === modal) {
+          e.stopPropagation();
+          e.preventDefault();
+        }
+      };
+    });
+  }
+
+  // ===================================================================
+  // DETECCIÓN DE CAMBIOS EN FORMULARIOS
+  // ===================================================================
+  
+  /**
+   * Marca que el formulario tiene cambios sin guardar
+   */
+  function marcarCambios() {
+    window.formularioTieneCambios = true;
+  }
+
+  // ===================================================================
+  // EXPORTAR FUNCIONES AL SCOPE GLOBAL
+  // ===================================================================
+  
+  window.guardarCurrentSheetUrl = guardarCurrentSheetUrl;
+  window.recuperarSheetUrl = recuperarSheetUrl;
+  window.irACasos = irACasos;
+  window.mostrarPantallaCasos = mostrarPantallaCasos;
+  window.volverAlDashboard = volverAlDashboard;
+  window.mostrarConfirmacionApp = mostrarConfirmacionApp;
+  window.marcarCambios = marcarCambios;
+
+  console.log('✅ Frontend_Components_Casos_Navegacion.html cargado');
+</script>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QA Management System</title>
+  
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- ESTILOS GLOBALES                                                     -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <?!= include('Frontend_Styles_Base'); ?>
+</head>
+
+<body>
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- HEADER                                                               -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div class="header">
+    <div class="header-content">
+      <div class="logo">
+        <span>📊</span>
+        <span>QA Management System</span>
+      </div>
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <span id="userEmail">Cargando...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- CONTENEDOR PRINCIPAL                                                 -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div class="container">
+    <!-- Pantalla de Bienvenida -->
+    <div id="welcomeScreen" class="welcome-screen">
+      <div class="card" style="max-width: 700px; margin: 0 auto;">
+        <div class="welcome-icon">📊</div>
+        <h1 class="welcome-title">Bienvenido a QA Management</h1>
+        <p class="welcome-subtitle">
+          Sistema integral para gestión de casos de prueba, bugs y regresiones
+        </p>
+        
+        <div style="max-width: 500px; margin: 0 auto;">
+          <!-- Input para URL del Google Sheet -->
+          <div class="mb-2">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #475569;">
+              📄 URL de tu Google Sheet:
+            </label>
+            <input 
+              type="text" 
+              id="sheetUrlInput" 
+              class="input-field" 
+              placeholder="https://docs.google.com/spreadsheets/d/..."
+              style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px;"
+            >
+            <p style="font-size: 0.85rem; color: #64748b; margin-top: 0.5rem;">
+              Pega aquí la URL de tu Google Sheet de pruebas
+            </p>
+          </div>
+
+          <button class="btn btn-primary btn-block" onclick="irACasos()">
+            <span>📋</span>
+            <span>Conectar a mi Sheet</span>
+          </button>
+
+          <button class="btn btn-secondary btn-block" onclick="iniciarCreacionWorkspace()">
+            <span>✨</span>
+            <span>Crear Nuevo Workspace</span>
+          </button>
+
+          <div style="border-top: 1px solid #e2e8f0; margin: 1.5rem 0; padding-top: 1.5rem;">
+            <button class="btn btn-secondary btn-block" onclick="testearBackend()">
+              <span>🚀</span>
+              <span>Probar Conexión Backend</span>
+            </button>
+            
+            <button class="btn btn-secondary btn-block" onclick="mostrarInfo()">
+              <span>📚</span>
+              <span>Ver Guía de Inicio</span>
+            </button>
+          </div>
+          
+          <p class="mt-2" style="color: #64748b; font-size: 0.9rem; text-align: center;">
+            Sprint 3: Arquitectura Modular Implementada ✨
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- OVERLAY DE CARGA                                                     -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+      <div class="spinner"></div>
+      <div class="loading-message" id="loadingMessage">Cargando...</div>
+      <div class="loading-tip" id="loadingTip">Preparando tu arsenal de testing...</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- NOTIFICACIÓN                                                         -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div id="notification" class="notification">
+    <span id="notificationIcon">✓</span>
+    <span id="notificationMessage">Mensaje</span>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- SCRIPTS GLOBALES                                                     -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <?!= include('Frontend_Scripts_Main'); ?>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- COMPONENTES - SETUP (Configuración de Workspace)                    -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <?!= include('Frontend_Components_Setup'); ?>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- COMPONENTES - CASOS (Arquitectura Modular - 5 archivos)             -->
+  <!-- ORDEN IMPORTANTE: De menos dependiente a más dependiente            -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  
+  <!-- 1. UI - Base visual (HTML + CSS) -->
+  <?!= include('Frontend_Components_Casos_UI'); ?>
+  
+  <!-- 2. Navegación - Helpers globales y gestión de URL -->
+  <?!= include('Frontend_Components_Casos_Navegacion'); ?>
+  
+  <!-- 3. Tabla - Visualización y filtros -->
+  <?!= include('Frontend_Components_Casos_Tabla'); ?>
+  
+  <!-- 4. Hojas - Gestión de hojas/módulos -->
+  <?!= include('Frontend_Components_Casos_Hojas'); ?>
+  
+  <!-- 5. CRUD - Crear, editar, eliminar, restaurar -->
+  <?!= include('Frontend_Components_Casos_CRUD'); ?>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- COMPONENTES - EJECUCIONES                                            -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <?!= include('Frontend_Components_Ejecuciones'); ?>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- COMPONENTES - BUGS                                                   -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <?!= include('Frontend_Components_Bugs'); ?>
+  <?!= include('Frontend_Components_Bugs_List2'); ?>
+  <?!= include('Frontend_Policies'); ?>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- SCRIPTS ESPECÍFICOS DEL INDEX                                       -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <script>
+    // ===================================================================
+    // VARIABLES GLOBALES
+    // ===================================================================
+    
+    let currentUser = null;
+    
+    // ===================================================================
+    // INICIALIZACIÓN
+    // ===================================================================
+    
+    window.onload = function() {
+      console.log('🚀 Inicializando QA Management System...');
+      cargarUsuario();
+      
+      // Validar que todos los módulos estén cargados
+      setTimeout(() => {
+        validarModulosCargados();
+      }, 500);
+    };
+    
+    // ===================================================================
+    // VALIDACIÓN DE MÓDULOS
+    // ===================================================================
+    
+    function validarModulosCargados() {
+      const modulosRequeridos = [
+        // Scripts Main
+        { nombre: 'mostrarSpinner', modulo: 'Scripts_Main' },
+        { nombre: 'mostrarToast', modulo: 'Scripts_Main' },
+        
+        // Navegación
+        { nombre: 'irACasos', modulo: 'Casos_Navegacion' },
+        { nombre: 'mostrarPantallaCasos', modulo: 'Casos_Navegacion' },
+        { nombre: 'recuperarSheetUrl', modulo: 'Casos_Navegacion' },
+        
+        // Tabla
+        { nombre: 'cargarTodosLosCasos', modulo: 'Casos_Tabla' },
+        { nombre: 'renderizarTablaCasos', modulo: 'Casos_Tabla' },
+        
+        // Hojas
+        { nombre: 'cargarHojasDisponibles', modulo: 'Casos_Hojas' },
+        { nombre: 'crearHojaNueva', modulo: 'Casos_Hojas' },
+        
+        // CRUD
+        { nombre: 'verDetalleCaso', modulo: 'Casos_CRUD' },
+        { nombre: 'editarCaso', modulo: 'Casos_CRUD' },
+        { nombre: 'guardarCaso', modulo: 'Casos_CRUD' },
+        
+        // Ejecuciones
+        { nombre: 'abrirModalEjecutarCaso', modulo: 'Ejecuciones' }
+      ];
+      
+      let todosCargados = true;
+      let modulosFallidos = [];
+      
+      modulosRequeridos.forEach(item => {
+        if (typeof window[item.nombre] !== 'function') {
+          todosCargados = false;
+          modulosFallidos.push(item);
+          console.error('❌ Función no disponible:', item.nombre, 'del módulo', item.modulo);
+        }
+      });
+      
+      if (todosCargados) {
+        console.log('✅ Todos los módulos cargados correctamente');
+        console.log('📊 Sistema listo para usar');
+      } else {
+        console.error('❌ Faltan módulos:', modulosFallidos);
+        mostrarToast('⚠️ Error: Algunos módulos no se cargaron correctamente', 'warning');
+      }
+    }
+    
+    // ===================================================================
+    // FUNCIONES DE USUARIO
+    // ===================================================================
+    
+    function cargarUsuario() {
+      try {
+        const email = '<?= userEmail ?>' || 'usuario@qa.com';
+        
+        if (email && email !== '') {
+          currentUser = { email: email };
+          document.getElementById('userEmail').textContent = email;
+          
+          const iniciales = email.substring(0, 2).toUpperCase();
+          document.getElementById('userAvatar').textContent = iniciales;
+          
+          console.log('✅ Usuario cargado:', email);
+        } else {
+          document.getElementById('userEmail').textContent = 'Usuario QA';
+          document.getElementById('userAvatar').textContent = 'QA';
+        }
+      } catch (error) {
+        console.error('Error en cargarUsuario:', error);
+        document.getElementById('userEmail').textContent = 'Usuario QA';
+        document.getElementById('userAvatar').textContent = 'QA';
+      }
+    }
+    
+    // ===================================================================
+    // FUNCIONES DE PRUEBA
+    // ===================================================================
+    
+    function testearBackend() {
+      mostrarSpinner();
+      
+      google.script.run
+        .withSuccessHandler(function(response) {
+          ocultarSpinner();
+          
+          if (response.success) {
+            const mensaje = 'Backend funcionando! Usuario: ' + response.user;
+            mostrarToast(mensaje, 'success');
+            console.log('✅ Test backend exitoso:', response);
+          } else {
+            mostrarToast('Error en el test', 'error');
+          }
+        })
+        .withFailureHandler(function(error) {
+          ocultarSpinner();
+          mostrarToast('Error de conexión: ' + error.message, 'error');
+        })
+        .testBackend();
+    }
+    
+    function mostrarInfo() {
+      alert('Sistema QA Management\n\n' +
+            'Versión: 3.0 (Arquitectura Modular)\n\n' +
+            'Funcionalidades:\n' +
+            '✅ Gestión de casos (CRUD completo)\n' +
+            '✅ Ejecución de pruebas\n' +
+            '✅ Auto-configuración de workspace\n' +
+            '✅ Creación de hojas organizacionales\n' +
+            '✅ Arquitectura modular (5 archivos)\n\n' +
+            'Próximamente:\n' +
+            '- Integración con Trello\n' +
+            '- Gestión de bugs\n' +
+            '- Informes automáticos');
+    }
+    
+    // Función para crear workspace (llama a Setup)
+    function iniciarCreacionWorkspace() {
+      if (typeof abrirModalNuevoWorkspace === 'function') {
+        abrirModalNuevoWorkspace();
+      } else {
+        mostrarToast('Módulo de Setup no disponible', 'error');
+      }
+    }
+    
+    // ===================================================================
+    // MANEJO DE ERRORES GLOBALES
+    // ===================================================================
+    
+    window.onerror = function(msg, url, lineNo, columnNo, error) {
+      console.error('💥 Error global:', msg, 'at', lineNo + ':' + columnNo);
+      mostrarToast('Ocurrió un error inesperado', 'error');
+      return false;
+    };
+    
+    console.log('✅ Frontend_Index.html cargado');
+  </script>
+</body>
+</html>

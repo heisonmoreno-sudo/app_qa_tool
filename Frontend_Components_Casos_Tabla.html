@@ -1,0 +1,443 @@
+<script>
+  // ===================================================================
+  // Badges de estado de ejecución
+  // ===================================================================
+  function generarBadgeEstadoEjecucion(estado) {
+    var badgeClass = 'badge badge-primary';
+    var texto = estado || 'Sin ejecutar';
+    switch (estado) {
+      case 'Ejecutando': badgeClass = 'badge badge-warning'; break;
+      case 'OK': badgeClass = 'badge badge-success'; break;
+      case 'No_OK': badgeClass = 'badge badge-danger'; break;
+      case 'Bloqueado': badgeClass = 'badge badge-warning'; break;
+      case 'Descartado': badgeClass = 'badge'; break;
+      default: badgeClass = 'badge badge-primary'; texto = 'Sin ejecutar';
+    }
+    var extra = (estado === 'Descartado') ? 'background:#94a3b8;color:white;' : '';
+    return '<span class="' + badgeClass + '" style="' + extra + '">' + texto + '</span>';
+  }
+  window.generarBadgeEstadoEjecucion = generarBadgeEstadoEjecucion;
+
+  // ===================================================================
+  // Cargar datos desde el backend
+  // ===================================================================
+  function actualizarBarraEjecucion() {
+    try {
+      var urlActual = (typeof recuperarSheetUrl === 'function') ? recuperarSheetUrl() : null;
+      if (!urlActual) return;
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          if (!response || !response.success) return;
+          var data = response.data || {};
+          var total = data.total || 0;
+          var ok = data.ok || 0;
+          var noOk = data.noOk || 0;
+          var bloqueados = data.bloqueados || 0;
+          var sinEjecutar = data.sinEjecutar || 0;
+          var ejecutando = data.ejecutando || 0;
+          var descartados = data.descartados || 0;
+          var porcentaje = total > 0 ? Math.round((ok / total) * 100) : 0;
+
+          var contenedor = document.getElementById('resumenEjecucion');
+          var barra = document.getElementById('barraEjecucionOK');
+          var texto = document.getElementById('textoResumenEjecucion');
+          if (!contenedor || !barra || !texto) return;
+
+          contenedor.style.display = 'block';
+          barra.style.width = porcentaje + '%';
+          texto.innerHTML = 'OK: <strong>' + ok + '</strong> | ' +
+            'No_OK: <strong>' + noOk + '</strong> | ' +
+            'Bloqueado: <strong>' + bloqueados + '</strong> | ' +
+            'Ejecutando: <strong>' + ejecutando + '</strong> | ' +
+            'Sin ejecutar: <strong>' + sinEjecutar + '</strong> | ' +
+            'Descartado: <strong>' + descartados + '</strong>' +
+            '<br><span style="color:#10b981; font-weight:600;">Progreso: ' + porcentaje + '%</span>';
+        })
+        .withFailureHandler(function(err) {
+          console.warn('Error obteniendo resumen:', err);
+        })
+        .obtenerResumenEjecucion(urlActual);
+    } catch (e) {
+      console.warn('Fallo en actualizarBarraEjecucion:', e);
+    }
+  }
+
+  function mostrarErrorEnTabla(mensaje) {
+    var tbody = document.getElementById('tablaCasos');
+    if (!tbody) return;
+    tbody.innerHTML = '' +
+      '<tr>' +
+      '  <td colspan="7" style="text-align:center; padding:2rem;">' +
+      '    <div style="color:#ef4444;">' + (mensaje || 'Ocurrió un error') + '</div>' +
+      '    <button onclick="cargarTodosLosCasos()" class="btn btn-primary" style="margin-top:1rem;">Reintentar</button>' +
+      '  </td>' +
+      '</tr>';
+  }
+
+  // Eliminar con confirmación desde la tabla
+  async function confirmarEliminarCasoTabla(casoId) {
+    try {
+      if (typeof mostrarConfirmacionApp === 'function') {
+        const ok = await mostrarConfirmacionApp({
+          titulo: 'Eliminar Caso',
+          mensaje: '¿Estás seguro de eliminar el caso <br><strong>' + casoId + '</strong>?<br><br>Se marcará como Eliminado.',
+          icono: '⚠️',
+          textoOk: 'Sí, eliminar',
+          textoCancelar: 'Cancelar'
+        });
+        if (!ok) return;
+      } else if (!confirm('Eliminar caso ' + casoId + '?')) {
+        return;
+      }
+
+      if (typeof mostrarSpinner === 'function') mostrarSpinner();
+      google.script.run
+        .withSuccessHandler(function(response){
+          if (typeof ocultarSpinner === 'function') ocultarSpinner();
+          if (response && response.success) {
+            if (typeof mostrarToast === 'function') mostrarToast('Caso eliminado', 'success');
+            cargarTodosLosCasos();
+          } else {
+            const msg = (response && response.mensaje) ? response.mensaje : 'No se pudo eliminar';
+            if (typeof mostrarToast === 'function') mostrarToast(msg, 'error');
+          }
+        })
+        .withFailureHandler(function(err){
+          if (typeof ocultarSpinner === 'function') ocultarSpinner();
+          if (typeof mostrarToast === 'function') mostrarToast('Error al eliminar: ' + (err?.message || err), 'error');
+        })
+        .eliminarCaso((typeof recuperarSheetUrl==='function'?recuperarSheetUrl():null), casoId);
+    } catch (e) {
+      if (typeof ocultarSpinner === 'function') ocultarSpinner();
+      console.error('confirmarEliminarCasoTabla error:', e);
+    }
+  }
+
+  function cargarTodosLosCasos() {
+    try {
+      var url = (typeof recuperarSheetUrl === 'function') ? recuperarSheetUrl() : null;
+      if (!url) {
+        console.error('URL del Sheet no disponible');
+        if (typeof mostrarToast === 'function') mostrarToast('Error: no se pudo obtener la URL del Sheet', 'error');
+        return;
+      }
+
+      if (typeof mostrarSpinner === 'function') mostrarSpinner();
+
+      var filtros = { incluirEliminados: !!window.mostrarEliminados };
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          if (typeof ocultarSpinner === 'function') ocultarSpinner();
+          if (!response || response.success !== true) {
+            var msg = (response && response.mensaje) ? response.mensaje : 'No se pudieron cargar los casos';
+            if (typeof mostrarToast === 'function') mostrarToast(msg, 'warning');
+            mostrarErrorEnTabla(msg);
+            return;
+          }
+
+          window.casosActuales = (response.data && response.data.casos) ? response.data.casos : [];
+          window.casosFiltrados = window.casosActuales;
+
+          renderizarTablaCasos(window.casosActuales);
+          actualizarBarraEjecucion();
+
+          if (typeof mostrarToast === 'function') {
+            if (window.casosActuales.length > 0) {
+              mostrarToast('Casos cargados: ' + window.casosActuales.length, 'success');
+            } else {
+              mostrarToast('No hay casos creados aún', 'info');
+            }
+          }
+        })
+        .withFailureHandler(function(error) {
+          if (typeof ocultarSpinner === 'function') ocultarSpinner();
+          var msg = 'Error cargando casos: ' + (error && error.message ? error.message : error);
+          console.error('listarCasos falló:', error);
+          if (typeof mostrarToast === 'function') mostrarToast(msg, 'error');
+          mostrarErrorEnTabla(msg);
+        })
+        .listarCasos(url, filtros);
+    } catch (err) {
+      if (typeof ocultarSpinner === 'function') ocultarSpinner();
+      console.error('Excepción en cargarTodosLosCasos:', err);
+      if (typeof mostrarToast === 'function') mostrarToast('Error inesperado al cargar casos', 'error');
+    }
+  }
+
+  // ===================================================================
+  // Renderizar tabla
+  // ===================================================================
+  function renderizarTablaCasos(casos) {
+    var tbody = document.getElementById('tablaCasos');
+    if (!tbody) return;
+
+    if (!casos || casos.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:1.25rem; color:#64748b;">Sin casos para mostrar</td></tr>';
+      return;
+    }
+
+    var html = '';
+    for (var i = 0; i < casos.length; i++) {
+      var c = casos[i] || {};
+      var estadoEjec = c.ResultadoUltimaEjecucion || 'Sin ejecutar';
+      var estadoDise = c.EstadoDiseño || c.Estado || 'Pendiente';
+      var id = c.ID || '';
+      var titulo = c.Titulo || '';
+      var hoja = c.Hoja || '';
+      var prioridad = c.Prioridad || '';
+      var critico = (c.FlujoCritico === 'Si' || c.FlujoCritico === 'Sí') ? '✓' : '';
+      var regresion = (c.CandidatoRegresion === 'Si' || c.CandidatoRegresion === 'Sí') ? '✓' : '';
+
+      html += '<tr>' +
+        '<td>' + id + '</td>' +
+        '<td>' + hoja + '</td>' +
+        '<td>' + titulo + '</td>' +
+        '<td>' + prioridad + '</td>' +
+        '<td>' + estadoDise + '</td>' +
+        '<td>' + generarBadgeEstadoEjecucion(estadoEjec) + '</td>' +
+        '<td style="text-align:center;">' + critico + '</td>' +
+        '<td style="text-align:center;">' + regresion + '</td>' +
+        '<td style="display:flex; gap:0.4rem; flex-wrap:wrap;">' +
+          '<button class="btn btn-secondary btn-icon" title="Ver" onclick="if(window.verDetalleCaso) verDetalleCaso(\'' + id + '\')">👁️ Ver</button>' +
+          '<button class="btn btn-primary btn-icon" title="Editar" onclick="if(window.editarCaso) editarCaso(\'' + id + '\')">✏️ Editar</button>' +
+          '<button class="btn btn-success btn-icon" title="Ejecutar" onclick="if(window.abrirModalEjecutarCaso) abrirModalEjecutarCaso(\'' + id + '\')">▶️ Ejecutar</button>' +
+          '<button class="btn btn-secondary btn-icon" title="Reportar bug" onclick="if(window.abrirModalCrearBug) abrirModalCrearBug(\'' + id + '\')">🐛 Bug</button>' +
+          '<button class="btn btn-danger btn-icon" title="Eliminar" onclick="confirmarEliminarCasoTabla(\'' + id + '\')">🗑️ Eliminar</button>' +
+        '</td>' +
+      '</tr>';
+    }
+    tbody.innerHTML = html;
+
+    // Renderizar cards para móvil también
+    renderizarCasosCards(casos);
+  }
+
+  // ===================================================================
+  // Renderizar Cards (Vista móvil)
+  // ===================================================================
+  function renderizarCasosCards(casos) {
+    var container = document.getElementById('casosCards');
+    if (!container) return;
+
+    if (!casos || casos.length === 0) {
+      container.innerHTML = '<div class="text-center text-secondary" style="padding:2rem;">Sin casos para mostrar</div>';
+      return;
+    }
+
+    var html = '';
+    for (var i = 0; i < casos.length; i++) {
+      var c = casos[i] || {};
+      var estadoEjec = c.ResultadoUltimaEjecucion || 'Sin ejecutar';
+      var estadoDise = c.EstadoDiseño || c.Estado || 'Pendiente';
+      var id = c.ID || '';
+      var titulo = escapeHtml(c.Titulo) || '';
+      var hoja = escapeHtml(c.Hoja) || '';
+      var prioridad = c.Prioridad || '';
+
+      html += '<div class="caso-card">';
+
+      // Header con ID y estado de ejecución
+      html += '<div class="caso-card-header">';
+      html += '<span class="badge badge-primary">' + id + '</span>';
+      html += generarBadgeEstadoEjecucion(estadoEjec);
+      html += '</div>';
+
+      // Título
+      html += '<h3 class="caso-card-title">' + titulo + '</h3>';
+
+      // Meta (hoja, prioridad, estado)
+      html += '<div class="caso-card-meta">';
+      html += '<span>📂 ' + hoja + '</span>';
+      html += '<span>•</span>';
+      html += '<span class="badge ' + (typeof getBadgePrioridad === 'function' ? getBadgePrioridad(prioridad) : '') + '">' + prioridad + '</span>';
+      html += '<span>•</span>';
+      html += '<span class="badge ' + (typeof getBadgeEstado === 'function' ? getBadgeEstado(estadoDise) : '') + '">' + estadoDise + '</span>';
+      html += '</div>';
+
+      // Acciones
+      html += '<div class="caso-card-actions">';
+      html += '<button class="btn btn-success btn-sm" onclick="if(window.abrirModalEjecutarCaso) abrirModalEjecutarCaso(\'' + id + '\')">▶️ Ejecutar</button>';
+      html += '<div class="actions-menu">';
+      html += '<button class="btn-action-menu" onclick="toggleActionsMenu(this)">⋮</button>';
+      html += '<div class="actions-dropdown">';
+      html += '<button onclick="if(window.verDetalleCaso) verDetalleCaso(\'' + id + '\'); closeAllMenus();"><span class="icon">👁️</span> Ver Detalle</button>';
+      html += '<button onclick="if(window.editarCaso) editarCaso(\'' + id + '\'); closeAllMenus();"><span class="icon">✏️</span> Editar</button>';
+      html += '<button onclick="if(window.abrirModalCrearBug) abrirModalCrearBug(\'' + id + '\'); closeAllMenus();"><span class="icon">🐛</span> Reportar Bug</button>';
+      html += '<hr>';
+      html += '<button class="danger" onclick="confirmarEliminarCasoTabla(\'' + id + '\'); closeAllMenus();"><span class="icon">🗑️</span> Eliminar</button>';
+      html += '</div>';
+      html += '</div>';
+      html += '</div>';
+
+      html += '</div>'; // .caso-card
+    }
+
+    container.innerHTML = html;
+  }
+
+  // ===================================================================
+  // Menú de acciones (móvil)
+  // ===================================================================
+  function toggleActionsMenu(button) {
+    // Cerrar otros menús abiertos
+    var allMenus = document.querySelectorAll('.actions-dropdown');
+    allMenus.forEach(function(menu) {
+      if (menu !== button.nextElementSibling) {
+        menu.classList.remove('active');
+      }
+    });
+
+    // Toggle del menú actual
+    var dropdown = button.nextElementSibling;
+    if (dropdown) {
+      dropdown.classList.toggle('active');
+    }
+  }
+
+  function closeAllMenus() {
+    var allMenus = document.querySelectorAll('.actions-dropdown');
+    allMenus.forEach(function(menu) {
+      menu.classList.remove('active');
+    });
+  }
+
+  // Cerrar menús al hacer click fuera
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.actions-menu')) {
+      closeAllMenus();
+    }
+  });
+
+  // ===================================================================
+  // Filtros
+  // ===================================================================
+  function aplicarFiltrosEnTiempoReal() {
+    try {
+      var busqueda = (document.getElementById('filtroBusqueda')?.value || '').trim().toLowerCase();
+      var hoja = document.getElementById('filtroHoja')?.value || 'Todas';
+      var prioridad = document.getElementById('filtroPrioridad')?.value || 'Todas';
+      var estadoDis = document.getElementById('filtroEstadoDiseño')?.value || 'Todos';
+      var estadoEje = document.getElementById('filtroEstadoEjecucion')?.value || 'Todos';
+      var soloFlujoCritico = !!document.getElementById('filtroFlujoCritico')?.checked;
+      var soloCandidatosRegresion = !!document.getElementById('filtroCandidatosRegresion')?.checked;
+
+      var base = Array.isArray(window.casosActuales) ? window.casosActuales : [];
+      window.casosFiltrados = base.filter(function(caso) {
+        if (!caso) return false;
+
+        if (busqueda) {
+          var titulo = (caso.Titulo || '').toLowerCase();
+          var id = (caso.ID || '').toString().toLowerCase();
+          if (titulo.indexOf(busqueda) === -1 && id.indexOf(busqueda) === -1) return false;
+        }
+
+        if (hoja && hoja !== 'Todas') {
+          if ((caso.Hoja || '') !== hoja) return false;
+        }
+
+        if (prioridad && prioridad !== 'Todas') {
+          if ((caso.Prioridad || '') !== prioridad) return false;
+        }
+
+        if (estadoDis && estadoDis !== 'Todos') {
+          var ed = caso.EstadoDiseño || caso.Estado || 'Pendiente';
+          if (ed !== estadoDis) return false;
+        }
+
+        if (estadoEje && estadoEje !== 'Todos') {
+          var ee = caso.ResultadoUltimaEjecucion || 'Sin ejecutar';
+          if (ee !== estadoEje) return false;
+        }
+
+        if (soloFlujoCritico && (caso.FlujoCritico !== 'Si' && caso.FlujoCritico !== 'Sí')) return false;
+        if (soloCandidatosRegresion && (caso.CandidatoRegresion !== 'Si' && caso.CandidatoRegresion !== 'Sí')) return false;
+
+        return true;
+      });
+
+      renderizarTablaCasos(window.casosFiltrados);
+    } catch (e) {
+      console.warn('Error aplicando filtros:', e);
+    }
+  }
+
+  function toggleMostrarEliminados() {
+    window.mostrarEliminados = !!document.getElementById('filtroMostrarEliminados')?.checked;
+    cargarTodosLosCasos();
+  }
+
+  function limpiarFiltros() {
+    var inputBusqueda = document.getElementById('filtroBusqueda'); if (inputBusqueda) inputBusqueda.value = '';
+    var selectHoja = document.getElementById('filtroHoja'); if (selectHoja) selectHoja.value = 'Todas';
+    var selectPrioridad = document.getElementById('filtroPrioridad'); if (selectPrioridad) selectPrioridad.value = 'Todas';
+    var selectEstadoDiseño = document.getElementById('filtroEstadoDiseño'); if (selectEstadoDiseño) selectEstadoDiseño.value = 'Todos';
+    var selectEstadoEjecucion = document.getElementById('filtroEstadoEjecucion'); if (selectEstadoEjecucion) selectEstadoEjecucion.value = 'Todos';
+    var checkFlujoCritico = document.getElementById('filtroFlujoCritico'); if (checkFlujoCritico) checkFlujoCritico.checked = false;
+    var checkCandidatosRegresion = document.getElementById('filtroCandidatosRegresion'); if (checkCandidatosRegresion) checkCandidatosRegresion.checked = false;
+    aplicarFiltrosEnTiempoReal();
+    if (typeof mostrarToast === 'function') mostrarToast('Filtros limpiados', 'info', 2000);
+  }
+
+  // ===================================================================
+  // Cargar todos los casos (definición explícita)
+  // ===================================================================
+  function cargarTodosLosCasos() {
+    try {
+      var url = (typeof recuperarSheetUrl === 'function') ? recuperarSheetUrl() : null;
+      if (!url) { console.warn('[Casos] No hay sheetUrl'); return; }
+
+      var filtros = { incluirEliminados: !!window.mostrarEliminados, excluirRegresiones: true };
+      console.log('[Casos] Listar con filtros:', filtros);
+
+      if (typeof mostrarSpinner === 'function') mostrarSpinner();
+      google.script.run
+        .withSuccessHandler(function(res){
+          if (typeof ocultarSpinner === 'function') ocultarSpinner();
+          console.log('[Casos] Respuesta listarCasos:', res);
+          if (!res || res.success !== true) {
+            var msg = (res && res.mensaje) ? res.mensaje : 'No se pudieron cargar casos';
+            mostrarErrorEnTabla(msg);
+            mostrarToast && mostrarToast(msg, 'warning');
+            window.casosActuales = [];
+            window.casosFiltrados = [];
+            renderizarTablaCasos([]);
+            return;
+          }
+          window.casosActuales = (res.data && res.data.casos) ? res.data.casos : [];
+          window.casosFiltrados = window.casosActuales;
+          renderizarTablaCasos(window.casosActuales);
+          if (typeof actualizarBarraEjecucion === 'function') {
+            setTimeout(function(){ try { actualizarBarraEjecucion(); } catch(e){} }, 300);
+          }
+          if (typeof mostrarToast === 'function') {
+            mostrarToast('Casos cargados: ' + window.casosActuales.length, 'success');
+          }
+        })
+        .withFailureHandler(function(err){
+          if (typeof ocultarSpinner === 'function') ocultarSpinner();
+          console.error('[Casos] Error listarCasos:', err);
+          mostrarErrorEnTabla('Error listando casos: ' + (err && err.message ? err.message : err));
+          mostrarToast && mostrarToast('Error listando casos', 'error');
+        })
+        .listarCasos(url, filtros);
+    } catch (e) {
+      if (typeof ocultarSpinner === 'function') ocultarSpinner();
+      console.error('[Casos] Excepción en cargarTodosLosCasos:', e);
+    }
+  }
+
+  // ===================================================================
+  // Exportar funciones al scope global
+  // ===================================================================
+  window.cargarTodosLosCasos = cargarTodosLosCasos;
+  window.renderizarTablaCasos = renderizarTablaCasos;
+  window.renderizarCasosCards = renderizarCasosCards;
+  window.toggleActionsMenu = toggleActionsMenu;
+  window.closeAllMenus = closeAllMenus;
+  window.aplicarFiltrosEnTiempoReal = aplicarFiltrosEnTiempoReal;
+  window.toggleMostrarEliminados = toggleMostrarEliminados;
+  window.limpiarFiltros = limpiarFiltros;
+  console.log('✅ Frontend_Components_Casos_Tabla.html cargado (con soporte responsive)');
+</script>

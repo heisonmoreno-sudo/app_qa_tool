@@ -1,0 +1,774 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     FRONTEND_COMPONENTS_EJECUCIONES.HTML
+     Componente para ejecución de casos de prueba
+     VERSIÓN CORREGIDA: Sin errores de validación HTML
+     ═══════════════════════════════════════════════════════════════════════════ -->
+
+<style>
+  /* ═══════════════════════════════════════════════════════ */
+  /* ESTILOS DE EJECUCIONES                                   */
+  /* ═══════════════════════════════════════════════════════ */
+  
+  .ejecucion-container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  
+  .caso-info-box {
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .caso-info-box h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.75rem;
+  }
+  
+  .caso-info-row {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .caso-info-label {
+    font-weight: 600;
+    color: #64748b;
+  }
+  
+  .caso-info-value {
+    color: #1e293b;
+  }
+  
+  .resultado-selector {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+  
+  .resultado-option {
+    flex: 1;
+    padding: 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+  }
+  
+  .resultado-option:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+  }
+  
+  .resultado-option.selected {
+    border-color: #3b82f6;
+    background: #eff6ff;
+  }
+  
+  .resultado-option.ok.selected {
+    border-color: #10b981;
+    background: #d1fae5;
+  }
+  
+  .resultado-option.no-ok.selected {
+    border-color: #ef4444;
+    background: #fee2e2;
+  }
+  
+  .resultado-option.ejecutando.selected {
+    border-color: #3b82f6;
+    background: #dbeafe;
+  }
+  
+  .resultado-option.bloqueado.selected {
+    border-color: #f59e0b;
+    background: #fef3c7;
+  }
+  
+  .resultado-option.descartado.selected {
+    border-color: #94a3b8;
+    background: #e2e8f0;
+  }
+  
+  .resultado-option.no-ejecutado.selected {
+    border-color: #94a3b8;
+    background: #f1f5f9;
+  }
+  
+  .resultado-option input[type="radio"] {
+    display: none;
+  }
+  
+  .resultado-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .resultado-label {
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+  
+  .evidencias-section {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+  }
+  
+  .dropzone-evidencias {
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  
+  .dropzone-evidencias:hover,
+  .dropzone-evidencias.drag-over {
+    border-color: #3b82f6;
+    background: #eff6ff;
+  }
+  
+  .lista-evidencias {
+    margin-top: 1rem;
+  }
+  
+  .evidencia-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .btn-eliminar-evidencia {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 1.25rem;
+    padding: 0.25rem 0.5rem;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-eliminar-evidencia:hover {
+    color: #dc2626;
+    transform: scale(1.2);
+  }
+
+  .resultado-option.selected {
+  border-color: #3b82f6 !important;
+  background: #eff6ff !important;
+  transform: scale(1.05);
+}
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL EJECUTAR CASO                                                         -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+<div id="modalEjecutarCaso" class="modal-overlay">
+  <div class="modal ejecucion-container">
+    <div class="modal-header">
+      <h3 class="modal-title">▶️ Ejecutar Caso de Prueba</h3>
+      <button class="modal-close" onclick="cerrarModalEjecucion()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Información del caso -->
+      <div class="caso-info-box">
+        <h4>📋 Información del Caso</h4>
+        <div class="caso-info-row">
+          <span class="caso-info-label">ID:</span>
+          <span class="caso-info-value" id="ejecucionCasoId">-</span>
+        </div>
+        <div class="caso-info-row">
+          <span class="caso-info-label">Título:</span>
+          <span class="caso-info-value" id="ejecucionCasoTitulo">-</span>
+        </div>
+        <div class="caso-info-row">
+          <span class="caso-info-label">Prioridad:</span>
+          <span class="caso-info-value" id="ejecucionCasoPrioridad">-</span>
+        </div>
+        <div class="caso-info-row">
+          <span class="caso-info-label">Formato:</span>
+          <span class="caso-info-value" id="ejecucionCasoFormato">-</span>
+        </div>
+      </div>
+
+      <!-- Pasos del caso -->
+      <div class="form-group">
+        <label class="form-label">📝 Pasos a Ejecutar</label>
+        <div id="ejecucionPasos" style="background: #f8fafc; padding: 1rem; border-radius: 6px; white-space: pre-wrap; font-family: monospace; font-size: 0.9rem;">
+          -
+        </div>
+      </div>
+
+      <!-- Resultado Esperado -->
+      <div class="form-group">
+        <label class="form-label">✅ Resultado Esperado</label>
+        <div id="ejecucionResultadoEsperado" style="background: #f8fafc; padding: 1rem; border-radius: 6px; white-space: pre-wrap;">
+          -
+        </div>
+      </div>
+
+      <!-- Estado actual de la ejecución -->
+      <div class="form-group">
+        <label class="form-label">Estado actual</label>
+        <div id="ejecucionEstadoActual" style="display:none"></div>
+      </div>
+
+      <!-- Selector de Resultado -->
+      <!-- Selector de Resultado -->
+<div class="form-group">
+  <label class="form-label required">🎯 Resultado de la Ejecución</label>
+  <input type="hidden" id="resultadoEjecucion" value="">
+  
+  <div class="resultado-selector" style="grid-template-columns: repeat(3, 1fr); display: grid;">
+    <label class="resultado-option no-ejecutado" onclick="seleccionarResultado('No_ejecutado')" style="cursor: pointer;">
+      <input type="radio" name="resultado" value="No_ejecutado">
+      <div class="resultado-icon">⌛</div>
+      <div class="resultado-label">No ejecutado</div>
+      <div style="font-size: 0.85rem; color: #64748b;">Predeterminado</div>
+    </label>
+    <label class="resultado-option ejecutando" onclick="seleccionarResultado('Ejecutando')" style="cursor: pointer;">
+      <input type="radio" name="resultado" value="Ejecutando">
+      <div class="resultado-icon">▶️</div>
+      <div class="resultado-label">Ejecutando</div>
+      <div style="font-size: 0.85rem; color: #64748b;">En progreso</div>
+    </label>
+    
+    <label class="resultado-option ok" onclick="seleccionarResultado('OK')" style="cursor: pointer;">
+      <input type="radio" name="resultado" value="OK">
+      <div class="resultado-icon">✅</div>
+      <div class="resultado-label">OK</div>
+      <div style="font-size: 0.85rem; color: #64748b;">Funciona correctamente</div>
+    </label>
+    
+    <label class="resultado-option no-ok" onclick="seleccionarResultado('No_OK')" style="cursor: pointer;">
+      <input type="radio" name="resultado" value="No_OK">
+      <div class="resultado-icon">❌</div>
+      <div class="resultado-label">No OK</div>
+      <div style="font-size: 0.85rem; color: #64748b;">Fallo detectado</div>
+    </label>
+    
+    <label class="resultado-option bloqueado" onclick="seleccionarResultado('Bloqueado')" style="cursor: pointer;">
+      <input type="radio" name="resultado" value="Bloqueado">
+      <div class="resultado-icon">🔒</div>
+      <div class="resultado-label">Bloqueado</div>
+      <div style="font-size: 0.85rem; color: #64748b;">No se puede ejecutar</div>
+    </label>
+    
+    <label class="resultado-option descartado" onclick="seleccionarResultado('Descartado')" style="cursor: pointer;">
+      <input type="radio" name="resultado" value="Descartado">
+      <div class="resultado-icon">🗑️</div>
+      <div class="resultado-label">Descartado</div>
+      <div style="font-size: 0.85rem; color: #64748b;">No ejecutar</div>
+    </label>
+  </div>
+  
+  <p class="form-help" style="margin-top: 0.75rem;">
+    💡 <strong>Tip:</strong> Selecciona "No_OK" si encontraste un fallo para habilitar el botón de reportar bug
+  </p>
+</div>
+
+      <!-- Observaciones -->
+      <div class="form-group">
+        <label class="form-label">💬 Observaciones</label>
+        <textarea 
+          id="ejecucionComentarios" 
+          class="form-textarea" 
+          rows="3"
+          placeholder="Describe lo que observaste durante la ejecución..."
+        ></textarea>
+        <p class="form-help">Si el resultado es No_OK, las observaciones son obligatorias (mín. 10 caracteres)</p>
+      </div>
+
+      <!-- Evidencias -->
+      <div class="evidencias-section">
+        <label class="form-label">📎 Evidencias (Opcional)</label>
+        <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 1rem;">
+          Puedes agregar capturas de pantalla, videos o documentos
+        </p>
+        
+        <div 
+          id="dropzoneEjecucion" 
+          class="dropzone-evidencias"
+          ondrop="handleDropEjecucion(event)" 
+          ondragover="handleDragOverEjecucion(event)"
+          ondragleave="handleDragLeaveEjecucion(event)"
+        >
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📁</div>
+          <div style="font-weight: 600; margin-bottom: 0.25rem;">Arrastra archivos aquí o haz click</div>
+          <div style="font-size: 0.85rem; color: #64748b;">PNG, JPG, MP4, PDF (máx 50MB)</div>
+        </div>
+        
+        <input 
+          type="file" 
+          id="inputArchivosEjecucion" 
+          multiple 
+          accept="image/*,video/*,.pdf" 
+          style="display: none;"
+          onchange="handleFileSelectEjecucion(event)"
+        >
+        
+        <div id="listaEvidenciasEjecucion" class="lista-evidencias hidden">
+          <div style="font-weight: 600; margin-bottom: 0.5rem;">📋 Archivos agregados:</div>
+          <div id="contenidoListaEvidencias"></div>
+        </div>
+      </div>
+
+      <!-- Información adicional (SIN required) -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">🌐 Ambiente</label>
+          <select id="ambienteEjecucion" class="form-select">
+            <option value="">Seleccionar...</option>
+            <option value="Producción">Producción</option>
+            <option value="Staging">Staging</option>
+            <option value="QA">QA</option>
+            <option value="Dev">Dev</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">🌐 Navegador</label>
+          <select id="navegadorEjecucion" class="form-select">
+            <option value="">Seleccionar...</option>
+            <option value="Chrome">Chrome</option>
+            <option value="Firefox">Firefox</option>
+            <option value="Safari">Safari</option>
+            <option value="Edge">Edge</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="guardarEjecucion()">
+        💾 Guardar Ejecución
+      </button>
+      <button class="btn btn-secondary" onclick="reportarBugDesdeCaso()" id="btnReportarBug">
+        🐛 Reportar Bug
+      </button>
+      <button class="btn btn-secondary" onclick="cerrarModalEjecucion()">
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===================================================================
+  // VARIABLES GLOBALES DE EJECUCIONES
+  // ===================================================================
+  
+  (function() {
+    console.log('🔵 Iniciando carga de Frontend_Components_Ejecuciones.html');
+    
+    if (!window.casoEnEjecucion) window.casoEnEjecucion = null;
+    if (!window.evidenciasTemporales) window.evidenciasTemporales = [];
+    if (!window.contadorLinks) window.contadorLinks = 0;
+    
+    console.log('✅ Variables globales de Ejecuciones inicializadas');
+  })();
+
+  // ===================================================================
+  // ABRIR MODAL DE EJECUCIÓN
+  // ===================================================================
+  
+  function abrirModalEjecutarCaso(casoId) {
+    console.log('▶️ Abriendo modal de ejecución para caso:', casoId);
+    
+    const caso = window.casosActuales ? window.casosActuales.find(c => c.ID === casoId) : null;
+    
+    if (!caso) {
+      mostrarToast('No se encontró el caso', 'error');
+      return;
+    }
+    
+    // Guardar caso en ejecución
+    window.casoEnEjecucion = caso;
+    window.evidenciasTemporales = [];
+    window.contadorLinks = 0;
+    
+    // Mostrar información del caso
+    document.getElementById('ejecucionCasoId').textContent = caso.ID || '-';
+    document.getElementById('ejecucionCasoTitulo').textContent = caso.Titulo || '-';
+    document.getElementById('ejecucionCasoPrioridad').textContent = caso.Prioridad || '-';
+    document.getElementById('ejecucionCasoFormato').textContent = caso.Formato || 'Clásico';
+    
+    // Mostrar pasos según formato
+    let pasos = '';
+    if (caso.Formato === 'Gherkin') {
+      if (caso.ScenarioGiven) pasos += 'Dado: ' + caso.ScenarioGiven + '\n\n';
+      if (caso.ScenarioWhen) pasos += 'Cuando: ' + caso.ScenarioWhen + '\n\n';
+      if (caso.ScenarioThen) pasos += 'Entonces: ' + caso.ScenarioThen;
+    } else {
+      pasos = caso.Pasos || 'No hay pasos definidos';
+    }
+    
+    document.getElementById('ejecucionPasos').textContent = pasos;
+    document.getElementById('ejecucionResultadoEsperado').textContent = caso.ResultadoEsperado || 'No definido';
+
+    // Mostrar estado actual con badge y seleccionar 'No ejecutado' si aplica
+    try {
+      const estadoActual = caso.ResultadoUltimaEjecucion || 'Sin ejecutar';
+      let badge = (typeof generarBadgeEstadoEjecucion === 'function')
+        ? generarBadgeEstadoEjecucion(estadoActual)
+        : ('<span class="badge badge-primary">' + (estadoActual || 'Sin ejecutar') + '</span>');
+      badge = badge.replace('Sin ejecutar', 'No ejecutado');
+      const cont = document.getElementById('ejecucionEstadoActual');
+      if (cont) cont.innerHTML = badge;
+      if (estadoActual === 'Sin ejecutar') {
+        try { seleccionarResultado('No_ejecutado'); } catch(e) {}
+      }
+    } catch (e) { console.warn('No se pudo renderizar estado actual', e); }
+    
+    // Limpiar formulario
+    document.getElementById('resultadoEjecucion').value = '';
+    document.getElementById('ejecucionComentarios').value = '';
+    document.getElementById('ambienteEjecucion').value = '';
+    document.getElementById('navegadorEjecucion').value = '';
+    
+    // Limpiar selección de resultado
+    document.querySelectorAll('.resultado-option').forEach(opt => {
+      opt.classList.remove('selected');
+    });
+    
+    // Seleccionar tarjeta según estado actual
+    try {
+      switch ((caso.ResultadoUltimaEjecucion || 'Sin ejecutar')) {
+        case 'OK': seleccionarResultado('OK'); break;
+        case 'No_OK': seleccionarResultado('No_OK'); break;
+        case 'Bloqueado': seleccionarResultado('Bloqueado'); break;
+        case 'Descartado': seleccionarResultado('Descartado'); break;
+        case 'Ejecutando': seleccionarResultado('Ejecutando'); break;
+        default: seleccionarResultado('No_ejecutado'); break;
+      }
+    } catch(e) {}
+    
+    // Limpiar evidencias
+    const listaEvidencias = document.getElementById('listaEvidenciasEjecucion');
+    if (listaEvidencias) listaEvidencias.classList.add('hidden');
+    
+    const contenidoLista = document.getElementById('contenidoListaEvidencias');
+    if (contenidoLista) contenidoLista.innerHTML = '';
+
+        // Ocultar botón de reportar bug por defecto
+    const btnReportarBug = document.getElementById('btnReportarBug');
+    if (btnReportarBug) {
+      btnReportarBug.style.display = 'none';
+    }
+    
+    // Abrir modal
+    abrirModal('modalEjecutarCaso');
+  }
+
+  // ===================================================================
+  // SELECCIONAR RESULTADO
+  // ===================================================================
+  
+function seleccionarResultado(resultado) {
+  console.log('🎯 Resultado seleccionado:', resultado);
+  
+  document.getElementById('resultadoEjecucion').value = resultado;
+  
+  // Actualizar UI
+  document.querySelectorAll('.resultado-option').forEach(opt => {
+    opt.classList.remove('selected');
+  });
+  
+  // Marcar la opción seleccionada
+  const opcionSeleccionada = Array.from(document.querySelectorAll('.resultado-option')).find(
+    opt => opt.querySelector('input').value === resultado
+  );
+  
+  if (opcionSeleccionada) {
+    opcionSeleccionada.classList.add('selected');
+  }
+  
+  // Mostrar/ocultar botón de reportar bug
+  const btnReportarBug = document.getElementById('btnReportarBug');
+  
+  if (btnReportarBug) {
+    // Solo mostrar si es "No_OK"
+    btnReportarBug.style.display = (resultado === 'No_OK') ? 'inline-flex' : 'none';
+  }
+}
+
+  // ===================================================================
+  // MANEJO DE EVIDENCIAS
+  // ===================================================================
+  
+  function handleDragOverEjecucion(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    document.getElementById('dropzoneEjecucion').classList.add('drag-over');
+  }
+
+  function handleDragLeaveEjecucion(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    document.getElementById('dropzoneEjecucion').classList.remove('drag-over');
+  }
+
+  function handleDropEjecucion(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    document.getElementById('dropzoneEjecucion').classList.remove('drag-over');
+    
+    const files = event.dataTransfer.files;
+    procesarArchivosEjecucion(files);
+  }
+
+  function handleFileSelectEjecucion(event) {
+    const files = event.target.files;
+    procesarArchivosEjecucion(files);
+    event.target.value = '';
+  }
+
+  // Click en dropzone
+  document.addEventListener('DOMContentLoaded', function() {
+    const dropzone = document.getElementById('dropzoneEjecucion');
+    if (dropzone) {
+      dropzone.addEventListener('click', function() {
+        document.getElementById('inputArchivosEjecucion').click();
+      });
+    }
+  });
+
+  function procesarArchivosEjecucion(files) {
+    let archivosValidos = 0;
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      
+      if (file.size > 50 * 1024 * 1024) {
+        mostrarToast('❌ "' + file.name + '" excede los 50 MB', 'error', 4000);
+        continue;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        window.evidenciasTemporales.push({
+          tipo: 'archivo',
+          nombre: file.name,
+          tamaño: file.size,
+          mimeType: file.type,
+          contenidoBase64: e.target.result.split(',')[1]
+        });
+        
+        renderizarListaEvidencias();
+        
+        const tamañoMB = (file.size / (1024 * 1024)).toFixed(2);
+        mostrarToast('✅ "' + file.name + '" listo (' + tamañoMB + ' MB)', 'success', 2000);
+      };
+      
+      reader.onerror = function() {
+        mostrarToast('❌ Error leyendo "' + file.name + '"', 'error');
+      };
+      
+      reader.readAsDataURL(file);
+      archivosValidos++;
+    }
+    
+    if (files.length > 1) {
+      setTimeout(() => {
+        if (archivosValidos > 0) {
+          mostrarToast('📎 ' + archivosValidos + ' archivo(s) agregado(s)', 'info', 2000);
+        }
+      }, 500);
+    }
+  }
+
+  function renderizarListaEvidencias() {
+    const lista = document.getElementById('listaEvidenciasEjecucion');
+    const contenido = document.getElementById('contenidoListaEvidencias');
+    
+    if (!window.evidenciasTemporales || window.evidenciasTemporales.length === 0) {
+      lista.classList.add('hidden');
+      return;
+    }
+    
+    lista.classList.remove('hidden');
+    
+    let html = '';
+    window.evidenciasTemporales.forEach((evidencia, index) => {
+      const tamañoMB = (evidencia.tamaño / (1024 * 1024)).toFixed(2);
+      
+      html += '<div class="evidencia-item">';
+      html += '  <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">';
+      html += '    <span style="font-size: 1.5rem;">📎</span>';
+      html += '    <div style="flex: 1;">';
+      html += '      <div style="font-weight: 500; word-break: break-word;">' + evidencia.nombre + '</div>';
+      html += '      <div style="font-size: 0.85rem; color: #64748b;">' + tamañoMB + ' MB</div>';
+      html += '    </div>';
+      html += '  </div>';
+      html += '  <button type="button" class="btn-eliminar-evidencia" onclick="eliminarEvidenciaEjecucion(' + index + ')" title="Eliminar">🗑️</button>';
+      html += '</div>';
+    });
+    
+    contenido.innerHTML = html;
+  }
+
+  function eliminarEvidenciaEjecucion(index) {
+    window.evidenciasTemporales.splice(index, 1);
+    renderizarListaEvidencias();
+    mostrarToast('✅ Evidencia eliminada', 'success');
+  }
+
+  // ===================================================================
+  // GUARDAR EJECUCIÓN
+  // ===================================================================
+  
+  function guardarEjecucion() {
+  console.log('💾 Guardando ejecución...');
+
+  // VALIDACIONES
+  let resultado = document.getElementById('resultadoEjecucion').value;
+  if (resultado === 'No_ejecutado') { resultado = 'Sin ejecutar'; }
+  const observaciones = document.getElementById('ejecucionComentarios').value.trim();
+
+  if (!resultado) {
+    mostrarToast('⚠️ Debes seleccionar un resultado (OK/No_OK)', 'warning');
+    return;
+  }
+
+  if (resultado === 'No_OK' && (!observaciones || observaciones.length < 10)) {
+    mostrarToast('⚠️ Si el resultado es No_OK, debes escribir observaciones (mín. 10 caracteres)', 'warning');
+    return;
+  }
+
+  if (!window.casoEnEjecucion) {
+    mostrarToast('Error: No hay caso en ejecución', 'error');
+    return;
+  }
+
+  const sheetUrl = window.currentSheetUrl;
+
+  if (!sheetUrl) {
+    mostrarToast('Error: No hay Sheet conectado', 'error');
+    return;
+  }
+
+  const datosEjecucion = {
+    sheetUrl: sheetUrl,
+    casoId: window.casoEnEjecucion.ID,
+    casoTitulo: window.casoEnEjecucion.Titulo,
+    resultado: resultado,
+    observaciones: observaciones,
+    ambiente: document.getElementById('ambienteEjecucion').value,
+    navegador: document.getElementById('navegadorEjecucion').value,
+    evidencias: []
+  };
+
+  // Agregar evidencias si hay
+  if (window.evidenciasTemporales && window.evidenciasTemporales.length > 0) {
+    datosEjecucion.evidencias = window.evidenciasTemporales.map(e => e.nombre);
+  }
+
+  console.log('📦 Datos de ejecución:', datosEjecucion);
+  mostrarSpinner();
+
+  google.script.run
+    .withSuccessHandler(function(response) {
+      ocultarSpinner();
+      console.log('📨 Respuesta del backend:', response);
+
+      if (response.success) {
+        mostrarToast('✅ Ejecución guardada exitosamente', 'success');
+
+        // Cerrar modal
+        cerrarModalEjecucion();
+
+        // Recargar tabla de casos
+        if (typeof cargarTodosLosCasos === 'function') {
+          setTimeout(() => {
+            cargarTodosLosCasos();
+          }, 500);
+        }
+
+        // ✅ Actualizar la barra de progreso (800 ms después)
+        if (typeof actualizarBarraEjecucion === 'function') {
+          setTimeout(() => {
+            actualizarBarraEjecucion();
+          }, 800);
+        }
+
+      } else {
+        mostrarToast('Error: ' + response.mensaje, 'error');
+      }
+    })
+    .withFailureHandler(function(error) {
+      ocultarSpinner();
+      console.error('💥 Error guardando ejecución:', error);
+      mostrarToast('Error al guardar ejecución: ' + error.message, 'error');
+    })
+    .guardarEjecucion(datosEjecucion);
+}
+
+
+  // ===================================================================
+  // REPORTAR BUG DESDE CASO
+  // ===================================================================
+  
+  function reportarBugDesdeCaso() {
+    const casoId = window.casoEnEjecucion ? window.casoEnEjecucion.ID : null;
+    
+    if (!casoId) {
+      mostrarToast('No hay caso en ejecución', 'warning');
+      return;
+    }
+    
+    // Abrir modal de bugs SIN cerrar el de ejecución
+    // (El z-index manejará que aparezca encima)
+    if (typeof abrirModalCrearBug === 'function') {
+      abrirModalCrearBug(casoId);
+    } else {
+      mostrarToast('Modal de bugs no disponible', 'error');
+    }
+  }
+
+  // ===================================================================
+  // CERRAR MODAL
+  // ===================================================================
+  
+  function cerrarModalEjecucion() {
+    cerrarModal('modalEjecutarCaso');
+    window.casoEnEjecucion = null;
+    window.evidenciasTemporales = [];
+  }
+
+  // ===================================================================
+  // EXPORTAR AL SCOPE GLOBAL
+  // ===================================================================
+  
+  window.abrirModalEjecutarCaso = abrirModalEjecutarCaso;
+  window.cerrarModalEjecucion = cerrarModalEjecucion;
+  window.seleccionarResultado = seleccionarResultado;
+  window.guardarEjecucion = guardarEjecucion;
+  window.reportarBugDesdeCaso = reportarBugDesdeCaso;
+  window.handleDragOverEjecucion = handleDragOverEjecucion;
+  window.handleDragLeaveEjecucion = handleDragLeaveEjecucion;
+  window.handleDropEjecucion = handleDropEjecucion;
+  window.handleFileSelectEjecucion = handleFileSelectEjecucion;
+  window.procesarArchivosEjecucion = procesarArchivosEjecucion;
+  window.renderizarListaEvidencias = renderizarListaEvidencias;
+  window.eliminarEvidenciaEjecucion = eliminarEvidenciaEjecucion;
+  
+  console.log('✅ Frontend_Components_Ejecuciones.html cargado correctamente');
+</script>

@@ -1,0 +1,772 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     FRONTEND_COMPONENTS_BUGS.HTML
+     Componente para gestión de bugs
+     ═══════════════════════════════════════════════════════════════════════════ -->
+
+<style>
+  /* ═══════════════════════════════════════════════════════ */
+  /* ESTILOS DE BUGS                                          */
+  /* ═══════════════════════════════════════════════════════ */
+  
+  .bugs-container {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  /* Badges de severidad */
+  .badge-severidad-critica {
+    background: #fee2e2;
+    color: #991b1b;
+    font-weight: 700;
+  }
+  
+  .badge-severidad-alta {
+    background: #fed7aa;
+    color: #9a3412;
+    font-weight: 600;
+  }
+  
+  .badge-severidad-media {
+    background: #fef3c7;
+    color: #92400e;
+    font-weight: 600;
+  }
+  
+  .badge-severidad-baja {
+    background: #dbeafe;
+    color: #1e40af;
+    font-weight: 600;
+  }
+  
+  /* Badges de estado bug */
+  .badge-bug-abierto {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 2px solid #fca5a5;
+  }
+  
+  .badge-bug-cerrado {
+    background: #d1fae5;
+    color: #065f46;
+    border: 2px solid #6ee7b7;
+  }
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL CREAR/EDITAR BUG                                                      -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+<div id="modalCrearBug" class="modal-overlay">
+  <div class="modal" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <span>🐛</span>
+        <span id="tituloModalBug">Reportar Bug</span>
+      </h3>
+      <button class="modal-close" onclick="cerrarModalBug()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Info del caso relacionado (si aplica) -->
+      <div id="infoCasoRelacionado" class="hidden" style="background: #eff6ff; border: 2px solid #3b82f6; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: start; gap: 0.75rem;">
+          <span style="font-size: 1.5rem;">🔗</span>
+          <div style="flex: 1;">
+            <strong style="color: #1e40af; display: block; margin-bottom: 0.25rem;">
+              Bug relacionado con caso de prueba
+            </strong>
+            <div style="color: #1e40af; font-size: 0.9rem;">
+              <strong id="casoRelacionadoId"></strong> - <span id="casoRelacionadoTitulo"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <form id="formCrearBug" onsubmit="guardarBug(); return false;">
+        <input type="hidden" id="bugCasoRelacionado" value="">
+        <input type="hidden" id="bugModoEdicion" value="false">
+        <input type="hidden" id="bugIdEdicion" value="">
+        
+        <!-- CAMPOS OBLIGATORIOS -->
+        <div class="form-group">
+          <label class="form-label required">🐛 Título del Bug (10-100 caracteres)</label>
+          <input 
+            type="text" 
+            id="bugTitulo" 
+            class="form-input" 
+            required 
+            minlength="10"
+            maxlength="100"
+            placeholder="Ej: Error en validación de email en formulario de registro"
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">📝 Descripción (mín. 10 caracteres)</label>
+          <textarea 
+            id="bugDescripcion" 
+            class="form-textarea" 
+            required 
+            minlength="10"
+            rows="3"
+            placeholder="Describe el bug de forma clara y concisa..."
+          ></textarea>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label required">🔴 Severidad</label>
+            <select id="bugSeveridad" class="form-select" required>
+              <option value="Crítica">🔴 Crítica</option>
+              <option value="Alta">🟠 Alta</option>
+              <option value="Media" selected>🟡 Media</option>
+              <option value="Baja">🟢 Baja</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">⚡ Prioridad</label>
+            <select id="bugPrioridad" class="form-select" required>
+              <option value="Alta">⚡ Alta</option>
+              <option value="Media" selected>🔸 Media</option>
+              <option value="Baja">🔹 Baja</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">📋 Precondiciones</label>
+          <textarea 
+            id="bugPrecondiciones" 
+            class="form-textarea" 
+            required 
+            minlength="10"
+            rows="2"
+            placeholder="Ej: Usuario debe estar logueado como administrador"
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">🔢 Datos de Prueba</label>
+          <textarea 
+            id="bugDatosPrueba" 
+            class="form-textarea" 
+            required 
+            minlength="10"
+            rows="2"
+            placeholder="Ej: Email: test@test.com, Password: Test123!"
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">👣 Pasos para Reproducir</label>
+          <textarea 
+            id="bugPasosReproducir" 
+            class="form-textarea" 
+            required 
+            minlength="10"
+            rows="4"
+            placeholder="1. Ir a la página de login&#10;2. Ingresar email inválido&#10;3. Click en 'Iniciar Sesión'&#10;4. Observar el error"
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">✅ Resultado Esperado</label>
+          <textarea 
+            id="bugResultadoEsperado" 
+            class="form-textarea" 
+            required 
+            minlength="10"
+            rows="2"
+            placeholder="Ej: Debe mostrar mensaje 'Email inválido'"
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">❌ Resultado Obtenido</label>
+          <textarea 
+            id="bugResultadoObtenido" 
+            class="form-textarea" 
+            required 
+            minlength="10"
+            rows="2"
+            placeholder="Ej: Muestra error 500 y la aplicación se cuelga"
+          ></textarea>
+        </div>
+
+        <!-- CAMPOS OPCIONALES -->
+        <div style="border-top: 2px dashed #e2e8f0; margin: 1.5rem 0; padding-top: 1.5rem;">
+          <h4 style="font-size: 1rem; font-weight: 600; color: #475569; margin-bottom: 1rem;">
+            📌 Información Adicional (Opcional)
+          </h4>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label">🌐 Ambiente</label>
+              <select id="bugAmbiente" class="form-select">
+                <option value="">Seleccionar...</option>
+                <option value="Producción">Producción</option>
+                <option value="Staging">Staging</option>
+                <option value="QA">QA</option>
+                <option value="Dev">Dev</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">🌐 Navegador</label>
+              <select id="bugNavegador" class="form-select">
+                <option value="">Seleccionar...</option>
+                <option value="Chrome">Chrome</option>
+                <option value="Firefox">Firefox</option>
+                <option value="Safari">Safari</option>
+                <option value="Edge">Edge</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">🏷️ Etiquetas (separadas por coma)</label>
+            <input 
+              type="text" 
+              id="bugEtiquetas" 
+              class="form-input" 
+              placeholder="Ej: login, validación, frontend"
+            >
+            <p class="form-help">Las etiquetas se usarán en Trello</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">📝 Notas</label>
+            <textarea 
+              id="bugNotas" 
+              class="form-textarea" 
+              rows="2"
+              placeholder="Información adicional, comentarios, etc."
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- EVIDENCIAS -->
+        <div class="form-group">
+          <label class="form-label">📎 Evidencias</label>
+          
+          <div style="background: #eff6ff; border: 1px solid #3b82f6; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; display: flex; align-items: start; gap: 0.5rem;">
+            <span style="font-size: 1.25rem;">💡</span>
+            <div style="flex: 1; font-size: 0.9rem; color: #1e40af;">
+              <strong>Importante:</strong> Los archivos se subirán a Drive cuando guardes el bug.
+            </div>
+          </div>
+          
+          <!-- Zona de archivos -->
+          <div style="margin-bottom: 1rem;">
+            <div style="font-weight: 600; margin-bottom: 0.5rem;">📤 Subir archivos (máx 50MB c/u)</div>
+            <div 
+              id="dropzoneBug" 
+              class="dropzone-evidencias"
+              ondrop="handleDropBug(event)" 
+              ondragover="handleDragOverBug(event)"
+              ondragleave="handleDragLeaveBug(event)"
+              style="cursor: pointer;"
+            >
+              <div style="text-align: center; padding: 2rem;">
+                <div style="font-size: 3rem; margin-bottom: 0.5rem;">📁</div>
+                <div style="font-weight: 600; margin-bottom: 0.25rem;">Arrastra archivos aquí o haz click</div>
+                <div style="font-size: 0.85rem; color: #64748b;">PNG, JPG, MP4, PDF (máx 50MB)</div>
+              </div>
+            </div>
+            <input 
+              type="file" 
+              id="inputArchivosBug" 
+              multiple 
+              accept="image/*,video/*,.pdf" 
+              style="display: none;"
+              onchange="handleFileSelectBug(event)"
+            >
+          </div>
+          
+          <!-- Lista de evidencias -->
+          <div id="listaEvidenciasBug" class="lista-evidencias hidden">
+            <div style="font-weight: 600; margin-bottom: 0.5rem;">📋 Archivos agregados:</div>
+            <div id="contenidoListaEvidenciasBug"></div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+ <button type="button" class="btn btn-primary" onclick="guardarBug(); return false;">
+  💾 Crear Bug
+</button>
+      <button type="button" class="btn btn-secondary" onclick="cerrarModalBug()">
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===================================================================
+  // VARIABLES GLOBALES DE BUGS
+  // ===================================================================
+  
+  (function() {
+    console.log('🔵 Iniciando carga de Frontend_Components_Bugs.html');
+    
+    if (!window.evidenciasBugTemporales) window.evidenciasBugTemporales = [];
+    if (!window.bugEnEdicion) window.bugEnEdicion = null;
+    console.log('✅ Variables globales de Bugs inicializadas');
+  })();
+
+  // ===================================================================
+  // ABRIR MODAL CREAR BUG
+  // ===================================================================
+  
+  function abrirModalCrearBug(casoId) {
+  console.log('🐛 Abriendo modal crear bug...');
+  console.log('   Caso relacionado:', casoId || 'Ninguno (bug manual)');
+  
+  const modal = document.getElementById('modalCrearBug');
+  const titulo = document.getElementById('tituloModalBug');
+  const infoCaso = document.getElementById('infoCasoRelacionado');
+  
+  if (!modal) {
+    console.error('❌ Modal modalCrearBug no encontrado');
+    mostrarToast('Error: Modal de bugs no disponible', 'error');
+    return;
+  }
+  
+  // Limpiar campos manualmente (sin usar form.reset)
+  document.getElementById('bugTitulo').value = '';
+  document.getElementById('bugDescripcion').value = '';
+  document.getElementById('bugSeveridad').value = 'Media';
+  document.getElementById('bugPrioridad').value = 'Media';
+  document.getElementById('bugPrecondiciones').value = '';
+  document.getElementById('bugDatosPrueba').value = '';
+  document.getElementById('bugPasosReproducir').value = '';
+  document.getElementById('bugResultadoEsperado').value = '';
+  document.getElementById('bugResultadoObtenido').value = '';
+  document.getElementById('bugAmbiente').value = '';
+  document.getElementById('bugNavegador').value = '';
+  document.getElementById('bugEtiquetas').value = '';
+  document.getElementById('bugNotas').value = '';
+  
+  const modoEdicion = document.getElementById('bugModoEdicion');
+  const idEdicion = document.getElementById('bugIdEdicion');
+  const casoRelacionadoInput = document.getElementById('bugCasoRelacionado');
+  
+  if (modoEdicion) modoEdicion.value = 'false';
+  if (idEdicion) idEdicion.value = '';
+  
+  window.evidenciasBugTemporales = [];
+  const listaEvidencias = document.getElementById('listaEvidenciasBug');
+  const contenidoLista = document.getElementById('contenidoListaEvidenciasBug');
+  
+  if (listaEvidencias) listaEvidencias.classList.add('hidden');
+  if (contenidoLista) contenidoLista.innerHTML = '';
+  
+  if (titulo) {
+    titulo.textContent = casoId ? 'Reportar Bug desde Caso' : 'Reportar Bug';
+  }
+  
+  if (casoId) {
+    const caso = window.casosActuales ? window.casosActuales.find(c => c.ID === casoId) : null;
+    
+    if (caso) {
+      if (casoRelacionadoInput) casoRelacionadoInput.value = casoId;
+      
+      const casoIdSpan = document.getElementById('casoRelacionadoId');
+      const casoTituloSpan = document.getElementById('casoRelacionadoTitulo');
+      
+      if (casoIdSpan) casoIdSpan.textContent = casoId;
+      if (casoTituloSpan) casoTituloSpan.textContent = caso.Titulo || '';
+      if (infoCaso) infoCaso.classList.remove('hidden');
+      
+      preLlenarDesdeCaso(caso);
+    } else {
+      console.warn('⚠️ Caso no encontrado en casosActuales:', casoId);
+    }
+  } else {
+    if (casoRelacionadoInput) casoRelacionadoInput.value = '';
+    if (infoCaso) infoCaso.classList.add('hidden');
+  }
+  
+  if (typeof abrirModal === 'function') {
+    abrirModal('modalCrearBug');
+  } else {
+    console.error('❌ Función abrirModal no disponible');
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+  function preLlenarDesdeCaso(caso) {
+    console.log('📝 Pre-llenando formulario desde caso...');
+    
+    const tituloSugerido = 'Error en: ' + (caso.Titulo || '').substring(0, 80);
+    document.getElementById('bugTitulo').value = tituloSugerido;
+    
+    let descripcionBase = 'Bug detectado durante la ejecución del caso de prueba.\n\n';
+    descripcionBase += 'Caso: ' + caso.ID + ' - ' + caso.Titulo;
+    document.getElementById('bugDescripcion').value = descripcionBase;
+    
+    if (caso.Prioridad === 'Critica' || caso.FlujoCritico === 'Si') {
+      document.getElementById('bugSeveridad').value = 'Crítica';
+      document.getElementById('bugPrioridad').value = 'Alta';
+    } else if (caso.Prioridad === 'Alta') {
+      document.getElementById('bugSeveridad').value = 'Alta';
+      document.getElementById('bugPrioridad').value = 'Alta';
+    } else {
+      document.getElementById('bugSeveridad').value = 'Media';
+      document.getElementById('bugPrioridad').value = 'Media';
+    }
+    
+    if (caso.Precondiciones && caso.Precondiciones !== '') {
+      document.getElementById('bugPrecondiciones').value = caso.Precondiciones;
+    } else {
+      document.getElementById('bugPrecondiciones').value = 'Condiciones previas necesarias...';
+    }
+    
+    if (caso.Formato === 'Gherkin') {
+      let pasos = '';
+      if (caso.ScenarioGiven) pasos += 'Dado: ' + caso.ScenarioGiven + '\n';
+      if (caso.ScenarioWhen) pasos += 'Cuando: ' + caso.ScenarioWhen + '\n';
+      if (caso.ScenarioThen) pasos += 'Entonces: ' + caso.ScenarioThen;
+      document.getElementById('bugPasosReproducir').value = pasos || '1. Paso uno\n2. Paso dos\n3. Paso tres';
+    } else {
+      if (caso.Pasos && caso.Pasos !== '') {
+        document.getElementById('bugPasosReproducir').value = caso.Pasos;
+      } else {
+        document.getElementById('bugPasosReproducir').value = '1. Paso uno\n2. Paso dos\n3. Paso tres';
+      }
+    }
+    
+    if (caso.ResultadoEsperado && caso.ResultadoEsperado !== '') {
+      document.getElementById('bugResultadoEsperado').value = caso.ResultadoEsperado;
+    } else {
+      document.getElementById('bugResultadoEsperado').value = 'Describe el resultado esperado...';
+    }
+    
+    document.getElementById('bugResultadoObtenido').value = 'Describe aquí el comportamiento erróneo observado...';
+    document.getElementById('bugDatosPrueba').value = 'Indica los datos usados en la prueba que causó el error';
+    
+    console.log('✅ Formulario pre-llenado');
+  }
+
+  function cerrarModalBug() {
+    cerrarModal('modalCrearBug');
+  }
+
+  // ===================================================================
+  // MANEJO DE EVIDENCIAS
+  // ===================================================================
+  
+  function handleDragOverBug(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    document.getElementById('dropzoneBug').classList.add('drag-over');
+  }
+
+  function handleDragLeaveBug(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    document.getElementById('dropzoneBug').classList.remove('drag-over');
+  }
+
+  function handleDropBug(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    document.getElementById('dropzoneBug').classList.remove('drag-over');
+    
+    const files = event.dataTransfer.files;
+    procesarArchivosBug(files);
+  }
+
+  function handleFileSelectBug(event) {
+    const files = event.target.files;
+    procesarArchivosBug(files);
+    event.target.value = '';
+  }
+
+  // Click en dropzone
+  document.addEventListener('DOMContentLoaded', function() {
+    const dropzone = document.getElementById('dropzoneBug');
+    if (dropzone) {
+      dropzone.addEventListener('click', function() {
+        document.getElementById('inputArchivosBug').click();
+      });
+    }
+  });
+
+  function procesarArchivosBug(files) {
+    let archivosValidos = 0;
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      
+      if (file.size > 50 * 1024 * 1024) {
+        mostrarToast('❌ "' + file.name + '" excede los 50 MB', 'error', 4000);
+        continue;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        window.evidenciasBugTemporales.push({
+          tipo: 'archivo',
+          nombre: file.name,
+          tamaño: file.size,
+          mimeType: file.type,
+          contenidoBase64: e.target.result.split(',')[1]
+        });
+        
+        renderizarListaEvidenciasBug();
+        
+        const tamañoMB = (file.size / (1024 * 1024)).toFixed(2);
+        mostrarToast('✅ "' + file.name + '" listo (' + tamañoMB + ' MB)', 'success', 2000);
+      };
+      
+      reader.onerror = function() {
+        mostrarToast('❌ Error leyendo "' + file.name + '"', 'error');
+      };
+      
+      reader.readAsDataURL(file);
+      archivosValidos++;
+    }
+    
+    if (files.length > 1) {
+      setTimeout(() => {
+        if (archivosValidos > 0) {
+          mostrarToast('📎 ' + archivosValidos + ' archivo(s) agregado(s)', 'info', 2000);
+        }
+      }, 500);
+    }
+  }
+
+  function renderizarListaEvidenciasBug() {
+    const lista = document.getElementById('listaEvidenciasBug');
+    const contenido = document.getElementById('contenidoListaEvidenciasBug');
+    
+    if (window.evidenciasBugTemporales.length === 0) {
+      lista.classList.add('hidden');
+      return;
+    }
+    
+    lista.classList.remove('hidden');
+    
+    let html = '';
+    window.evidenciasBugTemporales.forEach((evidencia, index) => {
+      const tamañoMB = (evidencia.tamaño / (1024 * 1024)).toFixed(2);
+      
+      html += '<div class="evidencia-item">';
+      html += '  <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">';
+      html += '    <span style="font-size: 1.5rem;">📎</span>';
+      html += '    <div style="flex: 1;">';
+      html += '      <div style="font-weight: 500; word-break: break-word;">' + evidencia.nombre + '</div>';
+      html += '      <div style="font-size: 0.85rem; color: #64748b;">' + tamañoMB + ' MB</div>';
+      html += '    </div>';
+      html += '  </div>';
+      html += '  <button type="button" class="btn-eliminar-evidencia" onclick="eliminarEvidenciaBug(' + index + ')" title="Eliminar">🗑️</button>';
+      html += '</div>';
+    });
+    
+    contenido.innerHTML = html;
+  }
+
+  function eliminarEvidenciaBug(index) {
+    window.evidenciasBugTemporales.splice(index, 1);
+    renderizarListaEvidenciasBug();
+    mostrarToast('✅ Evidencia eliminada', 'success');
+  }
+
+  // ===================================================================
+  // GUARDAR BUG
+  // ===================================================================
+  
+  async function guardarBug() {
+  console.log('💾 Guardando bug...');
+  
+  // ===================================================================
+  // VALIDACIONES DE CAMPOS OBLIGATORIOS
+  // ===================================================================
+  
+  const titulo = document.getElementById('bugTitulo').value.trim();
+  const descripcion = document.getElementById('bugDescripcion').value.trim();
+  const precondiciones = document.getElementById('bugPrecondiciones').value.trim();
+  const datosPrueba = document.getElementById('bugDatosPrueba').value.trim();
+  const pasosReproducir = document.getElementById('bugPasosReproducir').value.trim();
+  const resultadoEsperado = document.getElementById('bugResultadoEsperado').value.trim();
+  const resultadoObtenido = document.getElementById('bugResultadoObtenido').value.trim();
+  
+  if (!titulo || titulo.length < 10) {
+    mostrarToast('El título debe tener al menos 10 caracteres', 'warning');
+    return;
+  }
+  
+  if (!descripcion || descripcion.length < 10) {
+    mostrarToast('La descripción debe tener al menos 10 caracteres', 'warning');
+    return;
+  }
+  
+  if (!precondiciones || precondiciones.length < 10) {
+    mostrarToast('Las precondiciones son obligatorias (mín. 10 caracteres)', 'warning');
+    return;
+  }
+  
+  if (!datosPrueba || datosPrueba.length < 10) {
+    mostrarToast('Los datos de prueba son obligatorios (mín. 10 caracteres)', 'warning');
+    return;
+  }
+  
+  if (!pasosReproducir || pasosReproducir.length < 10) {
+    mostrarToast('Los pasos para reproducir son obligatorios (mín. 10 caracteres)', 'warning');
+    return;
+  }
+  
+  if (!resultadoEsperado || resultadoEsperado.length < 10) {
+    mostrarToast('El resultado esperado es obligatorio (mín. 10 caracteres)', 'warning');
+    return;
+  }
+  
+  if (!resultadoObtenido || resultadoObtenido.length < 10) {
+    mostrarToast('El resultado obtenido es obligatorio (mín. 10 caracteres)', 'warning');
+    return;
+  }
+  
+  // ===================================================================
+  // PREPARAR DATOS DEL BUG
+  // ===================================================================
+  
+const sheetUrl = window.currentSheetUrl;
+
+if (!sheetUrl) {
+  console.error('❌ No hay currentSheetUrl disponible');
+  console.log('window.currentSheetUrl:', window.currentSheetUrl);
+  mostrarToast('❌ Error: No hay Sheet conectado. Recarga la página e intenta de nuevo.', 'error');
+  return;
+}
+
+console.log('✅ Sheet URL obtenida:', sheetUrl);
+  
+  const casoRelacionado = document.getElementById('bugCasoRelacionado').value.trim();
+  
+  const datosBug = {
+    sheetUrl: sheetUrl,
+    titulo: titulo,
+    descripcion: descripcion,
+    severidad: document.getElementById('bugSeveridad').value,
+    prioridad: document.getElementById('bugPrioridad').value,
+    precondiciones: precondiciones,
+    datosPrueba: datosPrueba,
+    pasosReproducir: pasosReproducir,
+    resultadoEsperado: resultadoEsperado,
+    resultadoObtenido: resultadoObtenido,
+    ambiente: document.getElementById('bugAmbiente').value,
+    navegador: document.getElementById('bugNavegador').value,
+    etiquetas: document.getElementById('bugEtiquetas').value,
+    notas: document.getElementById('bugNotas').value,
+    tieneCasoDiseñado: casoRelacionado ? true : false,
+    casosRelacionados: casoRelacionado || '',
+    origenSinCaso: casoRelacionado ? '' : 'Manual',
+    evidencias: []
+  };
+  
+  // Agregar evidencias si hay
+  if (window.evidenciasBugTemporales && window.evidenciasBugTemporales.length > 0) {
+    // Por ahora solo guardamos los nombres (la subida a Drive es para después)
+    datosBug.evidencias = window.evidenciasBugTemporales.map(e => e.nombre);
+  }
+  
+  console.log('📦 Datos del bug:', datosBug);
+  
+  // ===================================================================
+  // LLAMAR AL BACKEND
+  // ===================================================================
+  
+  mostrarSpinner();
+  
+  google.script.run
+    .withSuccessHandler(function(response) {
+      ocultarSpinner();
+      
+      console.log('📨 Respuesta del backend:', response);
+      
+      if (response.success) {
+        const bugId = response.data.bugId;
+        
+        mostrarToast('✅ Bug ' + bugId + ' creado exitosamente', 'success');
+        
+        // Limpiar formulario manualmente
+document.getElementById('bugTitulo').value = '';
+document.getElementById('bugDescripcion').value = '';
+window.evidenciasBugTemporales = [];
+        
+        // Cerrar modal de bugs
+        cerrarModalBug();
+
+        // Marcar bug creado recientemente para el caso (para permitir guardar No_OK sin revalidar)
+        try {
+          window.__ultimoBugCreado = { bugId: bugId, casoId: (casoRelacionado || null), at: Date.now() };
+        } catch(e) {}
+
+        // Si el modal de ejecución está abierto para este caso, preparar No_OK y guardar automáticamente
+        try {
+          if (window.casoEnEjecucion && casoRelacionado && window.casoEnEjecucion.ID === casoRelacionado) {
+            // Setear resultado en UI
+            const resInput = document.getElementById('resultadoEjecucion');
+            if (resInput) resInput.value = 'No_OK';
+            if (typeof seleccionarResultado === 'function') seleccionarResultado('No_OK');
+
+            // Agregar referencia al bug en observaciones (si no está)
+            const obs = document.getElementById('ejecucionComentarios');
+            if (obs && obs.value.indexOf(bugId) === -1) {
+              obs.value = (obs.value ? obs.value + '\n' : '') + 'Bug reportado: ' + bugId;
+            }
+
+            // Guardar ejecución automáticamente
+            if (typeof guardarEjecucion === 'function') {
+              setTimeout(function(){ guardarEjecucion(); }, 400);
+            }
+          }
+        } catch(e) { console.warn('No se pudo sincronizar con modal de ejecución:', e); }
+        
+        // Si estábamos en modal de ejecución, actualizar estado
+ if (casoRelacionado) {
+  mostrarToast('Bug ' + bugId + ' vinculado al caso ' + casoRelacionado, 'info', 2000);
+}
+        
+        // Si hay tabla de casos visible, recargarla
+        if (typeof cargarTodosLosCasos === 'function') {
+          setTimeout(() => {
+            cargarTodosLosCasos();
+          }, 500);
+        }
+        
+      } else {
+        mostrarToast('Error: ' + response.mensaje, 'error');
+      }
+    })
+    .withFailureHandler(function(error) {
+      ocultarSpinner();
+      console.error('💥 Error llamando al backend:', error);
+      mostrarToast('Error al crear bug: ' + error.message, 'error');
+    })
+    .crearBug(datosBug);
+}
+  // ===================================================================
+  // EXPORTAR AL SCOPE GLOBAL
+  // ===================================================================
+  
+  window.abrirModalCrearBug = abrirModalCrearBug;
+  window.cerrarModalBug = cerrarModalBug;
+  window.preLlenarDesdeCaso = preLlenarDesdeCaso;
+  window.handleDragOverBug = handleDragOverBug;
+  window.handleDragLeaveBug = handleDragLeaveBug;
+  window.handleDropBug = handleDropBug;
+  window.handleFileSelectBug = handleFileSelectBug;
+  window.procesarArchivosBug = procesarArchivosBug;
+  window.renderizarListaEvidenciasBug = renderizarListaEvidenciasBug;
+  window.eliminarEvidenciaBug = eliminarEvidenciaBug;
+  window.guardarBug = guardarBug;
+  
+  console.log('✅ Frontend_Components_Bugs.html cargado correctamente');
+</script>

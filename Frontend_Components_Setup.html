@@ -5,104 +5,185 @@
      ═══════════════════════════════════════════════════════════════════════════ -->
 
 <style>
-  /* ─────────────────────────────────────────────────────────────────────────── */
-  /* ESTILOS ESPECÍFICOS DE SETUP (no duplicados de Styles_Base)                */
-  /* ─────────────────────────────────────────────────────────────────────────── */
-  
-  .setup-options {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-    margin-top: 2rem;
-  }
-  
-  .option-card {
-    background: white;
-    border: 2px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: 2rem;
-    cursor: pointer;
-    transition: all var(--transition-base);
-    text-align: center;
-  }
-  
-  .option-card:hover {
-    border-color: var(--accent-color);
-    transform: translateY(-4px);
-    box-shadow: 0 8px 16px rgba(59, 130, 246, 0.2);
-  }
-  
-  .option-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-  }
-  
-  .option-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-  }
-  
-  .option-description {
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-  }
-  
-  .config-status {
-    background: #fef3c7;
-    border-left: 4px solid var(--warning-color);
-    padding: 1rem 1.5rem;
-    border-radius: var(--radius-md);
-    margin: 1.5rem 0;
-  }
-  
-  .config-status.success {
-    background: #dcfce7;
-    border-left-color: var(--success-color);
-  }
-  
-  .config-status.error {
-    background: #fee2e2;
-    border-left-color: var(--error-color);
-  }
-  
-  .checklist {
-    list-style: none;
-    padding: 0;
-    margin: 1rem 0;
-  }
-  
-  .checklist li {
-    padding: 0.5rem 0;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-  
-  .checklist li::before {
-    content: '⏳';
-    font-size: 1.25rem;
-  }
-  
-  .checklist li.done::before {
-    content: '✅';
-  }
-  
-  .progress-bar {
-    width: 100%;
-    height: 8px;
-    background: var(--border-color);
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-    margin: 1rem 0;
-  }
-  
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent-color) 0%, var(--accent-hover) 100%);
-    transition: width var(--transition-base);
-  }
+    /* ─────────────────────────────────────────────────────────────────────────── */
+    /* ESTILOS ESPECÍFICOS DE SETUP (no duplicados de Styles_Base)                */
+    /* ─────────────────────────────────────────────────────────────────────────── */
+
+    .setup-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .option-card {
+        background: white;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        cursor: pointer;
+        transition: all var(--transition-base);
+        text-align: center;
+    }
+
+    .option-card:hover {
+        border-color: var(--accent-color);
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(59, 130, 246, 0.2);
+    }
+
+    .option-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .option-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .option-description {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
+    .config-status {
+        background: #fef3c7;
+        border-left: 4px solid var(--warning-color);
+        padding: 1rem 1.5rem;
+        border-radius: var(--radius-md);
+        margin: 1.5rem 0;
+    }
+
+    .config-status.success {
+        background: #dcfce7;
+        border-left-color: var(--success-color);
+    }
+
+    .config-status.error {
+        background: #fee2e2;
+        border-left-color: var(--error-color);
+    }
+
+    .checklist {
+        list-style: none;
+        padding: 0;
+        margin: 1rem 0;
+    }
+
+    .checklist li {
+        padding: 0.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .checklist li::before {
+        content: "⏳";
+        font-size: 1.25rem;
+    }
+
+    .checklist li.done::before {
+        content: "✅";
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: var(--border-color);
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+        margin: 1rem 0;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            var(--accent-color) 0%,
+            var(--accent-hover) 100%
+        );
+        transition: width var(--transition-base);
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────── */
+    /* ESTILOS DE CONFIGURACIÓN TRELLO (feature/bugs-trello)                       */
+    /* ─────────────────────────────────────────────────────────────────────────── */
+
+    .trello-config-section {
+        background: white;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        margin-top: 2rem;
+    }
+
+    .trello-config-section.connected {
+        border-color: var(--success-color);
+        background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+    }
+
+    .trello-status {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-radius: var(--radius-md);
+        margin-bottom: 1.5rem;
+    }
+
+    .trello-status.not-connected {
+        background: #fef3c7;
+        border: 1px solid #fbbf24;
+    }
+
+    .trello-status.connected {
+        background: #dcfce7;
+        border: 1px solid #22c55e;
+    }
+
+    .trello-status.error {
+        background: #fee2e2;
+        border: 1px solid #ef4444;
+    }
+
+    .trello-help-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--accent-color);
+        text-decoration: none;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    .trello-help-link:hover {
+        text-decoration: underline;
+    }
+
+    .config-step {
+        background: var(--bg-secondary);
+        border-left: 4px solid var(--accent-color);
+        padding: 1rem 1.5rem;
+        border-radius: var(--radius-md);
+        margin-bottom: 1rem;
+    }
+
+    .config-step-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        background: var(--accent-color);
+        color: white;
+        border-radius: 50%;
+        font-weight: 700;
+        font-size: 0.9rem;
+        margin-right: 0.75rem;
+    }
 </style>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
@@ -110,79 +191,337 @@
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 
 <div id="setupScreen" class="hidden">
-  <div class="card" style="max-width: 900px; margin: 2rem auto;">
-    <div style="text-align: center; margin-bottom: 2rem;">
-      <div style="font-size: 3rem; margin-bottom: 1rem;">⚙️</div>
-      <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">
-        Configurar Workspace
-      </h2>
-      <p style="color: var(--text-secondary); font-size: 1.1rem;">
-        Tu Google Sheet necesita configuración inicial
-      </p>
-    </div>
-
-    <!-- Estado de configuración -->
-    <div id="configStatus" class="config-status">
-      <div style="display: flex; align-items: center; gap: 1rem;">
-        <div style="font-size: 2rem;">⚠️</div>
-        <div>
-          <strong>Configuración necesaria</strong>
-          <p id="configMessage" style="margin: 0.5rem 0 0 0; color: var(--text-secondary);">
-            El Sheet no tiene la estructura necesaria para funcionar
-          </p>
+    <div class="card" style="max-width: 900px; margin: 2rem auto">
+        <div style="text-align: center; margin-bottom: 2rem">
+            <div style="font-size: 3rem; margin-bottom: 1rem">⚙️</div>
+            <h2
+                style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem"
+            >
+                Configurar Workspace
+            </h2>
+            <p style="color: var(--text-secondary); font-size: 1.1rem">
+                Tu Google Sheet necesita configuración inicial
+            </p>
         </div>
-      </div>
+
+        <!-- Estado de configuración -->
+        <div id="configStatus" class="config-status">
+            <div style="display: flex; align-items: center; gap: 1rem">
+                <div style="font-size: 2rem">⚠️</div>
+                <div>
+                    <strong>Configuración necesaria</strong>
+                    <p
+                        id="configMessage"
+                        style="
+                            margin: 0.5rem 0 0 0;
+                            color: var(--text-secondary);
+                        "
+                    >
+                        El Sheet no tiene la estructura necesaria para funcionar
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Checklist de lo que falta -->
+        <div id="checklistContainer" style="display: none">
+            <h3
+                style="
+                    font-size: 1.25rem;
+                    font-weight: 600;
+                    margin: 1.5rem 0 1rem;
+                "
+            >
+                📋 Lo que se creará:
+            </h3>
+            <ul class="checklist" id="configChecklist">
+                <li>Hoja de Configuración (Config)</li>
+                <li>Hoja de Casos de Prueba</li>
+                <li>Hoja de Bugs</li>
+                <li>Hoja de Ejecuciones</li>
+                <li>Hoja de Regresiones</li>
+            </ul>
+        </div>
+
+        <!-- Botones de acción -->
+        <div style="display: flex; gap: 1rem; margin-top: 2rem">
+            <button
+                class="btn btn-primary"
+                style="flex: 1"
+                onclick="autoConfigurarSheet()"
+                id="btnAutoConfigurar"
+            >
+                <span>⚡</span>
+                <span>Auto-Configurar Sheet</span>
+            </button>
+
+            <button
+                class="btn btn-secondary"
+                style="flex: 1"
+                onclick="volverAlDashboard()"
+            >
+                <span>←</span>
+                <span>Volver</span>
+            </button>
+        </div>
+
+        <!-- Progreso de configuración -->
+        <div id="progressContainer" style="display: none; margin-top: 2rem">
+            <h3
+                style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem"
+            >
+                Configurando workspace...
+            </h3>
+            <div class="progress-bar">
+                <div
+                    id="progressFill"
+                    class="progress-fill"
+                    style="width: 0%"
+                ></div>
+            </div>
+            <p
+                id="progressMessage"
+                style="
+                    text-align: center;
+                    color: var(--text-secondary);
+                    margin-top: 0.5rem;
+                "
+            >
+                Iniciando...
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!-- SECCIÓN DE CONFIGURACIÓN DE TRELLO (feature/bugs-trello)                   -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+<div id="trelloConfigSection" class="trello-config-section hidden">
+    <div style="text-align: center; margin-bottom: 2rem">
+        <div style="font-size: 3rem; margin-bottom: 1rem">🔗</div>
+        <h2 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem">
+            Conectar con Trello
+        </h2>
+        <p style="color: var(--text-secondary); font-size: 1rem">
+            Los bugs se crearán automáticamente como tarjetas en Trello
+        </p>
     </div>
 
-    <!-- Checklist de lo que falta -->
-    <div id="checklistContainer" style="display: none;">
-      <h3 style="font-size: 1.25rem; font-weight: 600; margin: 1.5rem 0 1rem;">
-        📋 Lo que se creará:
-      </h3>
-      <ul class="checklist" id="configChecklist">
-        <li>Hoja de Configuración (Config)</li>
-        <li>Hoja de Casos de Prueba</li>
-        <li>Hoja de Bugs</li>
-        <li>Hoja de Ejecuciones</li>
-        <li>Hoja de Regresiones</li>
-      </ul>
+    <!-- Estado de conexión -->
+    <div id="trelloStatus" class="trello-status not-connected">
+        <div style="font-size: 2rem">⚠️</div>
+        <div style="flex: 1">
+            <strong id="trelloStatusTitle">Trello no configurado</strong>
+            <p
+                id="trelloStatusMessage"
+                style="
+                    margin: 0.25rem 0 0 0;
+                    color: var(--text-secondary);
+                    font-size: 0.9rem;
+                "
+            >
+                Configura tus credenciales para sincronizar bugs con Trello
+            </p>
+        </div>
+    </div>
+
+    <!-- Formulario de configuración -->
+    <div id="trelloConfigForm">
+        <!-- Paso 1: Credenciales -->
+        <div class="config-step">
+            <div style="display: flex; align-items: start; margin-bottom: 1rem">
+                <span class="config-step-number">1</span>
+                <div style="flex: 1">
+                    <strong style="font-size: 1.1rem"
+                        >Obtener credenciales de Trello</strong
+                    >
+                    <p
+                        style="
+                            color: var(--text-secondary);
+                            margin: 0.5rem 0 0 0;
+                            font-size: 0.9rem;
+                        "
+                    >
+                        Necesitas una API Key y un Token de Trello
+                    </p>
+                    <a
+                        href="https://trello.com/power-ups/admin"
+                        target="_blank"
+                        class="trello-help-link"
+                    >
+                        📖 Ir a Trello Power-Ups (se abre en nueva pestaña)
+                    </a>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required"
+                    >API Key (32 caracteres)</label
+                >
+                <input
+                    type="text"
+                    id="trelloApiKey"
+                    class="form-input"
+                    placeholder="Ej: 1234567890abcdef1234567890abcdef"
+                    maxlength="32"
+                    style="font-family: monospace"
+                />
+                <p class="form-help">
+                    💡 En Trello Power-Ups, copia tu "API Key"
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">Token (64 caracteres)</label>
+                <input
+                    type="text"
+                    id="trelloToken"
+                    class="form-input"
+                    placeholder="Ej: 1234567890abcdef..."
+                    maxlength="64"
+                    style="font-family: monospace"
+                />
+                <p class="form-help">
+                    💡 En la misma página, genera un "Token" con permisos de
+                    lectura/escritura
+                </p>
+            </div>
+
+            <button
+                type="button"
+                class="btn btn-primary"
+                onclick="validarYGuardarCredencialesTrello()"
+                id="btnValidarCredenciales"
+            >
+                <span>🔐</span>
+                <span>Validar Credenciales</span>
+            </button>
+        </div>
+
+        <!-- Paso 2: Seleccionar Board y Lista (oculto inicialmente) -->
+        <div id="trelloBoardListStep" class="config-step hidden">
+            <div style="display: flex; align-items: start; margin-bottom: 1rem">
+                <span class="config-step-number">2</span>
+                <div style="flex: 1">
+                    <strong style="font-size: 1.1rem"
+                        >Seleccionar tablero y lista</strong
+                    >
+                    <p
+                        style="
+                            color: var(--text-secondary);
+                            margin: 0.5rem 0 0 0;
+                            font-size: 0.9rem;
+                        "
+                    >
+                        Elige dónde se crearán las tarjetas de bugs
+                    </p>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">Tablero de Trello</label>
+                <select
+                    id="trelloBoardSelect"
+                    class="form-select"
+                    onchange="cargarListasDeTrello()"
+                >
+                    <option value="">Cargando tableros...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required"
+                    >Lista de destino para bugs</label
+                >
+                <select id="trelloListSelect" class="form-select">
+                    <option value="">Selecciona primero un tablero</option>
+                </select>
+            </div>
+
+            <button
+                type="button"
+                class="btn btn-primary"
+                onclick="guardarConfiguracionCompletaTrello()"
+                id="btnGuardarConfigTrello"
+            >
+                <span>💾</span>
+                <span>Guardar Configuración</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Info de configuración guardada -->
+    <div
+        id="trelloConfigSummary"
+        class="hidden"
+        style="
+            background: #eff6ff;
+            border: 1px solid #3b82f6;
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        "
+    >
+        <div style="display: flex; align-items: start; gap: 1rem">
+            <div style="font-size: 2rem">✅</div>
+            <div style="flex: 1">
+                <strong
+                    style="
+                        color: #1e40af;
+                        display: block;
+                        margin-bottom: 0.5rem;
+                    "
+                    >Trello configurado correctamente</strong
+                >
+                <div
+                    style="color: #1e40af; font-size: 0.9rem; line-height: 1.6"
+                >
+                    <div>
+                        <strong>Tablero:</strong>
+                        <span id="summaryBoardName">-</span>
+                    </div>
+                    <div>
+                        <strong>Lista:</strong>
+                        <span id="summaryListName">-</span>
+                    </div>
+                    <div
+                        style="
+                            margin-top: 0.5rem;
+                            font-size: 0.85rem;
+                            opacity: 0.8;
+                        "
+                    >
+                        Los bugs se crearán automáticamente en esta lista
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Botones de acción -->
-    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-      <button 
-        class="btn btn-primary" 
-        style="flex: 1;" 
-        onclick="autoConfigurarSheet()"
-        id="btnAutoConfigurar"
-      >
-        <span>⚡</span>
-        <span>Auto-Configurar Sheet</span>
-      </button>
-      
-      <button 
-        class="btn btn-secondary" 
-        style="flex: 1;" 
-        onclick="volverAlDashboard()"
-      >
-        <span>←</span>
-        <span>Volver</span>
-      </button>
-    </div>
+    <div style="display: flex; gap: 1rem; margin-top: 2rem">
+        <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="desconectarTrello()"
+            id="btnDesconectarTrello"
+            style="display: none"
+        >
+            <span>🔓</span>
+            <span>Desconectar</span>
+        </button>
 
-    <!-- Progreso de configuración -->
-    <div id="progressContainer" style="display: none; margin-top: 2rem;">
-      <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">
-        Configurando workspace...
-      </h3>
-      <div class="progress-bar">
-        <div id="progressFill" class="progress-fill" style="width: 0%"></div>
-      </div>
-      <p id="progressMessage" style="text-align: center; color: var(--text-secondary); margin-top: 0.5rem;">
-        Iniciando...
-      </p>
+        <button
+            type="button"
+            class="btn btn-secondary"
+            style="flex: 1"
+            onclick="cerrarConfigTrello()"
+        >
+            <span>✕</span>
+            <span>Cerrar</span>
+        </button>
     </div>
-  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
@@ -190,50 +529,82 @@
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 
 <div id="modalNuevoWorkspace" class="modal-overlay">
-  <div class="modal" style="max-width: 600px;">
-    <div class="modal-header">
-      <h3 class="modal-title">🆕 Crear Nuevo Workspace</h3>
-      <button class="modal-close" onclick="cerrarModalNuevoWorkspace()">✕</button>
-    </div>
-
-    <div class="modal-body">
-      <form id="formNuevoWorkspace" onsubmit="crearNuevoWorkspace(); return false;">
-        <div class="form-group">
-          <label class="form-label required">Nombre del Workspace</label>
-          <input 
-            type="text" 
-            id="nombreNuevoWorkspace" 
-            class="form-input" 
-            required 
-            placeholder="Ej: QA Proyecto X"
-            minlength="3"
-          >
-          <p class="form-help">
-            Se creará un nuevo Google Sheet con este nombre
-          </p>
+    <div class="modal" style="max-width: 600px">
+        <div class="modal-header">
+            <h3 class="modal-title">🆕 Crear Nuevo Workspace</h3>
+            <button class="modal-close" onclick="cerrarModalNuevoWorkspace()">
+                ✕
+            </button>
         </div>
 
-        <div style="background: var(--bg-secondary); padding: 1rem; border-radius: var(--radius-md); margin: 1.5rem 0;">
-          <strong style="display: block; margin-bottom: 0.5rem;">✨ Se creará automáticamente:</strong>
-          <ul style="margin: 0.5rem 0 0 1.5rem; color: var(--text-secondary);">
-            <li>Google Sheet nuevo</li>
-            <li>Todas las hojas necesarias (Config, Casos, Bugs, etc.)</li>
-            <li>Headers y estructura completa</li>
-            <li>Configuración lista para usar</li>
-          </ul>
-        </div>
-      </form>
-    </div>
+        <div class="modal-body">
+            <form
+                id="formNuevoWorkspace"
+                onsubmit="crearNuevoWorkspace(); return false;"
+            >
+                <div class="form-group">
+                    <label class="form-label required"
+                        >Nombre del Workspace</label
+                    >
+                    <input
+                        type="text"
+                        id="nombreNuevoWorkspace"
+                        class="form-input"
+                        required
+                        placeholder="Ej: QA Proyecto X"
+                        minlength="3"
+                    />
+                    <p class="form-help">
+                        Se creará un nuevo Google Sheet con este nombre
+                    </p>
+                </div>
 
-    <div class="modal-footer">
-      <button type="submit" form="formNuevoWorkspace" class="btn btn-primary">
-        🚀 Crear Workspace
-      </button>
-      <button type="button" class="btn btn-secondary" onclick="cerrarModalNuevoWorkspace()">
-        Cancelar
-      </button>
+                <div
+                    style="
+                        background: var(--bg-secondary);
+                        padding: 1rem;
+                        border-radius: var(--radius-md);
+                        margin: 1.5rem 0;
+                    "
+                >
+                    <strong style="display: block; margin-bottom: 0.5rem"
+                        >✨ Se creará automáticamente:</strong
+                    >
+                    <ul
+                        style="
+                            margin: 0.5rem 0 0 1.5rem;
+                            color: var(--text-secondary);
+                        "
+                    >
+                        <li>Google Sheet nuevo</li>
+                        <li>
+                            Todas las hojas necesarias (Config, Casos, Bugs,
+                            etc.)
+                        </li>
+                        <li>Headers y estructura completa</li>
+                        <li>Configuración lista para usar</li>
+                    </ul>
+                </div>
+            </form>
+        </div>
+
+        <div class="modal-footer">
+            <button
+                type="submit"
+                form="formNuevoWorkspace"
+                class="btn btn-primary"
+            >
+                🚀 Crear Workspace
+            </button>
+            <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="cerrarModalNuevoWorkspace()"
+            >
+                Cancelar
+            </button>
+        </div>
     </div>
-  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
@@ -241,138 +612,554 @@
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 
 <script>
-  // ===================================================================
-  // FUNCIONES DE CONFIGURACIÓN DE WORKSPACE
-  // ===================================================================
+    // ===================================================================
+    // FUNCIONES DE CONFIGURACIÓN DE WORKSPACE
+    // ===================================================================
 
-  function mostrarPantallaSetup(sheetUrl, infoVerificacion) {
-    currentSheetUrl = sheetUrl;
-    
-    document.getElementById('welcomeScreen').classList.add('hidden');
-    document.getElementById('setupScreen').classList.remove('hidden');
-    
-    const configStatus = document.getElementById('configStatus');
-    const configMessage = document.getElementById('configMessage');
-    
-    if (infoVerificacion.hojasFaltantes && infoVerificacion.hojasFaltantes.length > 0) {
-      configMessage.textContent = 'Faltan hojas: ' + infoVerificacion.hojasFaltantes.join(', ');
-      document.getElementById('checklistContainer').style.display = 'block';
-    } else {
-      configMessage.textContent = infoVerificacion.mensaje || 'El Sheet necesita configuración';
-    }
-  }
+    function mostrarPantallaSetup(sheetUrl, infoVerificacion) {
+        currentSheetUrl = sheetUrl;
 
-  function autoConfigurarSheet() {
-    if (!currentSheetUrl) {
-      mostrarToast('No hay Sheet seleccionado', 'error');
-      return;
-    }
-    
-    const btn = document.getElementById('btnAutoConfigurar');
-    btn.disabled = true;
-    btn.textContent = 'Configurando...';
-    
-    document.getElementById('progressContainer').style.display = 'block';
-    actualizarProgreso(20, 'Verificando acceso al Sheet...');
-    
-    google.script.run
-      .withSuccessHandler(function(response) {
-        if (response.success) {
-          actualizarProgreso(100, 'Configuración completada!');
-          
-          setTimeout(function() {
-            mostrarToast('Workspace configurado exitosamente!', 'success');
-            
-            const configStatus = document.getElementById('configStatus');
-            configStatus.className = 'config-status success';
-            configStatus.innerHTML = '<div style="display: flex; align-items: center; gap: 1rem;"><div style="font-size: 2rem;">✅</div><div><strong>Configuración completada</strong><p style="margin: 0.5rem 0 0 0; color: #166534;">Hojas creadas: ' + response.hojasCreadas.join(', ') + '</p></div></div>';
-            
-            const checklist = document.getElementById('configChecklist');
-            const items = checklist.getElementsByTagName('li');
-            for (let i = 0; i < items.length; i++) {
-              items[i].classList.add('done');
-            }
-            
-            btn.textContent = 'Ir a Casos';
-            btn.disabled = false;
-            btn.onclick = function() {
-              mostrarPantallaCasos(currentSheetUrl);
-            };
-            
-          }, 1000);
-          
+        document.getElementById("welcomeScreen").classList.add("hidden");
+        document.getElementById("setupScreen").classList.remove("hidden");
+
+        const configStatus = document.getElementById("configStatus");
+        const configMessage = document.getElementById("configMessage");
+
+        if (
+            infoVerificacion.hojasFaltantes &&
+            infoVerificacion.hojasFaltantes.length > 0
+        ) {
+            configMessage.textContent =
+                "Faltan hojas: " + infoVerificacion.hojasFaltantes.join(", ");
+            document.getElementById("checklistContainer").style.display =
+                "block";
         } else {
-          actualizarProgreso(0, 'Error en configuración');
-          mostrarToast('Error: ' + response.error, 'error');
-          btn.disabled = false;
-          btn.innerHTML = '<span>⚡</span><span>Reintentar</span>';
+            configMessage.textContent =
+                infoVerificacion.mensaje || "El Sheet necesita configuración";
         }
-      })
-      .withFailureHandler(function(error) {
-        actualizarProgreso(0, 'Error de conexión');
-        mostrarToast('Error: ' + error.message, 'error');
-        btn.disabled = false;
-        btn.innerHTML = '<span>⚡</span><span>Reintentar</span>';
-      })
-      .configurarWorkspace(currentSheetUrl);
-  }
-
-  function actualizarProgreso(porcentaje, mensaje) {
-    const progressFill = document.getElementById('progressFill');
-    const progressMessage = document.getElementById('progressMessage');
-    
-    progressFill.style.width = porcentaje + '%';
-    progressMessage.textContent = mensaje;
-  }
-
-  function abrirModalNuevoWorkspace() {
-    abrirModal('modalNuevoWorkspace');
-    document.getElementById('nombreNuevoWorkspace').value = '';
-    document.getElementById('nombreNuevoWorkspace').focus();
-  }
-
-  function cerrarModalNuevoWorkspace() {
-    cerrarModal('modalNuevoWorkspace');
-  }
-
-  function crearNuevoWorkspace() {
-    const nombre = document.getElementById('nombreNuevoWorkspace').value.trim();
-    
-    if (!nombre) {
-      mostrarToast('Ingresa un nombre para el workspace', 'warning');
-      return;
     }
-    
-    cerrarModalNuevoWorkspace();
-    
-    mostrarSpinner();
-    
-    google.script.run
-      .withSuccessHandler(function(response) {
-        ocultarSpinner();
-        
-        if (response.success) {
-          mostrarToast('✅ Workspace creado: ' + response.nombreSheet, 'success');
-          
-          document.getElementById('sheetUrlInput').value = response.sheetUrl;
-          currentSheetUrl = response.sheetUrl;
-          
-          setTimeout(function() {
-            mostrarPantallaCasos(response.sheetUrl);
-          }, 1500);
-          
-        } else {
-          mostrarToast('Error: ' + response.error, 'error');
-        }
-      })
-      .withFailureHandler(function(error) {
-        ocultarSpinner();
-        mostrarToast('Error al crear workspace: ' + error.message, 'error');
-      })
-      .crearNuevoWorkspace(nombre);
-  }
 
-  function iniciarCreacionWorkspace() {
-    abrirModalNuevoWorkspace();
-  }
+    function autoConfigurarSheet() {
+        if (!currentSheetUrl) {
+            mostrarToast("No hay Sheet seleccionado", "error");
+            return;
+        }
+
+        const btn = document.getElementById("btnAutoConfigurar");
+        btn.disabled = true;
+        btn.textContent = "Configurando...";
+
+        document.getElementById("progressContainer").style.display = "block";
+        actualizarProgreso(20, "Verificando acceso al Sheet...");
+
+        google.script.run
+            .withSuccessHandler(function (response) {
+                if (response.success) {
+                    actualizarProgreso(100, "Configuración completada!");
+
+                    setTimeout(function () {
+                        mostrarToast(
+                            "Workspace configurado exitosamente!",
+                            "success"
+                        );
+
+                        const configStatus =
+                            document.getElementById("configStatus");
+                        configStatus.className = "config-status success";
+                        configStatus.innerHTML =
+                            '<div style="display: flex; align-items: center; gap: 1rem;"><div style="font-size: 2rem;">✅</div><div><strong>Configuración completada</strong><p style="margin: 0.5rem 0 0 0; color: #166534;">Hojas creadas: ' +
+                            response.hojasCreadas.join(", ") +
+                            "</p></div></div>";
+
+                        const checklist =
+                            document.getElementById("configChecklist");
+                        const items = checklist.getElementsByTagName("li");
+                        for (let i = 0; i < items.length; i++) {
+                            items[i].classList.add("done");
+                        }
+
+                        btn.textContent = "Ir a Casos";
+                        btn.disabled = false;
+                        btn.onclick = function () {
+                            mostrarPantallaCasos(currentSheetUrl);
+                        };
+                    }, 1000);
+                } else {
+                    actualizarProgreso(0, "Error en configuración");
+                    mostrarToast("Error: " + response.error, "error");
+                    btn.disabled = false;
+                    btn.innerHTML = "<span>⚡</span><span>Reintentar</span>";
+                }
+            })
+            .withFailureHandler(function (error) {
+                actualizarProgreso(0, "Error de conexión");
+                mostrarToast("Error: " + error.message, "error");
+                btn.disabled = false;
+                btn.innerHTML = "<span>⚡</span><span>Reintentar</span>";
+            })
+            .configurarWorkspace(currentSheetUrl);
+    }
+
+    function actualizarProgreso(porcentaje, mensaje) {
+        const progressFill = document.getElementById("progressFill");
+        const progressMessage = document.getElementById("progressMessage");
+
+        progressFill.style.width = porcentaje + "%";
+        progressMessage.textContent = mensaje;
+    }
+
+    function abrirModalNuevoWorkspace() {
+        abrirModal("modalNuevoWorkspace");
+        document.getElementById("nombreNuevoWorkspace").value = "";
+        document.getElementById("nombreNuevoWorkspace").focus();
+    }
+
+    function cerrarModalNuevoWorkspace() {
+        cerrarModal("modalNuevoWorkspace");
+    }
+
+    function crearNuevoWorkspace() {
+        const nombre = document
+            .getElementById("nombreNuevoWorkspace")
+            .value.trim();
+
+        if (!nombre) {
+            mostrarToast("Ingresa un nombre para el workspace", "warning");
+            return;
+        }
+
+        cerrarModalNuevoWorkspace();
+
+        mostrarSpinner();
+
+        google.script.run
+            .withSuccessHandler(function (response) {
+                ocultarSpinner();
+
+                if (response.success) {
+                    mostrarToast(
+                        "✅ Workspace creado: " + response.nombreSheet,
+                        "success"
+                    );
+
+                    document.getElementById("sheetUrlInput").value =
+                        response.sheetUrl;
+                    currentSheetUrl = response.sheetUrl;
+
+                    setTimeout(function () {
+                        mostrarPantallaCasos(response.sheetUrl);
+                    }, 1500);
+                } else {
+                    mostrarToast("Error: " + response.error, "error");
+                }
+            })
+            .withFailureHandler(function (error) {
+                ocultarSpinner();
+                mostrarToast(
+                    "Error al crear workspace: " + error.message,
+                    "error"
+                );
+            })
+            .crearNuevoWorkspace(nombre);
+    }
+
+    function iniciarCreacionWorkspace() {
+        abrirModalNuevoWorkspace();
+    }
+
+    // ===================================================================
+    // FUNCIONES DE CONFIGURACIÓN DE TRELLO (feature/bugs-trello)
+    // ===================================================================
+
+    /**
+     * Abre la sección de configuración de Trello
+     */
+    function abrirConfiguracionTrello() {
+        console.log("🔗 Abriendo configuración de Trello...");
+
+        // Ocultar otras pantallas
+        document.getElementById("welcomeScreen").classList.add("hidden");
+        document.getElementById("setupScreen").classList.add("hidden");
+        document.getElementById("casosScreen").classList.add("hidden");
+
+        // Mostrar sección de Trello
+        const trelloSection = document.getElementById("trelloConfigSection");
+        trelloSection.classList.remove("hidden");
+
+        // Cargar configuración actual si existe
+        cargarConfiguracionTrelloActual();
+    }
+
+    /**
+     * Cierra la configuración de Trello y vuelve a casos
+     */
+    function cerrarConfigTrello() {
+        document.getElementById("trelloConfigSection").classList.add("hidden");
+
+        if (currentSheetUrl) {
+            mostrarPantallaCasos(currentSheetUrl);
+        } else {
+            document.getElementById("welcomeScreen").classList.remove("hidden");
+        }
+    }
+
+    /**
+     * Carga la configuración actual de Trello (si existe)
+     */
+    function cargarConfiguracionTrelloActual() {
+        if (!currentSheetUrl) {
+            mostrarToast("No hay Sheet conectado", "error");
+            return;
+        }
+
+        mostrarSpinner();
+
+        google.script.run
+            .withSuccessHandler(function (config) {
+                ocultarSpinner();
+
+                console.log("📋 Config Trello actual:", config);
+
+                if (config.configurado) {
+                    // Ya está configurado
+                    mostrarTrelloConfigurado(config);
+                } else {
+                    // No configurado, mostrar formulario vacío
+                    mostrarFormularioTrelloVacio();
+                }
+            })
+            .withFailureHandler(function (error) {
+                ocultarSpinner();
+                console.error("Error cargando config Trello:", error);
+                mostrarToast(
+                    "Error al cargar configuración: " + error.message,
+                    "error"
+                );
+            })
+            .obtenerConfigTrello(currentSheetUrl);
+    }
+
+    /**
+     * Muestra el estado cuando Trello ya está configurado
+     */
+    function mostrarTrelloConfigurado(config) {
+        const status = document.getElementById("trelloStatus");
+        const statusTitle = document.getElementById("trelloStatusTitle");
+        const statusMessage = document.getElementById("trelloStatusMessage");
+        const configForm = document.getElementById("trelloConfigForm");
+        const configSummary = document.getElementById("trelloConfigSummary");
+        const btnDesconectar = document.getElementById("btnDesconectarTrello");
+
+        // Actualizar estado
+        status.className = "trello-status connected";
+        status.querySelector("div").textContent = "✅";
+        statusTitle.textContent = "Trello conectado";
+        statusMessage.textContent = "Los bugs se sincronizarán automáticamente";
+
+        // Ocultar formulario
+        configForm.classList.add("hidden");
+
+        // Mostrar resumen
+        configSummary.classList.remove("hidden");
+        document.getElementById("summaryBoardName").textContent =
+            config.boardName || config.boardId;
+        document.getElementById("summaryListName").textContent =
+            config.listName || config.listId;
+
+        // Mostrar botón desconectar
+        btnDesconectar.style.display = "block";
+
+        mostrarToast("Trello ya está configurado", "success");
+    }
+
+    /**
+     * Muestra el formulario vacío para nueva configuración
+     */
+    function mostrarFormularioTrelloVacio() {
+        const status = document.getElementById("trelloStatus");
+        const configForm = document.getElementById("trelloConfigForm");
+        const configSummary = document.getElementById("trelloConfigSummary");
+        const btnDesconectar = document.getElementById("btnDesconectarTrello");
+
+        status.className = "trello-status not-connected";
+        configForm.classList.remove("hidden");
+        configSummary.classList.add("hidden");
+        btnDesconectar.style.display = "none";
+
+        // Limpiar campos
+        document.getElementById("trelloApiKey").value = "";
+        document.getElementById("trelloToken").value = "";
+
+        // Ocultar paso 2
+        document.getElementById("trelloBoardListStep").classList.add("hidden");
+    }
+
+    /**
+     * Valida y guarda las credenciales de Trello
+     */
+    function validarYGuardarCredencialesTrello() {
+        const apiKey = document.getElementById("trelloApiKey").value.trim();
+        const token = document.getElementById("trelloToken").value.trim();
+
+        // Validaciones básicas
+        if (!apiKey || apiKey.length !== 32) {
+            mostrarToast("La API Key debe tener 32 caracteres", "warning");
+            return;
+        }
+
+        if (!token || token.length !== 64) {
+            mostrarToast("El Token debe tener 64 caracteres", "warning");
+            return;
+        }
+
+        const btn = document.getElementById("btnValidarCredenciales");
+        btn.disabled = true;
+        btn.textContent = "Validando...";
+
+        mostrarSpinner();
+
+        google.script.run
+            .withSuccessHandler(function (response) {
+                ocultarSpinner();
+                btn.disabled = false;
+                btn.innerHTML =
+                    "<span>🔐</span><span>Validar Credenciales</span>";
+
+                if (response.success) {
+                    mostrarToast(
+                        "✅ Credenciales válidas. Usuario: " +
+                            response.data.usuario,
+                        "success"
+                    );
+
+                    // Mostrar paso 2
+                    document
+                        .getElementById("trelloBoardListStep")
+                        .classList.remove("hidden");
+
+                    // Cargar boards
+                    cargarBoardsDeTrello(apiKey, token);
+                } else {
+                    mostrarToast("❌ " + response.mensaje, "error");
+                }
+            })
+            .withFailureHandler(function (error) {
+                ocultarSpinner();
+                btn.disabled = false;
+                btn.innerHTML =
+                    "<span>🔐</span><span>Validar Credenciales</span>";
+                mostrarToast("Error: " + error.message, "error");
+            })
+            .validarCredencialesTrello(apiKey, token);
+    }
+
+    /**
+     * Carga los boards disponibles en Trello
+     */
+    function cargarBoardsDeTrello(apiKey, token) {
+        const selectBoard = document.getElementById("trelloBoardSelect");
+        selectBoard.innerHTML =
+            '<option value="">Cargando tableros...</option>';
+        selectBoard.disabled = true;
+
+        google.script.run
+            .withSuccessHandler(function (response) {
+                selectBoard.disabled = false;
+
+                if (response.success && response.data.length > 0) {
+                    selectBoard.innerHTML =
+                        '<option value="">Selecciona un tablero</option>';
+
+                    response.data.forEach(function (board) {
+                        const option = document.createElement("option");
+                        option.value = board.id;
+                        option.textContent = board.name;
+                        option.dataset.url = board.shortUrl;
+                        selectBoard.appendChild(option);
+                    });
+
+                    mostrarToast(
+                        "✅ " + response.data.length + " tableros cargados",
+                        "success"
+                    );
+                } else {
+                    selectBoard.innerHTML =
+                        '<option value="">No se encontraron tableros</option>';
+                    mostrarToast("No tienes tableros en Trello", "warning");
+                }
+            })
+            .withFailureHandler(function (error) {
+                selectBoard.disabled = false;
+                selectBoard.innerHTML =
+                    '<option value="">Error cargando tableros</option>';
+                mostrarToast("Error: " + error.message, "error");
+            })
+            .obtenerBoardsTrello(apiKey, token);
+    }
+
+    /**
+     * Carga las listas del board seleccionado
+     */
+    function cargarListasDeTrello() {
+        const selectBoard = document.getElementById("trelloBoardSelect");
+        const selectList = document.getElementById("trelloListSelect");
+        const boardId = selectBoard.value;
+
+        if (!boardId) {
+            selectList.innerHTML =
+                '<option value="">Selecciona primero un tablero</option>';
+            return;
+        }
+
+        selectList.innerHTML = '<option value="">Cargando listas...</option>';
+        selectList.disabled = true;
+
+        const apiKey = document.getElementById("trelloApiKey").value.trim();
+        const token = document.getElementById("trelloToken").value.trim();
+
+        google.script.run
+            .withSuccessHandler(function (response) {
+                selectList.disabled = false;
+
+                if (response.success && response.data.length > 0) {
+                    selectList.innerHTML =
+                        '<option value="">Selecciona una lista</option>';
+
+                    response.data.forEach(function (lista) {
+                        const option = document.createElement("option");
+                        option.value = lista.id;
+                        option.textContent = lista.name;
+                        selectList.appendChild(option);
+                    });
+
+                    mostrarToast(
+                        "✅ " + response.data.length + " listas cargadas",
+                        "success"
+                    );
+                } else {
+                    selectList.innerHTML =
+                        '<option value="">No se encontraron listas</option>';
+                    mostrarToast("El tablero no tiene listas", "warning");
+                }
+            })
+            .withFailureHandler(function (error) {
+                selectList.disabled = false;
+                selectList.innerHTML =
+                    '<option value="">Error cargando listas</option>';
+                mostrarToast("Error: " + error.message, "error");
+            })
+            .obtenerListasTrello(apiKey, token, boardId);
+    }
+
+    /**
+     * Guarda la configuración completa de Trello
+     */
+    function guardarConfiguracionCompletaTrello() {
+        const apiKey = document.getElementById("trelloApiKey").value.trim();
+        const token = document.getElementById("trelloToken").value.trim();
+        const selectBoard = document.getElementById("trelloBoardSelect");
+        const selectList = document.getElementById("trelloListSelect");
+
+        const boardId = selectBoard.value;
+        const listId = selectList.value;
+
+        if (!boardId || !listId) {
+            mostrarToast("Selecciona un tablero y una lista", "warning");
+            return;
+        }
+
+        const boardName = selectBoard.options[selectBoard.selectedIndex].text;
+        const listName = selectList.options[selectList.selectedIndex].text;
+        const boardUrl =
+            selectBoard.options[selectBoard.selectedIndex].dataset.url;
+
+        const configTrello = {
+            apiKey: apiKey,
+            token: token,
+            boardId: boardId,
+            listId: listId,
+            boardUrl: boardUrl,
+            boardName: boardName,
+            listName: listName,
+        };
+
+        const btn = document.getElementById("btnGuardarConfigTrello");
+        btn.disabled = true;
+        btn.textContent = "Guardando...";
+
+        mostrarSpinner();
+
+        google.script.run
+            .withSuccessHandler(function (guardado) {
+                ocultarSpinner();
+                btn.disabled = false;
+                btn.innerHTML =
+                    "<span>💾</span><span>Guardar Configuración</span>";
+
+                if (guardado) {
+                    mostrarToast(
+                        "✅ Configuración de Trello guardada",
+                        "success"
+                    );
+
+                    // Recargar para mostrar como configurado
+                    setTimeout(function () {
+                        cargarConfiguracionTrelloActual();
+                    }, 1000);
+                } else {
+                    mostrarToast("Error al guardar configuración", "error");
+                }
+            })
+            .withFailureHandler(function (error) {
+                ocultarSpinner();
+                btn.disabled = false;
+                btn.innerHTML =
+                    "<span>💾</span><span>Guardar Configuración</span>";
+                mostrarToast("Error: " + error.message, "error");
+            })
+            .guardarConfigTrello(configTrello, currentSheetUrl);
+    }
+
+    /**
+     * Desconecta Trello (limpia la configuración)
+     */
+    function desconectarTrello() {
+        if (
+            !confirm(
+                "¿Estás seguro de desconectar Trello?\n\nLos bugs nuevos no se sincronizarán con Trello."
+            )
+        ) {
+            return;
+        }
+
+        mostrarSpinner();
+
+        google.script.run
+            .withSuccessHandler(function (limpiado) {
+                ocultarSpinner();
+
+                if (limpiado) {
+                    mostrarToast("✅ Trello desconectado", "success");
+                    cargarConfiguracionTrelloActual();
+                } else {
+                    mostrarToast("Error al desconectar", "error");
+                }
+            })
+            .withFailureHandler(function (error) {
+                ocultarSpinner();
+                mostrarToast("Error: " + error.message, "error");
+            })
+            .limpiarConfigTrello(currentSheetUrl);
+    }
+
+    // Exportar funciones al scope global
+    window.abrirConfiguracionTrello = abrirConfiguracionTrello;
+    window.cerrarConfigTrello = cerrarConfigTrello;
+    window.cargarConfiguracionTrelloActual = cargarConfiguracionTrelloActual;
+    window.validarYGuardarCredencialesTrello =
+        validarYGuardarCredencialesTrello;
+    window.cargarListasDeTrello = cargarListasDeTrello;
+    window.guardarConfiguracionCompletaTrello =
+        guardarConfiguracionCompletaTrello;
+    window.desconectarTrello = desconectarTrello;
 </script>

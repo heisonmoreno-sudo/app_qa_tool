@@ -362,8 +362,16 @@
                                 >
                                     Arrastra archivos aquí o haz click
                                 </div>
-                                <div style="font-size: 0.85rem; color: #64748b">
-                                    PNG, JPG, MP4, PDF (máx 50MB)
+                                <div
+                                    style="
+                                        font-size: 0.85rem;
+                                        color: #64748b;
+                                        line-height: 1.6;
+                                    "
+                                >
+                                    🖼️ Imágenes: máx 10MB<br />
+                                    🎥 Videos: máx 100MB<br />
+                                    📄 PDFs: máx 20MB
                                 </div>
                             </div>
                         </div>
@@ -403,6 +411,117 @@
                 type="button"
                 class="btn btn-secondary"
                 onclick="cerrarModalBug()"
+            >
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL CAMBIAR ESTADO BUG (MEJORA 5)                                         -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+<div id="modalCambiarEstadoBug" class="modal-overlay">
+    <div class="modal" style="max-width: 600px">
+        <div class="modal-header">
+            <h3 class="modal-title">
+                <span>🔄</span>
+                <span>Cambiar Estado del Bug</span>
+            </h3>
+            <button class="modal-close" onclick="cerrarModalCambiarEstado()">
+                ✕
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <input type="hidden" id="bugIdCambiarEstado" value="" />
+            <input type="hidden" id="nuevoEstadoBug" value="" />
+
+            <!-- Advertencia de casos asociados -->
+            <div
+                id="advertenciaCasosNoOK"
+                class="hidden"
+                style="
+                    background: #fef3c7;
+                    border: 2px solid #f59e0b;
+                    border-radius: 8px;
+                    padding: 1rem;
+                    margin-bottom: 1.5rem;
+                "
+            >
+                <div style="display: flex; align-items: start; gap: 0.75rem">
+                    <span style="font-size: 2rem">⚠️</span>
+                    <div style="flex: 1">
+                        <strong
+                            style="
+                                color: #92400e;
+                                display: block;
+                                margin-bottom: 0.5rem;
+                            "
+                        >
+                            Casos de prueba relacionados en estado No_OK
+                        </strong>
+                        <p style="color: #92400e; margin: 0.5rem 0">
+                            Este bug tiene casos de prueba asociados que están
+                            en estado <strong>No_OK</strong>:
+                        </p>
+                        <ul
+                            id="listaCasosNoOK"
+                            style="
+                                color: #92400e;
+                                margin: 0.5rem 0 0 1.5rem;
+                                line-height: 1.6;
+                            "
+                        ></ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label"
+                    >¿Deseas actualizar automáticamente estos casos a
+                    <strong>OK</strong>?</label
+                >
+                <p
+                    style="
+                        color: var(--text-secondary);
+                        font-size: 0.9rem;
+                        margin: 0.5rem 0;
+                    "
+                >
+                    Si el bug está resuelto, los casos relacionados pueden pasar
+                    a estado OK automáticamente.
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label
+                    style="
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        cursor: pointer;
+                    "
+                >
+                    <input type="checkbox" id="actualizarCasosCheck" checked />
+                    <span>Sí, actualizar casos de No_OK a OK</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button
+                type="button"
+                class="btn btn-primary"
+                onclick="confirmarCambioEstadoBug()"
+            >
+                ✅ Confirmar Cambio
+            </button>
+            <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="cerrarModalCambiarEstado()"
             >
                 Cancelar
             </button>
@@ -633,24 +752,118 @@
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
 
-            if (file.size > 50 * 1024 * 1024) {
+            // Límites diferenciados por tipo de archivo
+            const maxSizeImagen = 10 * 1024 * 1024; // 10 MB para imágenes
+            const maxSizeVideo = 100 * 1024 * 1024; // 100 MB para videos
+            const maxSizePDF = 20 * 1024 * 1024; // 20 MB para PDFs
+
+            let maxSize = 50 * 1024 * 1024; // Default
+            let tipoArchivo = "archivo";
+
+            if (file.type.startsWith("image/")) {
+                maxSize = maxSizeImagen;
+                tipoArchivo = "imagen";
+            } else if (file.type.startsWith("video/")) {
+                maxSize = maxSizeVideo;
+                tipoArchivo = "video";
+            } else if (file.type === "application/pdf") {
+                maxSize = maxSizePDF;
+                tipoArchivo = "PDF";
+            }
+
+            if (file.size > maxSize) {
+                const maxMB = (maxSize / (1024 * 1024)).toFixed(0);
                 mostrarToast(
-                    '❌ "' + file.name + '" excede los 50 MB',
+                    '❌ "' +
+                        file.name +
+                        '" excede el límite de ' +
+                        maxMB +
+                        " MB para " +
+                        tipoArchivo +
+                        "s",
                     "error",
-                    4000
+                    5000
                 );
                 continue;
             }
 
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                window.evidenciasBugTemporales.push({
-                    tipo: "archivo",
-                    nombre: file.name,
-                    tamaño: file.size,
-                    mimeType: file.type,
-                    contenidoBase64: e.target.result.split(",")[1],
-                });
+            // Validar formatos de video permitidos
+            if (file.type.startsWith("video/")) {
+                const formatosPermitidos = [
+                    "video/mp4",
+                    "video/webm",
+                    "video/quicktime", // .mov
+                    "video/x-msvideo", // .avi
+                    "video/x-matroska", // .mkv
+                ];
+
+                if (!formatosPermitidos.includes(file.type)) {
+                    mostrarToast(
+                        '⚠️ Formato de video "' +
+                            file.type +
+                            '" no recomendado. Usa MP4, WebM o MOV',
+                        "warning",
+                        4000
+                    );
+                }
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    window.evidenciasBugTemporales.push({
+                        tipo: "archivo",
+                        nombre: file.name,
+                        tamaño: file.size,
+                        mimeType: file.type,
+                        contenidoBase64: e.target.result.split(",")[1],
+                    });
+
+                    // Agregar feedback para archivos grandes (>20MB)
+                    if (file.size > 20 * 1024 * 1024) {
+                        const nombreCorto =
+                            file.name.length > 30
+                                ? file.name.substring(0, 27) + "..."
+                                : file.name;
+                        mostrarToast(
+                            '📤 Procesando "' +
+                                nombreCorto +
+                                '"... Puede tardar unos segundos',
+                            "info",
+                            3000
+                        );
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        window.evidenciasBugTemporales.push({
+                            tipo: "archivo",
+                            nombre: file.name,
+                            tamaño: file.size,
+                            mimeType: file.type,
+                            contenidoBase64: e.target.result.split(",")[1],
+                        });
+
+                        renderizarListaEvidenciasBug();
+
+                        const tamañoMB = (file.size / (1024 * 1024)).toFixed(2);
+
+                        // Emoji según tipo
+                        let emoji = "✅";
+                        if (file.type.startsWith("video/")) emoji = "🎥";
+                        else if (file.type.startsWith("image/")) emoji = "🖼️";
+                        else if (file.type === "application/pdf") emoji = "📄";
+
+                        mostrarToast(
+                            emoji +
+                                ' "' +
+                                file.name +
+                                '" listo (' +
+                                tamañoMB +
+                                " MB)",
+                            "success",
+                            2000
+                        );
+                    };
+                };
 
                 renderizarListaEvidenciasBug();
 
@@ -660,7 +873,7 @@
                     "success",
                     2000
                 );
-            };
+            }
 
             reader.onerror = function () {
                 mostrarToast('❌ Error leyendo "' + file.name + '"', "error");
@@ -703,7 +916,17 @@
             html += '<div class="evidencia-item">';
             html +=
                 '  <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">';
-            html += '    <span style="font-size: 1.5rem;">📎</span>';
+            // Icono según tipo de archivo
+            let icono = "📎";
+            if (evidencia.mimeType.startsWith("image/")) {
+                icono = "🖼️";
+            } else if (evidencia.mimeType.startsWith("video/")) {
+                icono = "🎥";
+            } else if (evidencia.mimeType === "application/pdf") {
+                icono = "📄";
+            }
+
+            html += '    <span style="font-size: 1.5rem;">' + icono + "</span>";
             html += '    <div style="flex: 1;">';
             html +=
                 '      <div style="font-weight: 500; word-break: break-word;">' +
@@ -858,17 +1081,36 @@
             tieneCasoDiseñado: casoRelacionado ? true : false,
             casosRelacionados: casoRelacionado || "",
             origenSinCaso: casoRelacionado ? "" : "Manual",
-            evidencias: [],
+            evidencias: [], // Solo nombres para referencia
+            evidenciasBase64: [], // ← NUEVO: Contenido completo para subir
         };
 
-        // Agregar evidencias si hay
+        // MEJORA 4: Agregar evidencias con contenido Base64 completo
         if (
             window.evidenciasBugTemporales &&
             window.evidenciasBugTemporales.length > 0
         ) {
-            // Por ahora solo guardamos los nombres (la subida a Drive es para después)
+            // Nombres para referencia rápida
             datosBug.evidencias = window.evidenciasBugTemporales.map(
                 (e) => e.nombre
+            );
+
+            // Contenido completo Base64 para subir a Drive
+            datosBug.evidenciasBase64 = window.evidenciasBugTemporales.map(
+                function (e) {
+                    return {
+                        nombre: e.nombre,
+                        mimeType: e.mimeType,
+                        contenidoBase64: e.contenidoBase64,
+                        tamaño: e.tamaño,
+                    };
+                }
+            );
+
+            console.log(
+                "📎 " +
+                    datosBug.evidenciasBase64.length +
+                    " evidencias preparadas para subir"
             );
         }
 
@@ -914,6 +1156,19 @@
                                 mostrarNotificacionTrello(bugId, trelloUrl);
                             }
                         }, 1000);
+                    }
+                    if (window.evidenciasBugTemporales.length > 0) {
+                        const cantEvidencias =
+                            window.evidenciasBugTemporales.length;
+                        setTimeout(function () {
+                            mostrarToast(
+                                "📎 " +
+                                    cantEvidencias +
+                                    " evidencia(s) subida(s) a Drive",
+                                "info",
+                                3000
+                            );
+                        }, 2000);
                     } else if (trelloIntentado && trelloError) {
                         // ⚠️ ESCENARIO 3: Error en Trello pero bug guardado
                         mostrarToast(
@@ -1140,6 +1395,256 @@
     }
 
     // ===================================================================
+    // CAMBIAR ESTADO DE BUG (MEJORA 5)
+    // ===================================================================
+
+    /**
+     * Inicia el proceso de cambiar estado de un bug
+     * @param {string} bugId - ID del bug
+     * @param {string} nuevoEstado - Nuevo estado (Cerrado, Resuelto, etc.)
+     */
+    function iniciarCambioEstadoBug(bugId, nuevoEstado) {
+        console.log("🔄 Iniciando cambio de estado:", bugId, "a", nuevoEstado);
+
+        mostrarSpinner();
+
+        google.script.run
+            .withSuccessHandler(function (validacion) {
+                ocultarSpinner();
+
+                if (!validacion.success) {
+                    mostrarToast("Error: " + validacion.mensaje, "error");
+                    return;
+                }
+
+                // Si requiere confirmación (tiene casos en No_OK)
+                if (
+                    validacion.requiereConfirmacion &&
+                    validacion.casosEnNoOK &&
+                    validacion.casosEnNoOK.length > 0
+                ) {
+                    mostrarModalConfirmacionCambioEstado(
+                        bugId,
+                        nuevoEstado,
+                        validacion.casosEnNoOK
+                    );
+                } else {
+                    // No requiere confirmación, cambiar directamente
+                    ejecutarCambioEstadoBug(bugId, nuevoEstado, []);
+                }
+            })
+            .withFailureHandler(function (error) {
+                ocultarSpinner();
+                mostrarToast("Error: " + error.message, "error");
+            })
+            .validarCambioEstadoBug(window.currentSheetUrl, bugId, nuevoEstado);
+    }
+
+    /**
+     * Muestra el modal de confirmación con los casos afectados
+     */
+    function mostrarModalConfirmacionCambioEstado(
+        bugId,
+        nuevoEstado,
+        casosEnNoOK
+    ) {
+        document.getElementById("bugIdCambiarEstado").value = bugId;
+        document.getElementById("nuevoEstadoBug").value = nuevoEstado;
+
+        // Mostrar advertencia y lista de casos
+        const advertencia = document.getElementById("advertenciaCasosNoOK");
+        const listaCasos = document.getElementById("listaCasosNoOK");
+
+        advertencia.classList.remove("hidden");
+
+        let html = "";
+        casosEnNoOK.forEach(function (caso) {
+            html +=
+                "<li><strong>" +
+                caso.id +
+                "</strong> - " +
+                caso.titulo +
+                " <em>(" +
+                caso.hoja +
+                ")</em></li>";
+        });
+        listaCasos.innerHTML = html;
+
+        // Marcar checkbox por defecto
+        document.getElementById("actualizarCasosCheck").checked = true;
+
+        abrirModal("modalCambiarEstadoBug");
+    }
+
+    /**
+     * Confirma el cambio de estado y ejecuta la actualización
+     */
+    function confirmarCambioEstadoBug() {
+        const bugId = document.getElementById("bugIdCambiarEstado").value;
+        const nuevoEstado = document.getElementById("nuevoEstadoBug").value;
+        const actualizarCasos = document.getElementById(
+            "actualizarCasosCheck"
+        ).checked;
+
+        cerrarModalCambiarEstado();
+
+        if (actualizarCasos) {
+            ejecutarCambioEstadoConActualizacion(bugId, nuevoEstado);
+        } else {
+            ejecutarCambioEstadoBug(bugId, nuevoEstado, []);
+        }
+    }
+
+    /**
+     * Ejecuta el cambio de estado sin actualizar casos
+     */
+    function ejecutarCambioEstadoBug(bugId, nuevoEstado, casosIds) {
+        mostrarSpinner();
+
+        google.script.run
+            .withSuccessHandler(function (response) {
+                ocultarSpinner();
+
+                if (response.success) {
+                    mostrarToast(
+                        "✅ Estado del bug actualizado a: " + nuevoEstado,
+                        "success"
+                    );
+
+                    // Recargar lista de bugs si existe
+                    if (typeof cargarBugs === "function") {
+                        setTimeout(function () {
+                            cargarBugs();
+                        }, 500);
+                    }
+                } else {
+                    mostrarToast("Error: " + response.mensaje, "error");
+                }
+            })
+            .withFailureHandler(function (error) {
+                ocultarSpinner();
+                mostrarToast("Error: " + error.message, "error");
+            })
+            .cambiarEstadoBug(window.currentSheetUrl, bugId, nuevoEstado);
+    }
+
+    /**
+     * Ejecuta el cambio de estado Y actualiza los casos a OK
+     */
+    function ejecutarCambioEstadoConActualizacion(bugId, nuevoEstado) {
+        mostrarSpinner();
+
+        // Primero cambiar estado del bug
+        google.script.run
+            .withSuccessHandler(function (response) {
+                if (response.success) {
+                    // Ahora obtener los casos y actualizarlos
+                    google.script.run
+                        .withSuccessHandler(function (resultadoCasos) {
+                            ocultarSpinner();
+
+                            if (resultadoCasos.success) {
+                                const casosIds =
+                                    resultadoCasos.data.casos || [];
+
+                                if (casosIds.length > 0) {
+                                    // Actualizar casos
+                                    actualizarCasosTrasCerrarBug(
+                                        bugId,
+                                        casosIds
+                                    );
+                                } else {
+                                    mostrarToast(
+                                        "✅ Estado del bug actualizado",
+                                        "success"
+                                    );
+                                }
+                            }
+                        })
+                        .withFailureHandler(function (error) {
+                            ocultarSpinner();
+                            mostrarToast(
+                                "Bug actualizado pero error obteniendo casos: " +
+                                    error.message,
+                                "warning"
+                            );
+                        })
+                        .obtenerCasosPorBug(window.currentSheetUrl, bugId);
+                } else {
+                    ocultarSpinner();
+                    mostrarToast("Error: " + response.mensaje, "error");
+                }
+            })
+            .withFailureHandler(function (error) {
+                ocultarSpinner();
+                mostrarToast("Error: " + error.message, "error");
+            })
+            .cambiarEstadoBug(window.currentSheetUrl, bugId, nuevoEstado);
+    }
+
+    /**
+     * Actualiza los casos asociados a OK
+     */
+    function actualizarCasosTrasCerrarBug(bugId, casosIds) {
+        mostrarSpinner();
+
+        google.script.run
+            .withSuccessHandler(function (resultado) {
+                ocultarSpinner();
+
+                if (resultado.success) {
+                    const cant = resultado.casosActualizados.length;
+                    mostrarToast(
+                        "✅ Bug actualizado. " +
+                            cant +
+                            " caso(s) cambiado(s) a OK",
+                        "success",
+                        4000
+                    );
+
+                    // Recargar listas
+                    if (typeof cargarBugs === "function") {
+                        setTimeout(function () {
+                            cargarBugs();
+                        }, 500);
+                    }
+                    if (typeof cargarTodosLosCasos === "function") {
+                        setTimeout(function () {
+                            cargarTodosLosCasos();
+                        }, 500);
+                    }
+                } else {
+                    mostrarToast(
+                        "Error actualizando casos: " + resultado.mensaje,
+                        "warning"
+                    );
+                }
+            })
+            .withFailureHandler(function (error) {
+                ocultarSpinner();
+                mostrarToast("Error: " + error.message, "error");
+            })
+            .actualizarCasosAlCerrarBug(
+                window.currentSheetUrl,
+                bugId,
+                casosIds
+            );
+    }
+
+    /**
+     * Cierra el modal de cambio de estado
+     */
+    function cerrarModalCambiarEstado() {
+        cerrarModal("modalCambiarEstadoBug");
+
+        // Limpiar campos
+        document.getElementById("bugIdCambiarEstado").value = "";
+        document.getElementById("nuevoEstadoBug").value = "";
+        document.getElementById("advertenciaCasosNoOK").classList.add("hidden");
+        document.getElementById("listaCasosNoOK").innerHTML = "";
+    }
+
+    // ===================================================================
     // EXPORTAR AL SCOPE GLOBAL
     // ===================================================================
 
@@ -1154,11 +1659,14 @@
     window.renderizarListaEvidenciasBug = renderizarListaEvidenciasBug;
     window.eliminarEvidenciaBug = eliminarEvidenciaBug;
     window.guardarBug = guardarBug;
-
     // Exportar funciones de Trello (feature/bugs-trello)
     window.mostrarNotificacionTrello = mostrarNotificacionTrello;
     window.mostrarSugerenciaConfigurarTrello =
         mostrarSugerenciaConfigurarTrello;
+    // Exportar funciones de cambio de estado (MEJORA 5)
+    window.iniciarCambioEstadoBug = iniciarCambioEstadoBug;
+    window.confirmarCambioEstadoBug = confirmarCambioEstadoBug;
+    window.cerrarModalCambiarEstado = cerrarModalCambiarEstado;
 
     console.log("✅ Frontend_Components_Bugs.html cargado correctamente");
 </script>

@@ -196,6 +196,84 @@ function crearBug(datosBug) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+// SUBIR EVIDENCIAS A DRIVE (MEJORA 4 - permanente)
+// ═══════════════════════════════════════════════════════════════════════
+
+var evidenciasUrls = [];
+var urlCarpetaEvidencias = "";
+
+if (datosBug.evidenciasBase64 && datosBug.evidenciasBase64.length > 0) {
+    Logger.log(
+        "📤 Subiendo " +
+            datosBug.evidenciasBase64.length +
+            " evidencias a Drive..."
+    );
+
+    try {
+        // Obtener o crear carpeta de evidencias
+        var carpetaEvidencias = obtenerOCrearCarpetaEvidencias(spreadsheet);
+
+        // Crear subcarpeta para este bug
+        var nombreCarpetaBug =
+            bugId + " - " + limpiarNombreArchivo(datosBug.titulo);
+        var carpetaBug = carpetaEvidencias.createFolder(nombreCarpetaBug);
+
+        Logger.log("📁 Carpeta creada: " + carpetaBug.getName());
+
+        // Subir cada evidencia
+        datosBug.evidenciasBase64.forEach(function (evidencia) {
+            try {
+                Logger.log("  📎 Subiendo: " + evidencia.nombre);
+
+                // Decodificar Base64
+                var bytes = Utilities.base64Decode(evidencia.contenidoBase64);
+                var blob = Utilities.newBlob(
+                    bytes,
+                    evidencia.mimeType,
+                    evidencia.nombre
+                );
+
+                // Crear archivo en Drive
+                var archivo = carpetaBug.createFile(blob);
+
+                // Hacer el archivo accesible con el link
+                archivo.setSharing(
+                    DriveApp.Access.ANYONE_WITH_LINK,
+                    DriveApp.Permission.VIEW
+                );
+
+                var urlArchivo = archivo.getUrl();
+                evidenciasUrls.push(urlArchivo);
+
+                Logger.log("    ✅ Subido: " + urlArchivo);
+            } catch (errorArchivo) {
+                Logger.log(
+                    '    ❌ Error con evidencia "' +
+                        evidencia.nombre +
+                        '": ' +
+                        errorArchivo.toString()
+                );
+            }
+        });
+
+        urlCarpetaEvidencias = carpetaBug.getUrl();
+
+        Logger.log(
+            "✅ " + evidenciasUrls.length + " evidencias subidas exitosamente"
+        );
+        Logger.log("📂 Carpeta: " + urlCarpetaEvidencias);
+
+        // Actualizar el bug con las URLs de evidencias
+        actualizarBug(sheetUrl, bugId, {
+            EvidenciasURL: evidenciasUrls.join("\n"),
+        });
+    } catch (errorDrive) {
+        Logger.log("❌ Error subiendo evidencias: " + errorDrive.toString());
+        // No detener el proceso, el bug ya está creado
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
 // INTEGRACIÓN CON TRELLO (feature/bugs-trello)
 // ═══════════════════════════════════════════════════════════════════════
 
@@ -241,6 +319,12 @@ if (configTrello.configurado) {
         reportadoPor: usuario,
     };
 
+    // MEJORA 4: Agregar URLs de evidencias si se subieron
+    if (evidenciasUrls.length > 0) {
+        bugCompleto.evidenciasUrls = evidenciasUrls;
+        bugCompleto.carpetaEvidencias = urlCarpetaEvidencias;
+    }
+
     try {
         // Llamar a la función de Trello
         resultadoTrello = crearTarjetaTrello(bugCompleto, configTrello);
@@ -257,7 +341,7 @@ if (configTrello.configurado) {
 
             // Actualizar el bug con la URL de Trello
             actualizarBug(sheetUrl, bugId, {
-                TrelloCardURL: trelloCardUrl,
+                LinkTrello: trelloCardUrl,
                 TrelloCardID: trelloCardId,
             });
 
@@ -744,6 +828,205 @@ function cambiarEstadoBug(sheetUrl, bugId, nuevoEstado) {
         return {
             success: false,
             mensaje: "Error al cambiar estado: " + error.message,
+        };
+    }
+}
+
+/**
+ * Valida el cambio de estado de un bug verificando casos asociados
+ * MEJORA 5: Advertir sobre casos en estado No_OK
+ * @param {string} sheetUrl - URL del Sheet
+ * @param {string} bugId - ID del bug
+ * @param {string} nuevoEstado - Estado al que se quiere cambiar
+ * @returns {Object} Resultado con advertencias y casos afectados
+ */
+function validarCambioEstadoBug(sheetUrl, bugId, nuevoEstado) {
+    try {
+        Logger.log(
+            "🔍 Validando cambio de estado de bug " +
+                bugId +
+                " a: " +
+                nuevoEstado
+        );
+
+        // Obtener el bug
+        var detalleBug = obtenerDetalleBug(sheetUrl, bugId);
+
+        if (!detalleBug.success) {
+            return {
+                success: false,
+                mensaje: "Bug no encontrado",
+            };
+        }
+
+        var bug = detalleBug.data;
+        var casosRelacionados = bug.CasosRelacionados || "";
+
+        // Si no tiene casos relacionados, no hay problema
+        if (
+            !casosRelacionados ||
+            casosRelacionados === "" ||
+            casosRelacionados === "-"
+        ) {
+            return {
+                success: true,
+                puedeCompletar: true,
+                tieneCasosAsociados: false,
+                mensaje: "Sin casos asociados, puede proceder",
+            };
+        }
+
+        // Separar IDs de casos
+        var casosIds = casosRelacionados
+            .split(",")
+            .map(function (id) {
+                return id.trim();
+            })
+            .filter(function (id) {
+                return id !== "";
+            });
+
+        Logger.log("   Casos relacionados: " + casosIds.join(", "));
+
+        // Si el nuevo estado es "Cerrado" o "Resuelto", verificar casos No_OK
+        if (nuevoEstado === "Cerrado" || nuevoEstado === "Resuelto") {
+            var spreadsheet = SpreadsheetApp.openByUrl(sheetUrl);
+            var casosEnNoOK = [];
+
+            casosIds.forEach(function (casoId) {
+                var resultado = buscarCasoEnTodasHojas(spreadsheet, casoId);
+
+                if (resultado) {
+                    var headers = resultado.headers;
+                    var fila = resultado.fila;
+                    var hoja = resultado.hoja;
+                    var datos = hoja
+                        .getRange(fila, 1, 1, headers.length)
+                        .getValues()[0];
+
+                    var colEstado = headers.indexOf("ResultadoUltimaEjecucion");
+
+                    if (colEstado > -1) {
+                        var estadoCaso = datos[colEstado];
+
+                        if (estadoCaso === "No_OK") {
+                            casosEnNoOK.push({
+                                id: casoId,
+                                titulo: datos[headers.indexOf("Titulo")] || "",
+                                hoja: resultado.nombreHoja,
+                            });
+                        }
+                    }
+                }
+            });
+
+            Logger.log("   Casos en No_OK encontrados: " + casosEnNoOK.length);
+
+            return {
+                success: true,
+                tieneCasosAsociados: true,
+                casosEnNoOK: casosEnNoOK,
+                requiereConfirmacion: casosEnNoOK.length > 0,
+                mensaje:
+                    casosEnNoOK.length > 0
+                        ? "Hay " +
+                          casosEnNoOK.length +
+                          " caso(s) en estado No_OK relacionado(s) con este bug"
+                        : "Todos los casos asociados están OK o sin ejecutar",
+            };
+        }
+
+        // Para otros cambios de estado, no requiere validación especial
+        return {
+            success: true,
+            puedeCompletar: true,
+            tieneCasosAsociados: true,
+            mensaje: "Puede proceder con el cambio de estado",
+        };
+    } catch (error) {
+        Logger.log("❌ Error validando cambio de estado: " + error.toString());
+        return {
+            success: false,
+            mensaje: "Error al validar: " + error.message,
+        };
+    }
+}
+
+/**
+ * Actualiza los casos relacionados con un bug que se cierra/resuelve
+ * MEJORA 5: Cambiar casos de No_OK a OK automáticamente
+ * @param {string} sheetUrl - URL del Sheet
+ * @param {string} bugId - ID del bug
+ * @param {Array} casosIds - IDs de los casos a actualizar
+ * @returns {Object} Resultado
+ */
+function actualizarCasosAlCerrarBug(sheetUrl, bugId, casosIds) {
+    try {
+        Logger.log("🔄 Actualizando casos relacionados al cerrar bug " + bugId);
+
+        var spreadsheet = SpreadsheetApp.openByUrl(sheetUrl);
+        var casosActualizados = [];
+        var errores = [];
+
+        casosIds.forEach(function (casoId) {
+            try {
+                var resultado = buscarCasoEnTodasHojas(spreadsheet, casoId);
+
+                if (resultado) {
+                    var headers = resultado.headers;
+                    var fila = resultado.fila;
+                    var hoja = resultado.hoja;
+
+                    var colEstado =
+                        headers.indexOf("ResultadoUltimaEjecucion") + 1;
+                    var colComentarios =
+                        headers.indexOf("ComentariosEjecucion") + 1;
+
+                    if (colEstado > 0) {
+                        // Cambiar estado a OK
+                        hoja.getRange(fila, colEstado).setValue("OK");
+
+                        // Agregar comentario
+                        if (colComentarios > 0) {
+                            var comentarioActual =
+                                hoja
+                                    .getRange(fila, colComentarios)
+                                    .getValue() || "";
+                            var nuevoComentario =
+                                (comentarioActual
+                                    ? comentarioActual + "\n"
+                                    : "") +
+                                "Bug " +
+                                bugId +
+                                " resuelto - Caso actualizado a OK automáticamente";
+                            hoja.getRange(fila, colComentarios).setValue(
+                                nuevoComentario
+                            );
+                        }
+
+                        casosActualizados.push(casoId);
+                        Logger.log("  ✅ Caso " + casoId + " actualizado a OK");
+                    }
+                }
+            } catch (e) {
+                Logger.log(
+                    "  ⚠️ Error con caso " + casoId + ": " + e.toString()
+                );
+                errores.push(casoId);
+            }
+        });
+
+        return {
+            success: true,
+            casosActualizados: casosActualizados,
+            errores: errores,
+            mensaje: casosActualizados.length + " caso(s) actualizado(s) a OK",
+        };
+    } catch (error) {
+        Logger.log("❌ Error actualizando casos: " + error.toString());
+        return {
+            success: false,
+            mensaje: "Error al actualizar casos: " + error.message,
         };
     }
 }
@@ -1547,5 +1830,70 @@ function reintentarSincronizacionTrello(sheetUrl, bugId) {
             success: false,
             mensaje: "Error al reintentar sincronización: " + error.message,
         };
+    }
+}
+
+/**
+ * Obtiene o crea la carpeta de evidencias en Drive
+ * MEJORA 4: Gestión de evidencias
+ * @param {Spreadsheet} spreadsheet - Spreadsheet activo
+ * @returns {Folder} Carpeta de evidencias
+ */
+function obtenerOCrearCarpetaEvidencias(spreadsheet) {
+    try {
+        // Obtener ID de carpeta desde Config
+        var config = obtenerConfiguracion();
+        var carpetaId = config["drive_folder_id"];
+
+        if (carpetaId && carpetaId !== "") {
+            try {
+                return DriveApp.getFolderById(carpetaId);
+            } catch (e) {
+                Logger.log(
+                    "⚠️ Carpeta configurada no existe, creando nueva..."
+                );
+            }
+        }
+
+        /**
+         * Limpia un nombre para usarlo como nombre de carpeta/archivo
+         * Remueve caracteres especiales y limita longitud
+         * @param {string} texto - Texto a limpiar
+         * @returns {string} Texto limpio
+         */
+        function limpiarNombreArchivo(texto) {
+            if (!texto) return "sin_nombre";
+
+            return texto
+                .substring(0, 50) // Máximo 50 caracteres
+                .replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-_]/g, "") // Solo alfanuméricos y espacios
+                .replace(/\s+/g, "_") // Espacios a guiones bajos
+                .trim();
+        }
+
+        // Crear carpeta junto al Sheet
+        var archivoSheet = DriveApp.getFileById(spreadsheet.getId());
+        var carpetasPadre = archivoSheet.getParents();
+
+        var carpetaPadre = carpetasPadre.hasNext()
+            ? carpetasPadre.next()
+            : DriveApp.getRootFolder();
+
+        var nombreCarpeta = spreadsheet.getName() + " - Evidencias QA";
+        var carpetaEvidencias = carpetaPadre.createFolder(nombreCarpeta);
+
+        // Guardar ID en Config para próximas veces
+        guardarValorConfig("drive_folder_id", carpetaEvidencias.getId());
+
+        Logger.log(
+            "✅ Carpeta de evidencias creada: " + carpetaEvidencias.getName()
+        );
+
+        return carpetaEvidencias;
+    } catch (error) {
+        Logger.log(
+            "❌ Error creando carpeta de evidencias: " + error.toString()
+        );
+        throw error;
     }
 }

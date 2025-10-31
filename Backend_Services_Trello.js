@@ -90,12 +90,37 @@ function crearTarjetaTrello(bug, configTrello) {
 
             Logger.log("✅ Tarjeta creada: " + cardUrl);
 
+            // MEJORA 1: Agregar cover rojo a la tarjeta (banner)
+            try {
+                agregarCoverRojo(cardId, configTrello);
+            } catch (coverError) {
+                Logger.log(
+                    "⚠️ No se pudo agregar cover rojo: " + coverError.toString()
+                );
+            }
+
             // Agregar etiqueta de severidad
             try {
                 agregarEtiquetaSeveridad(cardId, bug.severidad, configTrello);
             } catch (labelError) {
                 Logger.log(
                     "⚠️ No se pudo agregar etiqueta: " + labelError.toString()
+                );
+            }
+
+            // MEJORA 2: Agregar etiquetas personalizadas del usuario
+            try {
+                if (bug.etiquetas && bug.etiquetas !== "") {
+                    agregarEtiquetasPersonalizadas(
+                        cardId,
+                        bug.etiquetas,
+                        configTrello
+                    );
+                }
+            } catch (tagsError) {
+                Logger.log(
+                    "⚠️ No se pudieron agregar etiquetas personalizadas: " +
+                        tagsError.toString()
                 );
             }
 
@@ -228,12 +253,23 @@ function formatearDescripcionTrello(bug) {
         desc += "\n";
     }
 
-    // Evidencias
-    if (
+    // Evidencias con links a Drive
+    if (bug.evidenciasUrls && bug.evidenciasUrls.length > 0) {
+        desc += "## 📎 Evidencias en Drive\n\n";
+        bug.evidenciasUrls.forEach(function (url, index) {
+            var nombreArchivo =
+                bug.evidencias && bug.evidencias[index]
+                    ? bug.evidencias[index]
+                    : "Archivo " + (index + 1);
+            desc += "- [" + nombreArchivo + "](" + url + ")\n";
+        });
+        desc += "\n";
+    } else if (
         bug.evidencias &&
         Array.isArray(bug.evidencias) &&
         bug.evidencias.length > 0
     ) {
+        // Fallback: solo nombres si no hay URLs
         desc += "## 📎 Evidencias\n\n";
         bug.evidencias.forEach(function (evidencia) {
             desc += "- " + evidencia + "\n";
@@ -305,6 +341,15 @@ function agregarComentarioMetadatos(cardId, bug, configTrello) {
         comentario += "- **Fecha reporte:** " + bug.fechaCreacion + "\n";
         comentario += "- **Reportado por:** " + bug.reportadoPor + "\n";
 
+        // MEJORA 4: Agregar link a carpeta de evidencias
+        if (bug.carpetaEvidencias) {
+            comentario += "\n---\n\n";
+            comentario +=
+                "📂 **Carpeta de evidencias:** [Ver en Drive](" +
+                bug.carpetaEvidencias +
+                ")\n";
+        }
+
         var url = TRELLO_API_BASE + "/cards/" + cardId + "/actions/comments";
 
         var payload = {
@@ -323,6 +368,130 @@ function agregarComentarioMetadatos(cardId, bug, configTrello) {
         Logger.log("✅ Comentario con metadatos agregado");
     } catch (error) {
         Logger.log("⚠️ Error agregando comentario: " + error.toString());
+    }
+}
+
+/**
+ * Agrega un cover rojo a la tarjeta (banner superior)
+ * MEJORA 1: Banner rojo para identificar bugs fácilmente
+ * @param {string} cardId - ID de la tarjeta en Trello
+ * @param {Object} configTrello - Configuración de Trello
+ */
+function agregarCoverRojo(cardId, configTrello) {
+    try {
+        var url = TRELLO_API_BASE + "/cards/" + cardId;
+
+        var payload = {
+            key: configTrello.apiKey,
+            token: configTrello.token,
+            cover: JSON.stringify({
+                color: "red",
+                brightness: "dark",
+            }),
+        };
+
+        var options = {
+            method: "put",
+            payload: payload,
+            muteHttpExceptions: true,
+        };
+
+        UrlFetchApp.fetch(url, options);
+        Logger.log("✅ Cover rojo agregado a la tarjeta");
+    } catch (error) {
+        Logger.log("⚠️ Error agregando cover rojo: " + error.toString());
+    }
+}
+
+/**
+ * Agrega etiquetas personalizadas del usuario a la tarjeta
+ * MEJORA 2: Etiquetas ingresadas por el usuario en el formulario
+ * @param {string} cardId - ID de la tarjeta en Trello
+ * @param {string} etiquetasString - String de etiquetas separadas por coma
+ * @param {Object} configTrello - Configuración de Trello
+ */
+function agregarEtiquetasPersonalizadas(cardId, etiquetasString, configTrello) {
+    try {
+        // Separar etiquetas por coma
+        var etiquetas = etiquetasString
+            .split(",")
+            .map(function (e) {
+                return e.trim();
+            })
+            .filter(function (e) {
+                return e !== "";
+            });
+
+        if (etiquetas.length === 0) {
+            return;
+        }
+
+        Logger.log(
+            "📌 Agregando " + etiquetas.length + " etiquetas personalizadas..."
+        );
+
+        // Colores disponibles para etiquetas adicionales
+        var coloresDisponibles = [
+            "blue",
+            "green",
+            "purple",
+            "pink",
+            "lime",
+            "sky",
+            "black",
+        ];
+
+        etiquetas.forEach(function (etiqueta, index) {
+            try {
+                // Limitar a 50 caracteres por etiqueta
+                var nombreEtiqueta = etiqueta.substring(0, 50);
+                var color =
+                    coloresDisponibles[index % coloresDisponibles.length];
+
+                var url = TRELLO_API_BASE + "/cards/" + cardId + "/labels";
+
+                var payload = {
+                    key: configTrello.apiKey,
+                    token: configTrello.token,
+                    color: color,
+                    name: nombreEtiqueta,
+                };
+
+                var options = {
+                    method: "post",
+                    payload: payload,
+                    muteHttpExceptions: true,
+                };
+
+                var response = UrlFetchApp.fetch(url, options);
+
+                if (response.getResponseCode() === 200) {
+                    Logger.log(
+                        "  ✅ Etiqueta agregada: " +
+                            nombreEtiqueta +
+                            " (" +
+                            color +
+                            ")"
+                    );
+                }
+
+                // Pequeña pausa para evitar rate limit
+                Utilities.sleep(100);
+            } catch (e) {
+                Logger.log(
+                    '  ⚠️ Error con etiqueta "' +
+                        etiqueta +
+                        '": ' +
+                        e.toString()
+                );
+            }
+        });
+
+        Logger.log("✅ Etiquetas personalizadas agregadas");
+    } catch (error) {
+        Logger.log(
+            "⚠️ Error agregando etiquetas personalizadas: " + error.toString()
+        );
     }
 }
 

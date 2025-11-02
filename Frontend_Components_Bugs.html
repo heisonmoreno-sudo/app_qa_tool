@@ -752,10 +752,10 @@
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
 
-            // Límites diferenciados por tipo de archivo
-            const maxSizeImagen = 10 * 1024 * 1024; // 10 MB para imágenes
-            const maxSizeVideo = 100 * 1024 * 1024; // 100 MB para videos
-            const maxSizePDF = 20 * 1024 * 1024; // 20 MB para PDFs
+            // MEJORA: Límites diferenciados por tipo
+            const maxSizeImagen = 10 * 1024 * 1024; // 10 MB
+            const maxSizeVideo = 100 * 1024 * 1024; // 100 MB
+            const maxSizePDF = 20 * 1024 * 1024; // 20 MB
 
             let maxSize = 50 * 1024 * 1024; // Default
             let tipoArchivo = "archivo";
@@ -787,93 +787,68 @@
                 continue;
             }
 
-            // Validar formatos de video permitidos
+            // Validar formatos de video
             if (file.type.startsWith("video/")) {
                 const formatosPermitidos = [
                     "video/mp4",
                     "video/webm",
-                    "video/quicktime", // .mov
-                    "video/x-msvideo", // .avi
-                    "video/x-matroska", // .mkv
+                    "video/quicktime",
+                    "video/x-msvideo",
+                    "video/x-matroska",
                 ];
 
                 if (!formatosPermitidos.includes(file.type)) {
                     mostrarToast(
-                        '⚠️ Formato de video "' +
+                        '⚠️ Formato "' +
                             file.type +
                             '" no recomendado. Usa MP4, WebM o MOV',
                         "warning",
                         4000
                     );
                 }
+            }
 
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    window.evidenciasBugTemporales.push({
-                        tipo: "archivo",
-                        nombre: file.name,
-                        tamaño: file.size,
-                        mimeType: file.type,
-                        contenidoBase64: e.target.result.split(",")[1],
-                    });
+            // Feedback para archivos grandes
+            if (file.size > 20 * 1024 * 1024) {
+                const nombreCorto =
+                    file.name.length > 30
+                        ? file.name.substring(0, 27) + "..."
+                        : file.name;
+                mostrarToast(
+                    '📤 Procesando "' +
+                        nombreCorto +
+                        '"... Puede tardar unos segundos',
+                    "info",
+                    3000
+                );
+            }
 
-                    // Agregar feedback para archivos grandes (>20MB)
-                    if (file.size > 20 * 1024 * 1024) {
-                        const nombreCorto =
-                            file.name.length > 30
-                                ? file.name.substring(0, 27) + "..."
-                                : file.name;
-                        mostrarToast(
-                            '📤 Procesando "' +
-                                nombreCorto +
-                                '"... Puede tardar unos segundos',
-                            "info",
-                            3000
-                        );
-                    }
-
-                    const reader = new FileReader();
-                    reader.onload = function (e) {
-                        window.evidenciasBugTemporales.push({
-                            tipo: "archivo",
-                            nombre: file.name,
-                            tamaño: file.size,
-                            mimeType: file.type,
-                            contenidoBase64: e.target.result.split(",")[1],
-                        });
-
-                        renderizarListaEvidenciasBug();
-
-                        const tamañoMB = (file.size / (1024 * 1024)).toFixed(2);
-
-                        // Emoji según tipo
-                        let emoji = "✅";
-                        if (file.type.startsWith("video/")) emoji = "🎥";
-                        else if (file.type.startsWith("image/")) emoji = "🖼️";
-                        else if (file.type === "application/pdf") emoji = "📄";
-
-                        mostrarToast(
-                            emoji +
-                                ' "' +
-                                file.name +
-                                '" listo (' +
-                                tamañoMB +
-                                " MB)",
-                            "success",
-                            2000
-                        );
-                    };
-                };
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                window.evidenciasBugTemporales.push({
+                    tipo: "archivo",
+                    nombre: file.name,
+                    tamaño: file.size,
+                    mimeType: file.type,
+                    contenidoBase64: e.target.result.split(",")[1],
+                });
 
                 renderizarListaEvidenciasBug();
 
                 const tamañoMB = (file.size / (1024 * 1024)).toFixed(2);
+
+                // Emoji según tipo
+                let emoji = "✅";
+                if (file.type.startsWith("video/")) emoji = "🎥";
+                else if (file.type.startsWith("image/")) emoji = "🖼️";
+                else if (file.type === "application/pdf") emoji = "📄";
+
                 mostrarToast(
-                    '✅ "' + file.name + '" listo (' + tamañoMB + " MB)",
+                    emoji + ' "' + file.name + '" listo (' + tamañoMB + " MB)",
                     "success",
                     2000
                 );
-            }
+            };
 
             reader.onerror = function () {
                 mostrarToast('❌ Error leyendo "' + file.name + '"', "error");

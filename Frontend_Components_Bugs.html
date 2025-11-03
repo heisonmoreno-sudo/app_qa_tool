@@ -405,21 +405,71 @@
         <div
             id="trelloBugOptions"
             style="
-                border-top: 2px dashed #e2e8f0;
-                padding-top: 1rem;
-                margin: 1rem 0 0 0;
+                margin-top: 2rem;
+                background-color: #f0f9ff;
+                border: 2px solid #0ea5e9;
+                border-radius: 8px;
+                padding: 1rem;
             "
         >
+            <!-- Encabezado con logo -->
+            <div
+                style="
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
+                    margin-bottom: 1rem;
+                "
+            >
+                <span style="font-size: 2rem">🎫</span>
+                <div>
+                    <h4
+                        style="
+                            font-size: 1.1rem;
+                            font-weight: 600;
+                            color: #0369a1;
+                            margin: 0;
+                        "
+                    >
+                        Integración con Trello
+                    </h4>
+                    <p
+                        style="
+                            font-size: 0.9rem;
+                            color: #0369a1;
+                            margin: 0.25rem 0 0 0;
+                        "
+                    >
+                        Enviar este bug a una tarjeta de Trello automáticamente
+                    </p>
+                </div>
+            </div>
+
+            <!-- Toggle principal -->
             <label
                 style="
                     display: flex;
                     align-items: center;
-                    gap: 0.5rem;
+                    gap: 0.75rem;
                     font-weight: 600;
+                    color: #0c4a6e;
+                    margin-bottom: 1rem;
+                    padding: 0.5rem;
+                    background: rgba(255, 255, 255, 0.5);
+                    border-radius: 6px;
+                    cursor: pointer;
                 "
             >
-                <input type="checkbox" id="bugEnviarATrello" checked />
-                <span>Enviar bug a Trello</span>
+                <input
+                    type="checkbox"
+                    id="bugEnviarATrello"
+                    checked
+                    style="width: 1.2rem; height: 1.2rem"
+                />
+                <span style="font-size: 1.05rem">
+                    <span class="hide-mobile">🎯 </span>
+                    Crear tarjeta en Trello
+                </span>
             </label>
 
             <div
@@ -427,42 +477,74 @@
                 class="hidden"
                 style="margin-top: 0.75rem"
             >
-                <div
-                    style="
-                        font-size: 0.95rem;
-                        color: #475569;
-                        margin-bottom: 0.5rem;
-                    "
-                >
-                    <label class="form-label required">Tablero de Trello</label>
+                <div class="form-group" style="margin-bottom: 0.75rem">
+                    <label class="form-label required" style="color: #0c4a6e">
+                        <span class="hide-mobile">📋 </span>Tablero de Trello
+                    </label>
                     <select
                         id="bugBoardSelect"
                         class="form-select"
                         onchange="cargarListasModalPorBoard()"
+                        style="border-color: #0ea5e9"
                     >
                         <option value="">Cargando tableros...</option>
                     </select>
                 </div>
 
-                <div
-                    style="
-                        font-size: 0.95rem;
-                        color: #475569;
-                        margin-bottom: 0.5rem;
-                    "
-                >
-                    <label class="form-label">Lista destino (override)</label>
-                    <select id="bugListSelect" class="form-select">
+                <div class="form-group" style="margin-bottom: 1rem">
+                    <label class="form-label" style="color: #0c4a6e">
+                        <span class="hide-mobile">📑 </span>Lista destino
+                        (override)
+                    </label>
+                    <select
+                        id="bugListSelect"
+                        class="form-select"
+                        style="border-color: #0ea5e9"
+                    >
                         <option value="">Selecciona un tablero primero</option>
                     </select>
                 </div>
 
-                <div style="font-size: 0.85rem; color: #64748b">
+                <div style="font-size: 0.9rem; display: flex; gap: 1rem">
                     <a
                         href="#"
                         onclick="abrirConfiguracionTrello(); return false;"
-                        >Cambiar configuración / credenciales</a
+                        style="
+                            color: #0369a1;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                        "
                     >
+                        <span>⚙️</span>
+                        <span>Cambiar configuración</span>
+                    </a>
+                    <a
+                        href="https://trello.com/app-key"
+                        target="_blank"
+                        style="
+                            color: #0369a1;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                        "
+                    >
+                        <span>🔑</span>
+                        <span>Obtener API Key</span>
+                    </a>
+                    <a
+                        href="https://trello.com/1/token/approve"
+                        target="_blank"
+                        style="
+                            color: #0369a1;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                        "
+                    >
+                        <span>🔐</span>
+                        <span>Generar Token</span>
+                    </a>
                 </div>
             </div>
 
@@ -472,19 +554,50 @@
             >
                 <div
                     style="
+                        color: #0369a1;
+                        margin-bottom: 1rem;
                         font-size: 0.95rem;
-                        color: #475569;
-                        margin-bottom: 0.5rem;
                     "
                 >
-                    Trello no está configurado para este workspace.
+                    <p style="margin: 0 0 0.5rem 0">
+                        ⚡ Para empezar a enviar bugs a Trello necesitas:
+                    </p>
+                    <ol style="margin: 0 0 0 1.5rem; padding: 0">
+                        <li style="margin-bottom: 0.25rem">
+                            <a
+                                href="https://trello.com/app-key"
+                                target="_blank"
+                                style="color: #0369a1; font-weight: 500"
+                                >Obtener API Key</a
+                            >
+                        </li>
+                        <li style="margin-bottom: 0.25rem">
+                            <a
+                                href="https://trello.com/1/token/approve"
+                                target="_blank"
+                                style="color: #0369a1; font-weight: 500"
+                                >Generar Token</a
+                            >
+                        </li>
+                        <li>Configurar las credenciales en la herramienta</li>
+                    </ol>
                 </div>
+
                 <button
                     type="button"
-                    class="btn btn-secondary"
+                    class="btn btn-primary"
                     onclick="abrirConfiguracionTrello()"
+                    style="
+                        background: #0ea5e9;
+                        border-color: #0ea5e9;
+                        font-weight: 600;
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                    "
                 >
-                    Configurar Trello
+                    <span>⚙️</span>
+                    <span>Configurar Integración</span>
                 </button>
             </div>
         </div>

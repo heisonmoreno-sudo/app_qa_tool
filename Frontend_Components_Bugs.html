@@ -508,7 +508,7 @@
                 <div style="font-size: 0.9rem; display: flex; gap: 1rem">
                     <a
                         href="#"
-                        onclick="abrirConfiguracionTrello(); return false;"
+                        onclick="abrirConfiguracionTrelloInline(); return false;"
                         style="
                             color: #0369a1;
                             display: flex;
@@ -522,6 +522,7 @@
                     <a
                         href="https://trello.com/app-key"
                         target="_blank"
+                        rel="noopener noreferrer"
                         style="
                             color: #0369a1;
                             display: flex;
@@ -533,8 +534,9 @@
                         <span>Obtener API Key</span>
                     </a>
                     <a
-                        href="https://trello.com/1/token/approve"
+                        href="https://trello.com/1/authorize?expiration=never&name=QA-Tool&scope=read,write&response_type=token"
                         target="_blank"
+                        rel="noopener noreferrer"
                         style="
                             color: #0369a1;
                             display: flex;
@@ -573,8 +575,9 @@
                         </li>
                         <li style="margin-bottom: 0.25rem">
                             <a
-                                href="https://trello.com/1/token/approve"
+                                href="https://trello.com/1/authorize?expiration=never&name=QA-Tool&scope=read,write&response_type=token"
                                 target="_blank"
+                                rel="noopener noreferrer"
                                 style="color: #0369a1; font-weight: 500"
                                 >Generar Token</a
                             >
@@ -586,7 +589,7 @@
                 <button
                     type="button"
                     class="btn btn-primary"
-                    onclick="abrirConfiguracionTrello()"
+                    onclick="abrirConfiguracionTrelloInline()"
                     style="
                         background: #0ea5e9;
                         border-color: #0ea5e9;
@@ -599,6 +602,123 @@
                     <span>⚙️</span>
                     <span>Configurar Integración</span>
                 </button>
+            </div>
+
+            <!-- Inline config dentro del modal (oculto por defecto) -->
+            <div
+                id="trelloInlineConfig"
+                style="display: none; margin-top: 1rem"
+            >
+                <div
+                    style="
+                        background: white;
+                        border: 1px solid #cfeefe;
+                        padding: 0.75rem;
+                        border-radius: 6px;
+                    "
+                >
+                    <div
+                        style="
+                            display: flex;
+                            gap: 0.5rem;
+                            align-items: center;
+                            margin-bottom: 0.5rem;
+                        "
+                    >
+                        <strong style="color: #0c4a6e"
+                            >⚙️ Configurar Trello (rápido)</strong
+                        >
+                        <div
+                            style="
+                                font-size: 0.85rem;
+                                color: #64748b;
+                                margin-left: auto;
+                            "
+                        >
+                            Coloca tu API Key y Token
+                        </div>
+                    </div>
+
+                    <div
+                        style="
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 0.5rem;
+                            margin-bottom: 0.5rem;
+                        "
+                    >
+                        <div>
+                            <label class="form-label">API Key</label>
+                            <input
+                                id="trelloApiKeyInline"
+                                class="form-input"
+                                placeholder="32 chars"
+                            />
+                        </div>
+                        <div>
+                            <label class="form-label">Token</label>
+                            <input
+                                id="trelloTokenInline"
+                                class="form-input"
+                                placeholder="64 chars"
+                            />
+                        </div>
+                    </div>
+
+                    <div
+                        id="trelloBoardListStepInline"
+                        style="display: none; margin-bottom: 0.5rem"
+                    >
+                        <label class="form-label">Tablero</label>
+                        <select
+                            id="trelloBoardSelectInline"
+                            class="form-select"
+                            onchange="cargarListasTrelloInline()"
+                        >
+                            <option value="">Selecciona un tablero</option>
+                        </select>
+
+                        <label class="form-label" style="margin-top: 0.5rem"
+                            >Lista</label
+                        >
+                        <select id="trelloListSelectInline" class="form-select">
+                            <option value="">Selecciona una lista</option>
+                        </select>
+                    </div>
+
+                    <div
+                        style="
+                            display: flex;
+                            gap: 0.5rem;
+                            justify-content: flex-end;
+                        "
+                    >
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            onclick="cerrarConfiguracionTrelloInline()"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            id="btnValidarCredencialesInline"
+                            type="button"
+                            class="btn btn-secondary"
+                            onclick="validarCredencialesTrelloInline()"
+                        >
+                            🔐 Validar
+                        </button>
+                        <button
+                            id="btnGuardarConfigTrelloInline"
+                            type="button"
+                            class="btn btn-primary"
+                            onclick="guardarConfiguracionTrelloInline()"
+                            style="display: none"
+                        >
+                            💾 Guardar
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1308,6 +1428,288 @@
     window.cargarTrelloModal = cargarTrelloModal;
     window.cargarListasModalPorBoard = cargarListasModalPorBoard;
 
+    // ===================================================================
+    // CONFIGURACIÓN TRELLO INLINE DENTRO DEL MODAL
+    // ===================================================================
+
+    function abrirConfiguracionTrelloInline() {
+        try {
+            // Mostrar el inline config y ocultar mensajes previos
+            document.getElementById("trelloInlineConfig").style.display =
+                "block";
+            // Cargar config actual para prellenar
+            if (typeof window.currentSheetUrl === "undefined")
+                window.currentSheetUrl = null;
+
+            google.script.run
+                .withSuccessHandler(function (config) {
+                    if (!config) config = {};
+                    document.getElementById("trelloApiKeyInline").value =
+                        config.apiKey || "";
+                    document.getElementById("trelloTokenInline").value =
+                        config.token || "";
+
+                    // Si ya hay credentials, mostrar paso de boards
+                    if (config.apiKey && config.token) {
+                        document.getElementById(
+                            "trelloBoardListStepInline"
+                        ).style.display = "block";
+                        cargarBoardsTrelloInline(config.apiKey, config.token);
+                    } else {
+                        document.getElementById(
+                            "trelloBoardListStepInline"
+                        ).style.display = "none";
+                        document.getElementById(
+                            "btnGuardarConfigTrelloInline"
+                        ).style.display = "none";
+                    }
+                })
+                .withFailureHandler(function (err) {
+                    console.error("Error cargando config Trello inline:", err);
+                })
+                .obtenerConfigTrello(window.currentSheetUrl);
+        } catch (e) {
+            console.error("abrirConfiguracionTrelloInline error:", e);
+        }
+    }
+
+    function cerrarConfiguracionTrelloInline() {
+        const el = document.getElementById("trelloInlineConfig");
+        if (el) el.style.display = "none";
+    }
+
+    function validarCredencialesTrelloInline() {
+        const apiKey = document
+            .getElementById("trelloApiKeyInline")
+            .value.trim();
+        const token = document.getElementById("trelloTokenInline").value.trim();
+
+        if (!apiKey || apiKey.length !== 32) {
+            mostrarToast("La API Key debe tener 32 caracteres", "warning");
+            return;
+        }
+        if (!token || token.length !== 64) {
+            mostrarToast("El Token debe tener 64 caracteres", "warning");
+            return;
+        }
+
+        const btn = document.getElementById("btnValidarCredencialesInline");
+        btn.disabled = true;
+        btn.textContent = "Validando...";
+
+        mostrarSpinner();
+
+        google.script.run
+            .withSuccessHandler(function (resp) {
+                ocultarSpinner();
+                btn.disabled = false;
+                btn.innerHTML = "🔐 Validar";
+
+                if (resp && resp.success) {
+                    mostrarToast(
+                        "✅ Credenciales válidas: " +
+                            (resp.data ? resp.data.usuario : ""),
+                        "success"
+                    );
+                    document.getElementById(
+                        "trelloBoardListStepInline"
+                    ).style.display = "block";
+                    document.getElementById(
+                        "btnGuardarConfigTrelloInline"
+                    ).style.display = "inline-flex";
+                    cargarBoardsTrelloInline(apiKey, token);
+                } else {
+                    mostrarToast(
+                        "❌ " +
+                            (resp
+                                ? resp.mensaje
+                                : "Error validando credenciales"),
+                        "error"
+                    );
+                }
+            })
+            .withFailureHandler(function (err) {
+                ocultarSpinner();
+                btn.disabled = false;
+                btn.innerHTML = "🔐 Validar";
+                mostrarToast(
+                    "Error validando credenciales: " + err.message,
+                    "error"
+                );
+            })
+            .validarCredencialesTrello(apiKey, token);
+    }
+
+    function cargarBoardsTrelloInline(apiKey, token) {
+        const selectBoard = document.getElementById("trelloBoardSelectInline");
+        selectBoard.innerHTML =
+            '<option value="">Cargando tableros...</option>';
+        selectBoard.disabled = true;
+
+        google.script.run
+            .withSuccessHandler(function (response) {
+                selectBoard.disabled = false;
+                if (response && response.success && response.data.length > 0) {
+                    selectBoard.innerHTML =
+                        '<option value="">Selecciona un tablero</option>';
+                    response.data.forEach(function (board) {
+                        const option = document.createElement("option");
+                        option.value = board.id;
+                        option.textContent = board.name;
+                        option.dataset.url = board.shortUrl || "";
+                        selectBoard.appendChild(option);
+                    });
+                    mostrarToast(
+                        "✅ " + response.data.length + " tableros cargados",
+                        "success"
+                    );
+                } else {
+                    selectBoard.innerHTML =
+                        '<option value="">No se encontraron tableros</option>';
+                    mostrarToast("No tienes tableros en Trello", "warning");
+                }
+            })
+            .withFailureHandler(function (err) {
+                selectBoard.disabled = false;
+                selectBoard.innerHTML =
+                    '<option value="">Error cargando tableros</option>';
+                mostrarToast(
+                    "Error cargando tableros: " + err.message,
+                    "error"
+                );
+            })
+            .obtenerBoardsTrello(apiKey, token);
+    }
+
+    function cargarListasTrelloInline() {
+        const selectBoard = document.getElementById("trelloBoardSelectInline");
+        const selectList = document.getElementById("trelloListSelectInline");
+        const apiKey = document
+            .getElementById("trelloApiKeyInline")
+            .value.trim();
+        const token = document.getElementById("trelloTokenInline").value.trim();
+        const boardId = selectBoard.value;
+
+        if (!boardId) {
+            selectList.innerHTML =
+                '<option value="">Selecciona primero un tablero</option>';
+            return;
+        }
+
+        selectList.innerHTML = '<option value="">Cargando listas...</option>';
+        selectList.disabled = true;
+
+        google.script.run
+            .withSuccessHandler(function (response) {
+                selectList.disabled = false;
+                if (response && response.success && response.data.length > 0) {
+                    selectList.innerHTML =
+                        '<option value="">Selecciona una lista</option>';
+                    response.data.forEach(function (lista) {
+                        const option = document.createElement("option");
+                        option.value = lista.id;
+                        option.textContent = lista.name;
+                        selectList.appendChild(option);
+                    });
+                    mostrarToast(
+                        "✅ " + response.data.length + " listas cargadas",
+                        "success"
+                    );
+                } else {
+                    selectList.innerHTML =
+                        '<option value="">No se encontraron listas</option>';
+                    mostrarToast("El tablero no tiene listas", "warning");
+                }
+            })
+            .withFailureHandler(function (err) {
+                selectList.disabled = false;
+                selectList.innerHTML =
+                    '<option value="">Error cargando listas</option>';
+                mostrarToast("Error cargando listas: " + err.message, "error");
+            })
+            .obtenerListasTrello(apiKey, token, boardId);
+    }
+
+    function guardarConfiguracionTrelloInline() {
+        const apiKey = document
+            .getElementById("trelloApiKeyInline")
+            .value.trim();
+        const token = document.getElementById("trelloTokenInline").value.trim();
+        const selectBoard = document.getElementById("trelloBoardSelectInline");
+        const selectList = document.getElementById("trelloListSelectInline");
+
+        const boardId = selectBoard ? selectBoard.value : "";
+        const listId = selectList ? selectList.value : "";
+
+        if (!apiKey || apiKey.length !== 32) {
+            mostrarToast("La API Key debe tener 32 caracteres", "warning");
+            return;
+        }
+        if (!token || token.length !== 64) {
+            mostrarToast("El Token debe tener 64 caracteres", "warning");
+            return;
+        }
+        if (!boardId || !listId) {
+            mostrarToast("Selecciona un tablero y una lista", "warning");
+            return;
+        }
+
+        const boardName =
+            selectBoard.options[selectBoard.selectedIndex].text || "";
+        const listName =
+            selectList.options[selectList.selectedIndex].text || "";
+        const boardUrl =
+            selectBoard.options[selectBoard.selectedIndex].dataset.url || "";
+
+        const configTrello = {
+            apiKey: apiKey,
+            token: token,
+            boardId: boardId,
+            listId: listId,
+            boardUrl: boardUrl,
+            boardName: boardName,
+            listName: listName,
+        };
+
+        const btn = document.getElementById("btnGuardarConfigTrelloInline");
+        btn.disabled = true;
+        btn.textContent = "Guardando...";
+
+        mostrarSpinner();
+
+        google.script.run
+            .withSuccessHandler(function (guardado) {
+                ocultarSpinner();
+                btn.disabled = false;
+                btn.innerHTML = "💾 Guardar";
+
+                if (guardado) {
+                    mostrarToast(
+                        "✅ Configuración de Trello guardada",
+                        "success"
+                    );
+                    // Cerrar inline y recargar options del modal
+                    cerrarConfiguracionTrelloInline();
+                    setTimeout(function () {
+                        if (typeof cargarTrelloModal === "function")
+                            cargarTrelloModal();
+                    }, 600);
+                } else {
+                    mostrarToast("Error al guardar configuración", "error");
+                }
+            })
+            .withFailureHandler(function (err) {
+                ocultarSpinner();
+                btn.disabled = false;
+                btn.innerHTML = "💾 Guardar";
+                mostrarToast(
+                    "Error guardando configuración: " + err.message,
+                    "error"
+                );
+            })
+            .guardarConfigTrello(configTrello, window.currentSheetUrl);
+    }
+
     function eliminarEvidenciaBug(index) {
         window.evidenciasBugTemporales.splice(index, 1);
         renderizarListaEvidenciasBug();
@@ -1750,7 +2152,7 @@
         messageEl.innerHTML =
             "💡 Tip: Configura Trello para sincronizar bugs automáticamente. " +
             '<span style="cursor: pointer; text-decoration: underline; font-weight: bold;" ' +
-            'onclick="abrirConfiguracionTrello()">Configurar ahora</span>';
+            'onclick="abrirConfiguracionTrelloInline()">Configurar ahora</span>';
 
         setTimeout(function () {
             notification.classList.add("show");

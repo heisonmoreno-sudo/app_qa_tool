@@ -276,7 +276,21 @@ function crearBug(datosBug) {
             "📋 Config Trello - Configurado: " + configTrello.configurado
         );
 
-        if (configTrello.configurado) {
+        // Permitir override desde el frontend: datosBug.enviarATrello (bool) y datosBug.trelloListOverride
+        var enviarATrello = true;
+        if (typeof datosBug.enviarATrello !== "undefined") {
+            enviarATrello = !!datosBug.enviarATrello;
+        }
+
+        // Si envío deshabilitado por el usuario, no se intenta sincronizar
+        if (enviarATrello && configTrello.configurado) {
+            // Si el frontend dio una lista específica para este bug, usarla
+            if (
+                datosBug.trelloListOverride &&
+                datosBug.trelloListOverride !== ""
+            ) {
+                configTrello.listId = datosBug.trelloListOverride;
+            }
             Logger.log("🎫 Intentando crear tarjeta en Trello...");
 
             var bugCompleto = {
@@ -355,8 +369,17 @@ function crearBug(datosBug) {
                     resultadoTrello.error;
             }
         } else {
-            Logger.log("ℹ️ Trello no configurado, solo se guarda en Sheet");
-            mensajeFinal = "Bug " + bugId + " guardado. Trello no configurado";
+            if (!enviarATrello) {
+                Logger.log(
+                    "ℹ️ Usuario deshabilitó el envío a Trello para este bug"
+                );
+                mensajeFinal =
+                    "Bug " + bugId + " guardado. Envío a Trello deshabilitado";
+            } else {
+                Logger.log("ℹ️ Trello no configurado, solo se guarda en Sheet");
+                mensajeFinal =
+                    "Bug " + bugId + " guardado. Trello no configurado";
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════════════

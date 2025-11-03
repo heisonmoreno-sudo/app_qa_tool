@@ -399,6 +399,96 @@
             </form>
         </div>
 
+        <!-- ───────────────────────────────────────────────────────────────── -->
+        <!-- OPCIONES TRELLO DENTRO DEL MODAL (compacto)                       -->
+        <!-- ───────────────────────────────────────────────────────────────── -->
+        <div
+            id="trelloBugOptions"
+            style="
+                border-top: 2px dashed #e2e8f0;
+                padding-top: 1rem;
+                margin: 1rem 0 0 0;
+            "
+        >
+            <label
+                style="
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    font-weight: 600;
+                "
+            >
+                <input type="checkbox" id="bugEnviarATrello" checked />
+                <span>Enviar bug a Trello</span>
+            </label>
+
+            <div
+                id="trelloBugConfigured"
+                class="hidden"
+                style="margin-top: 0.75rem"
+            >
+                <div
+                    style="
+                        font-size: 0.95rem;
+                        color: #475569;
+                        margin-bottom: 0.5rem;
+                    "
+                >
+                    <label class="form-label required">Tablero de Trello</label>
+                    <select
+                        id="bugBoardSelect"
+                        class="form-select"
+                        onchange="cargarListasModalPorBoard()"
+                    >
+                        <option value="">Cargando tableros...</option>
+                    </select>
+                </div>
+
+                <div
+                    style="
+                        font-size: 0.95rem;
+                        color: #475569;
+                        margin-bottom: 0.5rem;
+                    "
+                >
+                    <label class="form-label">Lista destino (override)</label>
+                    <select id="bugListSelect" class="form-select">
+                        <option value="">Selecciona un tablero primero</option>
+                    </select>
+                </div>
+
+                <div style="font-size: 0.85rem; color: #64748b">
+                    <a
+                        href="#"
+                        onclick="abrirConfiguracionTrello(); return false;"
+                        >Cambiar configuración / credenciales</a
+                    >
+                </div>
+            </div>
+
+            <div
+                id="trelloBugNotConfigured"
+                style="margin-top: 0.75rem; display: none"
+            >
+                <div
+                    style="
+                        font-size: 0.95rem;
+                        color: #475569;
+                        margin-bottom: 0.5rem;
+                    "
+                >
+                    Trello no está configurado para este workspace.
+                </div>
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    onclick="abrirConfiguracionTrello()"
+                >
+                    Configurar Trello
+                </button>
+            </div>
+        </div>
+
         <div class="modal-footer">
             <button
                 type="button"
@@ -624,6 +714,13 @@
         } else {
             if (casoRelacionadoInput) casoRelacionadoInput.value = "";
             if (infoCaso) infoCaso.classList.add("hidden");
+        }
+
+        // Cargar opciones relacionadas con Trello (si existe configuración)
+        try {
+            if (typeof cargarTrelloModal === "function") cargarTrelloModal();
+        } catch (e) {
+            console.warn("No se pudo cargar Trello en modal:", e);
         }
 
         if (typeof abrirModal === "function") {
@@ -923,6 +1020,181 @@
         contenido.innerHTML = html;
     }
 
+    // ===================================================================
+    // FUNCIONES TRELLO PARA EL MODAL DE BUG
+    // ===================================================================
+
+    /**
+     * Carga la configuración de Trello para este workspace y prepara la UI del modal
+     */
+    function cargarTrelloModal() {
+        try {
+            const enviarCheck = document.getElementById("bugEnviarATrello");
+            const configured = document.getElementById("trelloBugConfigured");
+            const notConfigured = document.getElementById(
+                "trelloBugNotConfigured"
+            );
+            const boardSelect = document.getElementById("bugBoardSelect");
+            const listSelect = document.getElementById("bugListSelect");
+
+            // Reset
+            if (enviarCheck) enviarCheck.checked = true;
+            if (configured) configured.classList.add("hidden");
+            if (notConfigured) notConfigured.style.display = "none";
+            if (boardSelect)
+                boardSelect.innerHTML =
+                    '<option value="">Cargando tableros...</option>';
+            if (listSelect)
+                listSelect.innerHTML =
+                    '<option value="">Selecciona un tablero primero</option>';
+
+            if (!window.currentSheetUrl) {
+                if (notConfigured) notConfigured.style.display = "block";
+                return;
+            }
+
+            // Primero obtener configuración para saber si hay Trello configurado
+            google.script.run
+                .withSuccessHandler(function (config) {
+                    if (config && config.configurado) {
+                        // Mostrar UI configurada
+                        if (configured) configured.classList.remove("hidden");
+                        if (notConfigured) notConfigured.style.display = "none";
+
+                        // Cargar boards usando credenciales guardadas
+                        google.script.run
+                            .withSuccessHandler(function (respBoards) {
+                                if (!boardSelect) return;
+                                boardSelect.disabled = false;
+                                boardSelect.innerHTML =
+                                    '<option value="">Selecciona un tablero</option>';
+
+                                if (
+                                    respBoards &&
+                                    respBoards.success &&
+                                    respBoards.data.length > 0
+                                ) {
+                                    respBoards.data.forEach(function (b) {
+                                        const opt =
+                                            document.createElement("option");
+                                        opt.value = b.id;
+                                        opt.textContent = b.name;
+                                        opt.dataset.url = b.shortUrl || "";
+                                        boardSelect.appendChild(opt);
+                                    });
+
+                                    // Preselect configured board if present
+                                    if (config.boardId) {
+                                        boardSelect.value = config.boardId;
+                                        // cargar listas del board seleccionado
+                                        cargarListasModalPorBoard(
+                                            config.boardId,
+                                            config.listId
+                                        );
+                                    }
+                                } else {
+                                    boardSelect.innerHTML =
+                                        '<option value="">No se encontraron tableros</option>';
+                                }
+                            })
+                            .withFailureHandler(function (err) {
+                                if (boardSelect)
+                                    boardSelect.innerHTML =
+                                        '<option value="">Error cargando tableros</option>';
+                                console.error(
+                                    "Error cargando boards para modal:",
+                                    err
+                                );
+                            })
+                            .obtenerBoardsTrelloGuardados(
+                                window.currentSheetUrl
+                            );
+                    } else {
+                        if (notConfigured)
+                            notConfigured.style.display = "block";
+                    }
+                })
+                .withFailureHandler(function (error) {
+                    console.error(
+                        "Error obteniendo config Trello para modal:",
+                        error
+                    );
+                    if (document.getElementById("trelloBugNotConfigured"))
+                        document.getElementById(
+                            "trelloBugNotConfigured"
+                        ).style.display = "block";
+                })
+                .obtenerConfigTrello(window.currentSheetUrl);
+        } catch (e) {
+            console.error("Error en cargarTrelloModal:", e);
+        }
+    }
+
+    /**
+     * Carga las listas para el board seleccionado en el modal. Si se pasa listToSelect intenta preseleccionarlo.
+     * @param {string} boardIdOverride - opcional boardId para forzar carga
+     * @param {string} listToSelect - opcional listId para preseleccionar
+     */
+    function cargarListasModalPorBoard(boardIdOverride, listToSelect) {
+        try {
+            const boardSelect = document.getElementById("bugBoardSelect");
+            const selectList = document.getElementById("bugListSelect");
+            const boardId =
+                boardIdOverride || (boardSelect ? boardSelect.value : "");
+
+            if (!boardId) {
+                if (selectList)
+                    selectList.innerHTML =
+                        '<option value="">Selecciona primero un tablero</option>';
+                return;
+            }
+
+            if (selectList) {
+                selectList.innerHTML =
+                    '<option value="">Cargando listas...</option>';
+                selectList.disabled = true;
+            }
+
+            google.script.run
+                .withSuccessHandler(function (resp) {
+                    if (!selectList) return;
+                    selectList.disabled = false;
+
+                    if (resp && resp.success && resp.data.length > 0) {
+                        selectList.innerHTML =
+                            '<option value="">Selecciona una lista</option>';
+                        resp.data.forEach(function (l) {
+                            const opt = document.createElement("option");
+                            opt.value = l.id;
+                            opt.textContent = l.name;
+                            selectList.appendChild(opt);
+                        });
+
+                        if (listToSelect) selectList.value = listToSelect;
+                    } else {
+                        selectList.innerHTML =
+                            '<option value="">No se encontraron listas</option>';
+                    }
+                })
+                .withFailureHandler(function (err) {
+                    if (selectList)
+                        selectList.innerHTML =
+                            '<option value="">Error cargando listas</option>';
+                    console.error(
+                        "Error cargando listas para modal (by board):",
+                        err
+                    );
+                })
+                .obtenerListasTrelloGuardadas(window.currentSheetUrl, boardId);
+        } catch (e) {
+            console.error("Error en cargarListasModalPorBoard:", e);
+        }
+    }
+
+    // Exportar al scope global
+    window.cargarTrelloModal = cargarTrelloModal;
+    window.cargarListasModalPorBoard = cargarListasModalPorBoard;
+
     function eliminarEvidenciaBug(index) {
         window.evidenciasBugTemporales.splice(index, 1);
         renderizarListaEvidenciasBug();
@@ -1058,6 +1330,13 @@
             origenSinCaso: casoRelacionado ? "" : "Manual",
             evidencias: [], // Solo nombres para referencia
             evidenciasBase64: [], // ← NUEVO: Contenido completo para subir
+            // Opciones Trello (compacto en modal)
+            enviarATrello: document.getElementById("bugEnviarATrello")
+                ? document.getElementById("bugEnviarATrello").checked
+                : true,
+            trelloListOverride: document.getElementById("bugListSelect")
+                ? document.getElementById("bugListSelect").value
+                : "",
         };
 
         // MEJORA 4: Agregar evidencias con contenido Base64 completo

@@ -395,6 +395,53 @@ function obtenerConfigTrello(sheetUrl) {
 }
 
 /**
+ * Obtiene los boards de Trello usando las credenciales guardadas en la configuración
+ * @param {string} sheetUrl - URL del Sheet (opcional)
+ * @returns {Object} Resultado de llamada a obtenerBoardsTrello
+ */
+function obtenerBoardsTrelloGuardados(sheetUrl) {
+    try {
+        var cfg = obtenerConfigTrello(sheetUrl);
+
+        if (!cfg || !cfg.apiKey || !cfg.token) {
+            return respuestaError(
+                "Credenciales faltantes",
+                "No hay API Key / Token configurados para Trello"
+            );
+        }
+
+        return obtenerBoardsTrello(cfg.apiKey, cfg.token);
+    } catch (error) {
+        Logger.log("❌ Error obteniendo boards guardados: " + error.message);
+        return respuestaError(error.message, "Error al obtener boards");
+    }
+}
+
+/**
+ * Obtiene las listas de un board usando las credenciales guardadas
+ * @param {string} sheetUrl - URL del Sheet (opcional)
+ * @param {string} boardId - ID del board
+ * @returns {Object} Resultado de llamada a obtenerListasTrello
+ */
+function obtenerListasTrelloGuardadas(sheetUrl, boardId) {
+    try {
+        var cfg = obtenerConfigTrello(sheetUrl);
+
+        if (!cfg || !cfg.apiKey || !cfg.token) {
+            return respuestaError(
+                "Credenciales faltantes",
+                "No hay API Key / Token configurados para Trello"
+            );
+        }
+
+        return obtenerListasTrello(cfg.apiKey, cfg.token, boardId);
+    } catch (error) {
+        Logger.log("❌ Error obteniendo listas guardadas: " + error.message);
+        return respuestaError(error.message, "Error al obtener listas");
+    }
+}
+
+/**
  * Guarda la configuración de Trello
  * @param {Object} configTrello - Objeto con datos de Trello
  * @param {string} sheetUrl - URL del Sheet (opcional)

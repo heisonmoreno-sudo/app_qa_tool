@@ -155,37 +155,244 @@ function crearBug(datosBug) {
 
         // Preparar fila de datos
         var fila = [
-            bugId, // ID
-            datosBug.titulo || "", // Titulo
-            datosBug.descripcion || "", // Descripcion
-            datosBug.severidad || "Media", // Severidad
-            datosBug.prioridad || "Media", // Prioridad
-            "Abierto", // Estado (siempre Abierto al crear)
-            datosBug.etiquetas || "", // Etiquetas
-            datosBug.tieneCasoDiseñado ? "Si" : "No", // TieneCasoDiseñado
-            datosBug.casosRelacionados || "", // CasosRelacionados
-            datosBug.origenSinCaso || "", // OrigenSinCaso
-            datosBug.precondiciones || "", // Precondiciones
-            datosBug.datosPrueba || "", // DatosPrueba
-            datosBug.pasosReproducir || "", // PasosReproducir
-            datosBug.resultadoEsperado || "", // ResultadoEsperado
-            datosBug.resultadoObtenido || "", // ResultadoObtenido
-            datosBug.ambiente || "", // Ambiente
-            datosBug.navegador || "", // Navegador
-            datosBug.evidencias ? datosBug.evidencias.join("\n") : "", // EvidenciasURL
-            fechaHoy, // FechaDeteccion
-            usuario, // DetectadoPor
-            datosBug.asignadoA || "", // AsignadoA
-            "", // FechaResolucion
-            "", // TrelloCardID
-            "", // TrelloCardURL
-            datosBug.notas || "", // Notas
+            bugId,
+            datosBug.titulo || "",
+            datosBug.descripcion || "",
+            datosBug.severidad || "Media",
+            datosBug.prioridad || "Media",
+            "Abierto",
+            datosBug.etiquetas || "",
+            datosBug.tieneCasoDiseñado ? "Si" : "No",
+            datosBug.casosRelacionados || "",
+            datosBug.origenSinCaso || "",
+            datosBug.precondiciones || "",
+            datosBug.datosPrueba || "",
+            datosBug.pasosReproducir || "",
+            datosBug.resultadoEsperado || "",
+            datosBug.resultadoObtenido || "",
+            datosBug.ambiente || "",
+            datosBug.navegador || "",
+            datosBug.evidencias ? datosBug.evidencias.join("\n") : "",
+            fechaHoy,
+            usuario,
+            datosBug.asignadoA || "",
+            "",
+            "",
+            "",
+            datosBug.notas || "",
         ];
 
         // Agregar fila a la hoja
         hojaBugs.appendRow(fila);
-
         Logger.log("✅ Bug creado en Sheet: " + bugId);
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SUBIR EVIDENCIAS A DRIVE (MEJORA 4 - permanente)
+        // ═══════════════════════════════════════════════════════════════════════
+        var evidenciasUrls = [];
+        var urlCarpetaEvidencias = "";
+
+        if (datosBug.evidenciasBase64 && datosBug.evidenciasBase64.length > 0) {
+            Logger.log(
+                "📤 Subiendo " +
+                    datosBug.evidenciasBase64.length +
+                    " evidencias a Drive..."
+            );
+
+            try {
+                var carpetaEvidencias =
+                    obtenerOCrearCarpetaEvidencias(spreadsheet);
+                var nombreCarpetaBug =
+                    bugId + " - " + limpiarNombreArchivo(datosBug.titulo);
+                var carpetaBug =
+                    carpetaEvidencias.createFolder(nombreCarpetaBug);
+
+                Logger.log("📁 Carpeta creada: " + carpetaBug.getName());
+
+                datosBug.evidenciasBase64.forEach(function (evidencia) {
+                    try {
+                        Logger.log("  📎 Subiendo: " + evidencia.nombre);
+                        var bytes = Utilities.base64Decode(
+                            evidencia.contenidoBase64
+                        );
+                        var blob = Utilities.newBlob(
+                            bytes,
+                            evidencia.mimeType,
+                            evidencia.nombre
+                        );
+                        var archivo = carpetaBug.createFile(blob);
+                        archivo.setSharing(
+                            DriveApp.Access.ANYONE_WITH_LINK,
+                            DriveApp.Permission.VIEW
+                        );
+                        var urlArchivo = archivo.getUrl();
+                        evidenciasUrls.push(urlArchivo);
+                        Logger.log("    ✅ Subido: " + urlArchivo);
+                    } catch (errorArchivo) {
+                        Logger.log(
+                            '    ❌ Error con evidencia "' +
+                                evidencia.nombre +
+                                '": ' +
+                                errorArchivo.toString()
+                        );
+                    }
+                });
+
+                urlCarpetaEvidencias = carpetaBug.getUrl();
+                Logger.log(
+                    "✅ " +
+                        evidenciasUrls.length +
+                        " evidencias subidas exitosamente"
+                );
+                Logger.log("📂 Carpeta: " + urlCarpetaEvidencias);
+
+                actualizarBug(sheetUrl, bugId, {
+                    EvidenciasURL: evidenciasUrls.join("\n"),
+                });
+            } catch (errorDrive) {
+                Logger.log(
+                    "❌ Error subiendo evidencias: " + errorDrive.toString()
+                );
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // INTEGRACIÓN CON TRELLO (feature/bugs-trello)
+        // ═══════════════════════════════════════════════════════════════════════
+        var resultadoTrello = {
+            intentado: false,
+            exito: false,
+            cardUrl: "",
+            cardId: "",
+            error: "",
+        };
+
+        var mensajeFinal = "";
+        var trelloCardUrl = "";
+        var trelloCardId = "";
+
+        var configTrello = obtenerConfigTrello(sheetUrl);
+        Logger.log(
+            "📋 Config Trello - Configurado: " + configTrello.configurado
+        );
+
+        if (configTrello.configurado) {
+            Logger.log("🎫 Intentando crear tarjeta en Trello...");
+
+            var bugCompleto = {
+                id: bugId,
+                titulo: datosBug.titulo,
+                descripcion: datosBug.descripcion,
+                severidad: datosBug.severidad,
+                prioridad: datosBug.prioridad,
+                estado: "Abierto",
+                casoRelacionado: datosBug.casosRelacionados || "-",
+                precondiciones: datosBug.precondiciones || "-",
+                datosPrueba: datosBug.datosPrueba || "-",
+                pasosReproducir: datosBug.pasosReproducir,
+                resultadoEsperado: datosBug.resultadoEsperado,
+                resultadoObtenido: datosBug.resultadoObtenido,
+                navegador: datosBug.navegador || "-",
+                ambiente: datosBug.ambiente || "-",
+                evidencias: datosBug.evidencias || [],
+                fechaCreacion: fechaHoy,
+                reportadoPor: usuario,
+            };
+
+            if (evidenciasUrls.length > 0) {
+                bugCompleto.evidenciasUrls = evidenciasUrls;
+                bugCompleto.carpetaEvidencias = urlCarpetaEvidencias;
+            }
+
+            try {
+                resultadoTrello = crearTarjetaTrello(bugCompleto, configTrello);
+                resultadoTrello.intentado = true;
+
+                if (resultadoTrello.exito) {
+                    Logger.log(
+                        "✅ Tarjeta creada en Trello: " +
+                            resultadoTrello.cardUrl
+                    );
+                    trelloCardUrl = resultadoTrello.cardUrl;
+                    trelloCardId = resultadoTrello.cardId;
+
+                    actualizarBug(sheetUrl, bugId, {
+                        LinkTrello: trelloCardUrl,
+                        TrelloCardID: trelloCardId,
+                    });
+
+                    mensajeFinal =
+                        "Bug " +
+                        bugId +
+                        " creado y enviado a Trello exitosamente";
+                } else {
+                    Logger.log(
+                        "⚠️ Bug guardado pero error en Trello: " +
+                            resultadoTrello.error
+                    );
+                    actualizarBug(sheetUrl, bugId, {
+                        Estado: "Pendiente sincronización Trello",
+                        Notas: "Error Trello: " + resultadoTrello.error,
+                    });
+                    mensajeFinal =
+                        "Bug " +
+                        bugId +
+                        " guardado. Error al sincronizar con Trello: " +
+                        resultadoTrello.error;
+                }
+            } catch (trelloError) {
+                Logger.log(
+                    "💥 Excepción con Trello: " + trelloError.toString()
+                );
+                resultadoTrello.intentado = true;
+                resultadoTrello.exito = false;
+                resultadoTrello.error =
+                    trelloError.message || trelloError.toString();
+                mensajeFinal =
+                    "Bug " +
+                    bugId +
+                    " guardado. Error al sincronizar con Trello: " +
+                    resultadoTrello.error;
+            }
+        } else {
+            Logger.log("ℹ️ Trello no configurado, solo se guarda en Sheet");
+            mensajeFinal = "Bug " + bugId + " guardado. Trello no configurado";
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // ACTUALIZAR CASOS RELACIONADOS
+        // ═══════════════════════════════════════════════════════════════════════
+        if (datosBug.casosRelacionados && datosBug.casosRelacionados !== "") {
+            var casosIds = datosBug.casosRelacionados
+                .split(",")
+                .map(function (id) {
+                    return id.trim();
+                });
+
+            casosIds.forEach(function (casoId) {
+                if (casoId) {
+                    actualizarBugEnCaso(spreadsheet, casoId, bugId);
+                }
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // RESPUESTA FINAL
+        // ═══════════════════════════════════════════════════════════════════════
+        return {
+            success: true,
+            data: {
+                bugId: bugId,
+                titulo: datosBug.titulo,
+                estado: "Abierto",
+                trelloCreado: resultadoTrello.exito,
+                trelloUrl: trelloCardUrl,
+                trelloCardId: trelloCardId,
+                trelloIntentado: resultadoTrello.intentado,
+                trelloError: resultadoTrello.error || "",
+            },
+            mensaje: mensajeFinal,
+        };
     } catch (error) {
         Logger.log("❌ Error al crear bug: " + error);
         return {
@@ -194,232 +401,6 @@ function crearBug(datosBug) {
         };
     }
 }
-
-// ═══════════════════════════════════════════════════════════════════════
-// SUBIR EVIDENCIAS A DRIVE (MEJORA 4 - permanente)
-// ═══════════════════════════════════════════════════════════════════════
-
-var evidenciasUrls = [];
-var urlCarpetaEvidencias = "";
-
-if (datosBug.evidenciasBase64 && datosBug.evidenciasBase64.length > 0) {
-    Logger.log(
-        "📤 Subiendo " +
-            datosBug.evidenciasBase64.length +
-            " evidencias a Drive..."
-    );
-
-    try {
-        // Obtener o crear carpeta de evidencias
-        var carpetaEvidencias = obtenerOCrearCarpetaEvidencias(spreadsheet);
-
-        // Crear subcarpeta para este bug
-        var nombreCarpetaBug =
-            bugId + " - " + limpiarNombreArchivo(datosBug.titulo);
-        var carpetaBug = carpetaEvidencias.createFolder(nombreCarpetaBug);
-
-        Logger.log("📁 Carpeta creada: " + carpetaBug.getName());
-
-        // Subir cada evidencia
-        datosBug.evidenciasBase64.forEach(function (evidencia) {
-            try {
-                Logger.log("  📎 Subiendo: " + evidencia.nombre);
-
-                // Decodificar Base64
-                var bytes = Utilities.base64Decode(evidencia.contenidoBase64);
-                var blob = Utilities.newBlob(
-                    bytes,
-                    evidencia.mimeType,
-                    evidencia.nombre
-                );
-
-                // Crear archivo en Drive
-                var archivo = carpetaBug.createFile(blob);
-
-                // Hacer el archivo accesible con el link
-                archivo.setSharing(
-                    DriveApp.Access.ANYONE_WITH_LINK,
-                    DriveApp.Permission.VIEW
-                );
-
-                var urlArchivo = archivo.getUrl();
-                evidenciasUrls.push(urlArchivo);
-
-                Logger.log("    ✅ Subido: " + urlArchivo);
-            } catch (errorArchivo) {
-                Logger.log(
-                    '    ❌ Error con evidencia "' +
-                        evidencia.nombre +
-                        '": ' +
-                        errorArchivo.toString()
-                );
-            }
-        });
-
-        urlCarpetaEvidencias = carpetaBug.getUrl();
-
-        Logger.log(
-            "✅ " + evidenciasUrls.length + " evidencias subidas exitosamente"
-        );
-        Logger.log("📂 Carpeta: " + urlCarpetaEvidencias);
-
-        // Actualizar el bug con las URLs de evidencias
-        actualizarBug(sheetUrl, bugId, {
-            EvidenciasURL: evidenciasUrls.join("\n"),
-        });
-    } catch (errorDrive) {
-        Logger.log("❌ Error subiendo evidencias: " + errorDrive.toString());
-        // No detener el proceso, el bug ya está creado
-    }
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-// INTEGRACIÓN CON TRELLO (feature/bugs-trello)
-// ═══════════════════════════════════════════════════════════════════════
-
-var resultadoTrello = {
-    intentado: false,
-    exito: false,
-    cardUrl: "",
-    cardId: "",
-    error: "",
-};
-
-var mensajeFinal = "";
-var trelloCardUrl = "";
-var trelloCardId = "";
-
-// Obtener configuración de Trello
-var configTrello = obtenerConfigTrello(sheetUrl);
-
-Logger.log("📋 Config Trello - Configurado: " + configTrello.configurado);
-
-if (configTrello.configurado) {
-    // Trello está configurado, intentar crear tarjeta
-    Logger.log("🎫 Intentando crear tarjeta en Trello...");
-
-    // Preparar datos completos del bug para Trello
-    var bugCompleto = {
-        id: bugId,
-        titulo: datosBug.titulo,
-        descripcion: datosBug.descripcion,
-        severidad: datosBug.severidad,
-        prioridad: datosBug.prioridad,
-        estado: "Abierto",
-        casoRelacionado: datosBug.casosRelacionados || "-",
-        precondiciones: datosBug.precondiciones || "-",
-        datosPrueba: datosBug.datosPrueba || "-",
-        pasosReproducir: datosBug.pasosReproducir,
-        resultadoEsperado: datosBug.resultadoEsperado,
-        resultadoObtenido: datosBug.resultadoObtenido,
-        navegador: datosBug.navegador || "-",
-        ambiente: datosBug.ambiente || "-",
-        evidencias: datosBug.evidencias || [],
-        fechaCreacion: fechaHoy,
-        reportadoPor: usuario,
-    };
-
-    // MEJORA 4: Agregar URLs de evidencias si se subieron
-    if (evidenciasUrls.length > 0) {
-        bugCompleto.evidenciasUrls = evidenciasUrls;
-        bugCompleto.carpetaEvidencias = urlCarpetaEvidencias;
-    }
-
-    try {
-        // Llamar a la función de Trello
-        resultadoTrello = crearTarjetaTrello(bugCompleto, configTrello);
-        resultadoTrello.intentado = true;
-
-        if (resultadoTrello.exito) {
-            // ✅ ESCENARIO 1: Éxito con Trello
-            Logger.log(
-                "✅ Tarjeta creada en Trello: " + resultadoTrello.cardUrl
-            );
-
-            trelloCardUrl = resultadoTrello.cardUrl;
-            trelloCardId = resultadoTrello.cardId;
-
-            // Actualizar el bug con la URL de Trello
-            actualizarBug(sheetUrl, bugId, {
-                LinkTrello: trelloCardUrl,
-                TrelloCardID: trelloCardId,
-            });
-
-            mensajeFinal =
-                "Bug " + bugId + " creado y enviado a Trello exitosamente";
-        } else {
-            // ❌ ESCENARIO 3: Error en Trello pero bug guardado
-            Logger.log(
-                "⚠️ Bug guardado pero error en Trello: " + resultadoTrello.error
-            );
-
-            // Marcar como pendiente de sincronización
-            actualizarBug(sheetUrl, bugId, {
-                Estado: "Pendiente sincronización Trello",
-                Notas: "Error Trello: " + resultadoTrello.error,
-            });
-
-            mensajeFinal =
-                "Bug " +
-                bugId +
-                " guardado. Error al sincronizar con Trello: " +
-                resultadoTrello.error;
-        }
-    } catch (trelloError) {
-        // ❌ ESCENARIO 3: Excepción al intentar crear en Trello
-        Logger.log("💥 Excepción con Trello: " + trelloError.toString());
-
-        resultadoTrello.intentado = true;
-        resultadoTrello.exito = false;
-        resultadoTrello.error = trelloError.message || trelloError.toString();
-
-        mensajeFinal =
-            "Bug " +
-            bugId +
-            " guardado. Error al sincronizar con Trello: " +
-            resultadoTrello.error;
-    }
-} else {
-    // ℹ️ ESCENARIO 2: Sin Trello configurado
-    Logger.log("ℹ️ Trello no configurado, solo se guarda en Sheet");
-    mensajeFinal = "Bug " + bugId + " guardado. Trello no configurado";
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-// ACTUALIZAR CASOS RELACIONADOS
-// ═══════════════════════════════════════════════════════════════════════
-
-// Si tiene casos relacionados, actualizar esos casos
-if (datosBug.casosRelacionados && datosBug.casosRelacionados !== "") {
-    var casosIds = datosBug.casosRelacionados.split(",").map(function (id) {
-        return id.trim();
-    });
-
-    casosIds.forEach(function (casoId) {
-        if (casoId) {
-            actualizarBugEnCaso(spreadsheet, casoId, bugId);
-        }
-    });
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-// RESPUESTA FINAL
-// ═══════════════════════════════════════════════════════════════════════
-
-return {
-    success: true,
-    data: {
-        bugId: bugId,
-        titulo: datosBug.titulo,
-        estado: "Abierto",
-        trelloCreado: resultadoTrello.exito,
-        trelloUrl: trelloCardUrl,
-        trelloCardId: trelloCardId,
-        trelloIntentado: resultadoTrello.intentado,
-        trelloError: resultadoTrello.error || "",
-    },
-    mensaje: mensajeFinal,
-};
 
 /**
  * Actualiza la columna de bugs en un caso

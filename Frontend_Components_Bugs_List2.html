@@ -1,195 +1,410 @@
 <!-- Bugs History Screen (clean UTF-8, no emojis) -->
-<div id="bugsScreen" class="hidden" style="padding: 1rem;">
-  <div class="card" style="margin-top: 0.5rem;">
-    <div class="card-header" style="display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
-      <div style="display:flex; align-items:center; gap:0.5rem;">
-        <button class="btn btn-secondary btn-sm" onclick="ocultarPanelBugs()">← Volver</button>
-        <div style="font-weight:700; color:#334155;">Historial de Bugs</div>
-      </div>
-      <div style="display:flex; gap:0.5rem;">
-        <button class="btn btn-primary" onclick="abrirModalCrearBug('')">Nuevo Bug</button>
-      </div>
+<div id="bugsScreen" class="hidden" style="padding: 1rem">
+    <div class="card" style="margin-top: 0.5rem">
+        <div
+            class="card-header"
+            style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                flex-wrap: wrap;
+            "
+        >
+            <div style="display: flex; align-items: center; gap: 0.5rem">
+                <button
+                    class="btn btn-secondary btn-sm"
+                    onclick="ocultarPanelBugs()"
+                >
+                    ← Volver
+                </button>
+                <div style="font-weight: 700; color: #334155">
+                    Historial de Bugs
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.5rem">
+                <button
+                    class="btn btn-primary"
+                    onclick="abrirModalCrearBugProxy('')"
+                >
+                    Nuevo Bug
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div
+                style="
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                    gap: 0.75rem;
+                    margin-bottom: 0.75rem;
+                "
+            >
+                <input
+                    id="bugFiltroBusqueda"
+                    class="input-field"
+                    placeholder="Buscar por título o descripción"
+                    oninput="cargarBugs()"
+                />
+                <select
+                    id="bugFiltroEstado"
+                    class="input-field"
+                    onchange="cargarBugs()"
+                >
+                    <option value="Todos">Estado: Todos</option>
+                    <option value="Abierto">Abierto</option>
+                    <option value="Cerrado">Cerrado</option>
+                </select>
+                <select
+                    id="bugFiltroSeveridad"
+                    class="input-field"
+                    onchange="cargarBugs()"
+                >
+                    <option value="Todas">Severidad: Todas</option>
+                    <option value="Crítica">Crítica</option>
+                    <option value="Alta">Alta</option>
+                    <option value="Media">Media</option>
+                    <option value="Baja">Baja</option>
+                </select>
+                <select
+                    id="bugFiltroConCaso"
+                    class="input-field"
+                    onchange="cargarBugs()"
+                >
+                    <option value="Todos">Relación: Todos</option>
+                    <option value="ConCaso">Con Caso</option>
+                    <option value="SinCaso">Sin Caso</option>
+                </select>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th style="width: 90px">ID</th>
+                            <th>Título</th>
+                            <th>Estado</th>
+                            <th>Severidad</th>
+                            <th>Casos</th>
+                            <th>Link Caso</th>
+                            <th>Fecha</th>
+                            <th style="width: 220px">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaBugs"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
-    <div class="card-body">
-      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:0.75rem; margin-bottom:0.75rem;">
-        <input id="bugFiltroBusqueda" class="input-field" placeholder="Buscar por título o descripción" oninput="cargarBugs()" />
-        <select id="bugFiltroEstado" class="input-field" onchange="cargarBugs()">
-          <option value="Todos">Estado: Todos</option>
-          <option value="Abierto">Abierto</option>
-          <option value="Cerrado">Cerrado</option>
-        </select>
-        <select id="bugFiltroSeveridad" class="input-field" onchange="cargarBugs()">
-          <option value="Todas">Severidad: Todas</option>
-          <option value="Crítica">Crítica</option>
-          <option value="Alta">Alta</option>
-          <option value="Media">Media</option>
-          <option value="Baja">Baja</option>
-        </select>
-        <select id="bugFiltroConCaso" class="input-field" onchange="cargarBugs()">
-          <option value="Todos">Relación: Todos</option>
-          <option value="ConCaso">Con Caso</option>
-          <option value="SinCaso">Sin Caso</option>
-        </select>
-      </div>
-      <div class="table-responsive">
-        <table class="table">
-          <thead>
-            <tr>
-              <th style="width:90px;">ID</th>
-              <th>Título</th>
-              <th>Estado</th>
-              <th>Severidad</th>
-              <th>Casos</th>
-              <th>Link Caso</th>
-              <th>Fecha</th>
-              <th style="width:220px;">Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="tablaBugs"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
 </div>
 
 <script>
-function mostrarPanelBugs() {
-  try { console.log('[Bugs] Abrir historial'); } catch(e){}
-  var bugsScreen = document.getElementById('bugsScreen');
-  var casosScreen = document.getElementById('casosScreen');
-  if (casosScreen) casosScreen.classList.add('hidden');
-  if (bugsScreen) bugsScreen.classList.remove('hidden');
-  try { cargarBugs(); } catch(e) { console.error('[Bugs] Error cargarBugs init:', e); }
-}
+    function mostrarPanelBugs() {
+        try {
+            console.log("[Bugs] Abrir historial");
+        } catch (e) {}
+        var bugsScreen = document.getElementById("bugsScreen");
+        var casosScreen = document.getElementById("casosScreen");
+        if (casosScreen) casosScreen.classList.add("hidden");
+        if (bugsScreen) bugsScreen.classList.remove("hidden");
+        try {
+            cargarBugs();
+        } catch (e) {
+            console.error("[Bugs] Error cargarBugs init:", e);
+        }
+    }
 
-function ocultarPanelBugs() {
-  var bugsScreen = document.getElementById('bugsScreen');
-  var casosScreen = document.getElementById('casosScreen');
-  if (bugsScreen) bugsScreen.classList.add('hidden');
-  if (casosScreen) casosScreen.classList.remove('hidden');
-}
+    function ocultarPanelBugs() {
+        var bugsScreen = document.getElementById("bugsScreen");
+        var casosScreen = document.getElementById("casosScreen");
+        if (bugsScreen) bugsScreen.classList.add("hidden");
+        if (casosScreen) casosScreen.classList.remove("hidden");
+    }
 
-function cargarBugs() {
-  var url = (typeof recuperarSheetUrl === 'function') ? recuperarSheetUrl() : null;
-  if (!url) { console.warn('[Bugs] No hay sheetUrl'); if (typeof mostrarToast==='function') mostrarToast('Conecta un Sheet primero','warning'); return; }
-  var filtros = {};
-  var busqueda = document.getElementById('bugFiltroBusqueda') ? document.getElementById('bugFiltroBusqueda').value.trim() : '';
-  var estado = document.getElementById('bugFiltroEstado') ? document.getElementById('bugFiltroEstado').value : 'Todos';
-  var severidad = document.getElementById('bugFiltroSeveridad') ? document.getElementById('bugFiltroSeveridad').value : 'Todas';
-  var relacion = document.getElementById('bugFiltroConCaso') ? document.getElementById('bugFiltroConCaso').value : 'Todos';
-  if (busqueda) filtros.busqueda = busqueda;
-  if (estado && estado !== 'Todos') filtros.estado = estado;
-  if (severidad && severidad !== 'Todas') filtros.severidad = severidad;
-  if (relacion === 'ConCaso') filtros.conCaso = true; else if (relacion === 'SinCaso') filtros.conCaso = false;
-  console.log('[Bugs] Listar con filtros:', filtros);
-  if (typeof mostrarSpinner === 'function') mostrarSpinner();
+    function cargarBugs() {
+        var url =
+            typeof recuperarSheetUrl === "function"
+                ? recuperarSheetUrl()
+                : null;
+        if (!url) {
+            console.warn("[Bugs] No hay sheetUrl");
+            if (typeof mostrarToast === "function")
+                mostrarToast("Conecta un Sheet primero", "warning");
+            return;
+        }
+        var filtros = {};
+        var busqueda = document.getElementById("bugFiltroBusqueda")
+            ? document.getElementById("bugFiltroBusqueda").value.trim()
+            : "";
+        var estado = document.getElementById("bugFiltroEstado")
+            ? document.getElementById("bugFiltroEstado").value
+            : "Todos";
+        var severidad = document.getElementById("bugFiltroSeveridad")
+            ? document.getElementById("bugFiltroSeveridad").value
+            : "Todas";
+        var relacion = document.getElementById("bugFiltroConCaso")
+            ? document.getElementById("bugFiltroConCaso").value
+            : "Todos";
+        if (busqueda) filtros.busqueda = busqueda;
+        if (estado && estado !== "Todos") filtros.estado = estado;
+        if (severidad && severidad !== "Todas") filtros.severidad = severidad;
+        if (relacion === "ConCaso") filtros.conCaso = true;
+        else if (relacion === "SinCaso") filtros.conCaso = false;
+        console.log("[Bugs] Listar con filtros:", filtros);
+        if (typeof mostrarSpinner === "function") mostrarSpinner();
 
-  // Llamada directa a listarBugs (sin wrapper)
-  google.script.run
-    .withSuccessHandler(function(res){
-      console.log('[Bugs] Respuesta listarBugs:', res);
-      if (typeof ocultarSpinner === 'function') ocultarSpinner();
+        // Llamada directa a listarBugs (sin wrapper)
+        google.script.run
+            .withSuccessHandler(function (res) {
+                console.log("[Bugs] Respuesta listarBugs:", res);
+                if (typeof ocultarSpinner === "function") ocultarSpinner();
 
-      if (!res) {
-        console.error('[Bugs] listarBugs devolvió null');
-        if (typeof mostrarToast==='function') mostrarToast('Error: No se recibió respuesta del servidor','error');
-        renderizarTablaBugs([]);
-        return;
-      }
+                if (!res) {
+                    console.error("[Bugs] listarBugs devolvió null");
+                    if (typeof mostrarToast === "function")
+                        mostrarToast(
+                            "Error: No se recibió respuesta del servidor",
+                            "error"
+                        );
+                    renderizarTablaBugs([]);
+                    return;
+                }
 
-      if (!res.success) {
-        console.error('[Bugs] listarBugs falló:', res.mensaje);
-        if (typeof mostrarToast==='function') mostrarToast('No se pudieron listar bugs: ' + (res.mensaje||''),'error');
-        renderizarTablaBugs([]);
-        return;
-      }
+                if (!res.success) {
+                    console.error("[Bugs] listarBugs falló:", res.mensaje);
+                    if (typeof mostrarToast === "function")
+                        mostrarToast(
+                            "No se pudieron listar bugs: " +
+                                (res.mensaje || ""),
+                            "error"
+                        );
+                    renderizarTablaBugs([]);
+                    return;
+                }
 
-      renderizarTablaBugs((res.data && res.data.bugs) ? res.data.bugs : []);
-    })
-    .withFailureHandler(function(err){
-      if (typeof ocultarSpinner==='function') ocultarSpinner();
-      console.error('[Bugs] Error listarBugs:', err);
-      if (typeof mostrarToast==='function') mostrarToast('Error listando bugs: ' + (err.message || err),'error');
-      renderizarTablaBugs([]);
-    })
-    .listarBugs(url, filtros);
-}
+                renderizarTablaBugs(
+                    res.data && res.data.bugs ? res.data.bugs : []
+                );
+            })
+            .withFailureHandler(function (err) {
+                if (typeof ocultarSpinner === "function") ocultarSpinner();
+                console.error("[Bugs] Error listarBugs:", err);
+                if (typeof mostrarToast === "function")
+                    mostrarToast(
+                        "Error listando bugs: " + (err.message || err),
+                        "error"
+                    );
+                renderizarTablaBugs([]);
+            })
+            // Use api_listarBugs wrapper to ensure consistent response structure
+            .api_listarBugs(url, filtros);
+    }
 
-function renderizarTablaBugs(bugs) {
-  var tbody = document.getElementById('tablaBugs');
-  if (!tbody) return;
-  if (!bugs || bugs.length===0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:1rem; color:#64748b;">Sin bugs para mostrar</td></tr>';
-    return;
-  }
-  var html='';
-  bugs.forEach(function(b){
-    var id = b.ID || '';
-    var titulo = b.Titulo || '';
-    var estado = b.Estado || 'Abierto';
-    var sev = b.Severidad || '';
-    var casos = b.CasosRelacionados || '';
-    var link = b.LinkCasoPrueba || '';
-    var fecha = (function(){ try { return (b.FechaDeteccion && (new Date(b.FechaDeteccion)).toLocaleDateString()); } catch(e){ return '' } })();
-    var badge = estado==='Cerrado' ? '<span class="badge badge-success">Cerrado</span>' : '<span class="badge badge-danger">Abierto</span>';
-    var linkHtml = link ? link.split('\n').map(function(l){return '<a href="'+l+'" target="_blank">Link</a>';}).join('<br>') : '';
-    html += '<tr>'+
-      '<td>'+id+'</td>'+
-      '<td>'+titulo+'</td>'+
-      '<td>'+badge+'</td>'+
-      '<td>'+sev+'</td>'+
-      '<td>'+(casos||'')+'</td>'+
-      '<td>'+linkHtml+'</td>'+
-      '<td>'+(fecha||'')+'</td>'+
-      '<td style="display:flex; gap:0.35rem; flex-wrap:wrap;">'+
-        '<button class="btn btn-secondary btn-sm" onclick="abrirModalCrearBug(\''+id+'\')">Ver/Editar</button>'+
-        (estado==='Abierto'
-          ? '<button class="btn btn-success btn-sm" onclick="cambiarEstadoBugUI(\''+id+'\',\'Cerrado\')">Cerrar</button>'
-          : '<button class="btn btn-primary btn-sm" onclick="cambiarEstadoBugUI(\''+id+'\',\'Abierto\')">Abrir</button>')+
-        '<button class="btn btn-danger btn-sm" onclick="eliminarBugUI(\''+id+'\')">Eliminar</button>'+
-      '</td>'+
-    '</tr>';
-  });
-  tbody.innerHTML = html;
-}
+    function renderizarTablaBugs(bugs) {
+        var tbody = document.getElementById("tablaBugs");
+        if (!tbody) return;
+        if (!bugs || bugs.length === 0) {
+            tbody.innerHTML =
+                '<tr><td colspan="8" style="text-align:center; padding:1rem; color:#64748b;">Sin bugs para mostrar</td></tr>';
+            return;
+        }
+        var html = "";
+        bugs.forEach(function (b) {
+            var id = b.ID || "";
+            var titulo = b.Titulo || "";
+            var estado = b.Estado || "Abierto";
+            var sev = b.Severidad || "";
+            var casos = b.CasosRelacionados || "";
+            var link = b.LinkCasoPrueba || "";
+            var fecha = (function () {
+                try {
+                    return (
+                        b.FechaDeteccion &&
+                        new Date(b.FechaDeteccion).toLocaleDateString()
+                    );
+                } catch (e) {
+                    return "";
+                }
+            })();
+            var badge =
+                estado === "Cerrado"
+                    ? '<span class="badge badge-success">Cerrado</span>'
+                    : '<span class="badge badge-danger">Abierto</span>';
+            var linkHtml = link
+                ? link
+                      .split("\n")
+                      .map(function (l) {
+                          return '<a href="' + l + '" target="_blank">Link</a>';
+                      })
+                      .join("<br>")
+                : "";
+            html +=
+                "<tr>" +
+                "<td>" +
+                id +
+                "</td>" +
+                "<td>" +
+                titulo +
+                "</td>" +
+                "<td>" +
+                badge +
+                "</td>" +
+                "<td>" +
+                sev +
+                "</td>" +
+                "<td>" +
+                (casos || "") +
+                "</td>" +
+                "<td>" +
+                linkHtml +
+                "</td>" +
+                "<td>" +
+                (fecha || "") +
+                "</td>" +
+                '<td style="display:flex; gap:0.35rem; flex-wrap:wrap;">' +
+                '<button class="btn btn-secondary btn-sm" onclick="abrirModalCrearBugProxy(\'' +
+                id +
+                "')\">Ver/Editar</button>" +
+                (estado === "Abierto"
+                    ? '<button class="btn btn-success btn-sm" onclick="cambiarEstadoBugUI(\'' +
+                      id +
+                      "','Cerrado')\">Cerrar</button>"
+                    : '<button class="btn btn-primary btn-sm" onclick="cambiarEstadoBugUI(\'' +
+                      id +
+                      "','Abierto')\">Abrir</button>") +
+                '<button class="btn btn-danger btn-sm" onclick="eliminarBugUI(\'' +
+                id +
+                "')\">Eliminar</button>" +
+                "</td>" +
+                "</tr>";
+        });
+        tbody.innerHTML = html;
+    }
 
-function cambiarEstadoBugUI(bugId, nuevoEstado) {
-  var url = (typeof recuperarSheetUrl === 'function') ? recuperarSheetUrl() : null;
-  if (!url) return;
-  if (typeof mostrarSpinner==='function') mostrarSpinner();
-  google.script.run
-    .withSuccessHandler(function(r){ if (typeof ocultarSpinner==='function') ocultarSpinner(); if (r && r.success){ cargarBugs(); if (typeof mostrarToast==='function') mostrarToast('Estado actualizado','success'); } else { if (typeof mostrarToast==='function') mostrarToast('Error: '+(r && r.mensaje ? r.mensaje : ''),'error'); } })
-    .withFailureHandler(function(e){ if (typeof ocultarSpinner==='function') ocultarSpinner(); if (typeof mostrarToast==='function') mostrarToast('Error: '+(e && e.message ? e.message : e),'error'); })
-    .cambiarEstadoBug(url, bugId, nuevoEstado);
-}
+    function cambiarEstadoBugUI(bugId, nuevoEstado) {
+        var url =
+            typeof recuperarSheetUrl === "function"
+                ? recuperarSheetUrl()
+                : null;
+        if (!url) return;
+        if (typeof mostrarSpinner === "function") mostrarSpinner();
+        google.script.run
+            .withSuccessHandler(function (r) {
+                if (typeof ocultarSpinner === "function") ocultarSpinner();
+                if (r && r.success) {
+                    cargarBugs();
+                    if (typeof mostrarToast === "function")
+                        mostrarToast("Estado actualizado", "success");
+                } else {
+                    if (typeof mostrarToast === "function")
+                        mostrarToast(
+                            "Error: " + (r && r.mensaje ? r.mensaje : ""),
+                            "error"
+                        );
+                }
+            })
+            .withFailureHandler(function (e) {
+                if (typeof ocultarSpinner === "function") ocultarSpinner();
+                if (typeof mostrarToast === "function")
+                    mostrarToast(
+                        "Error: " + (e && e.message ? e.message : e),
+                        "error"
+                    );
+            })
+            .cambiarEstadoBug(url, bugId, nuevoEstado);
+    }
 
-async function eliminarBugUI(bugId) {
-  var confirmar = (typeof mostrarConfirmacionApp==='function')
-    ? await mostrarConfirmacionApp({ titulo:'Eliminar Bug', icono:'!', mensaje:'Al eliminar este bug, los casos vinculados que estén en No_OK y sin otros bugs abiertos pasarán a Sin ejecutar. ¿Confirmas?', textoOk:'Sí, eliminar', textoCancelar:'Cancelar' })
-    : confirm('Eliminar bug '+bugId+'? Los casos con No_OK podrían pasar a Sin ejecutar.');
-  if (!confirmar) return;
-  var url = (typeof recuperarSheetUrl === 'function') ? recuperarSheetUrl() : null;
-  if (!url) return;
-  if (typeof mostrarSpinner==='function') mostrarSpinner();
-  google.script.run
-    .withSuccessHandler(function(r){
-      if (typeof ocultarSpinner==='function') ocultarSpinner();
-      if (r && r.success){
-        if (typeof mostrarToast==='function') mostrarToast('Bug eliminado','success');
-        cargarBugs();
-        if (typeof cargarTodosLosCasos==='function') setTimeout(function(){ cargarTodosLosCasos(); }, 400);
-      } else {
-        if (typeof mostrarToast==='function') mostrarToast('Error: '+(r && r.mensaje ? r.mensaje : ''),'error');
-      }
-    })
-    .withFailureHandler(function(e){ if (typeof ocultarSpinner==='function') ocultarSpinner(); if (typeof mostrarToast==='function') mostrarToast('Error eliminando bug: '+(e && e.message ? e.message : e),'error'); })
-    .eliminarBug(url, bugId);
-}
+    async function eliminarBugUI(bugId) {
+        var confirmar =
+            typeof mostrarConfirmacionApp === "function"
+                ? await mostrarConfirmacionApp({
+                      titulo: "Eliminar Bug",
+                      icono: "!",
+                      mensaje:
+                          "Al eliminar este bug, los casos vinculados que estén en No_OK y sin otros bugs abiertos pasarán a Sin ejecutar. ¿Confirmas?",
+                      textoOk: "Sí, eliminar",
+                      textoCancelar: "Cancelar",
+                  })
+                : confirm(
+                      "Eliminar bug " +
+                          bugId +
+                          "? Los casos con No_OK podrían pasar a Sin ejecutar."
+                  );
+        if (!confirmar) return;
+        var url =
+            typeof recuperarSheetUrl === "function"
+                ? recuperarSheetUrl()
+                : null;
+        if (!url) return;
+        if (typeof mostrarSpinner === "function") mostrarSpinner();
+        google.script.run
+            .withSuccessHandler(function (r) {
+                if (typeof ocultarSpinner === "function") ocultarSpinner();
+                if (r && r.success) {
+                    if (typeof mostrarToast === "function")
+                        mostrarToast("Bug eliminado", "success");
+                    cargarBugs();
+                    if (typeof cargarTodosLosCasos === "function")
+                        setTimeout(function () {
+                            cargarTodosLosCasos();
+                        }, 400);
+                } else {
+                    if (typeof mostrarToast === "function")
+                        mostrarToast(
+                            "Error: " + (r && r.mensaje ? r.mensaje : ""),
+                            "error"
+                        );
+                }
+            })
+            .withFailureHandler(function (e) {
+                if (typeof ocultarSpinner === "function") ocultarSpinner();
+                if (typeof mostrarToast === "function")
+                    mostrarToast(
+                        "Error eliminando bug: " +
+                            (e && e.message ? e.message : e),
+                        "error"
+                    );
+            })
+            .eliminarBug(url, bugId);
+    }
 
-window.mostrarPanelBugs = mostrarPanelBugs;
-window.ocultarPanelBugs = ocultarPanelBugs;
-window.cargarBugs = cargarBugs;
-window.renderizarTablaBugs = renderizarTablaBugs;
-window.cambiarEstadoBugUI = cambiarEstadoBugUI;
-window.eliminarBugUI = eliminarBugUI;
+    // Proxy to safely call abrirModalCrearBug from other fragments
+    function abrirModalCrearBugProxy(casoId) {
+        try {
+            if (typeof window.abrirModalCrearBug === "function") {
+                return window.abrirModalCrearBug(casoId);
+            }
+
+            var attempts = 0;
+            var maxAttempts = 8;
+            var interval = setInterval(function () {
+                attempts++;
+                if (typeof window.abrirModalCrearBug === "function") {
+                    clearInterval(interval);
+                    window.abrirModalCrearBug(casoId);
+                    return;
+                }
+                if (attempts >= maxAttempts) {
+                    clearInterval(interval);
+                    console.error(
+                        "[Bugs] abrirModalCrearBug no disponible después de reintentos"
+                    );
+                    if (typeof mostrarToast === "function")
+                        mostrarToast(
+                            "Función abrirModalCrearBug no disponible",
+                            "error"
+                        );
+                }
+            }, 150);
+        } catch (e) {
+            console.error("[Bugs] abrirModalCrearBugProxy error:", e);
+        }
+    }
+
+    window.mostrarPanelBugs = mostrarPanelBugs;
+    window.ocultarPanelBugs = ocultarPanelBugs;
+    window.cargarBugs = cargarBugs;
+    window.renderizarTablaBugs = renderizarTablaBugs;
+    window.cambiarEstadoBugUI = cambiarEstadoBugUI;
+    window.eliminarBugUI = eliminarBugUI;
+    window.abrirModalCrearBugProxy = abrirModalCrearBugProxy;
 </script>

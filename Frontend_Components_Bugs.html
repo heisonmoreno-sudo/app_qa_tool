@@ -967,9 +967,28 @@
 
         // Cargar opciones relacionadas con Trello (si existe configuración)
         try {
-            if (typeof cargarTrelloModal === "function") cargarTrelloModal();
+            // Verificar que existe la función y los elementos necesarios
+            if (typeof cargarTrelloModal === "function") {
+                if (
+                    !document.getElementById("bugBoardSelect") ||
+                    !document.getElementById("bugListSelect")
+                ) {
+                    console.warn(
+                        "⚠️ Elementos de Trello no encontrados en el DOM"
+                    );
+                    return;
+                }
+                cargarTrelloModal();
+            }
         } catch (e) {
             console.warn("No se pudo cargar Trello en modal:", e);
+            // Ocultar sección de Trello si hay error
+            const configured = document.getElementById("trelloBugConfigured");
+            const notConfigured = document.getElementById(
+                "trelloBugNotConfigured"
+            );
+            if (configured) configured.classList.add("hidden");
+            if (notConfigured) notConfigured.style.display = "none";
         }
 
         if (typeof abrirModal === "function") {
@@ -1278,24 +1297,35 @@
      */
     function cargarTrelloModal() {
         try {
-            const enviarCheck = document.getElementById("bugEnviarATrello");
-            const configured = document.getElementById("trelloBugConfigured");
-            const notConfigured = document.getElementById(
-                "trelloBugNotConfigured"
-            );
-            const boardSelect = document.getElementById("bugBoardSelect");
-            const listSelect = document.getElementById("bugListSelect");
+            const elements = {
+                enviarCheck: document.getElementById("bugEnviarATrello"),
+                configured: document.getElementById("trelloBugConfigured"),
+                notConfigured: document.getElementById(
+                    "trelloBugNotConfigured"
+                ),
+                boardSelect: document.getElementById("bugBoardSelect"),
+                listSelect: document.getElementById("bugListSelect"),
+            };
+
+            // Verificar elementos requeridos
+            if (!elements.boardSelect || !elements.listSelect) {
+                console.error(
+                    "❌ Elementos requeridos de Trello no encontrados"
+                );
+                throw new Error("Elementos de Trello no encontrados");
+            }
 
             // Reset
-            if (enviarCheck) enviarCheck.checked = true;
-            if (configured) configured.classList.add("hidden");
-            if (notConfigured) notConfigured.style.display = "none";
-            if (boardSelect)
-                boardSelect.innerHTML =
-                    '<option value="">Cargando tableros...</option>';
-            if (listSelect)
-                listSelect.innerHTML =
-                    '<option value="">Selecciona un tablero primero</option>';
+            elements.enviarCheck && (elements.enviarCheck.checked = true);
+            elements.configured && elements.configured.classList.add("hidden");
+            elements.notConfigured &&
+                (elements.notConfigured.style.display = "none");
+            elements.boardSelect.innerHTML =
+                '<option value="">Cargando tableros...</option>';
+            elements.boardSelect.disabled = true;
+            elements.listSelect.innerHTML =
+                '<option value="">Selecciona un tablero primero</option>';
+            elements.listSelect.disabled = true;
 
             if (!window.currentSheetUrl) {
                 if (notConfigured) notConfigured.style.display = "block";

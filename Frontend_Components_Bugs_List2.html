@@ -375,7 +375,7 @@
             }
 
             var attempts = 0;
-            var maxAttempts = 8;
+            var maxAttempts = 60; // ~9 seconds max (60 * 150ms)
             var interval = setInterval(function () {
                 attempts++;
                 if (typeof window.abrirModalCrearBug === "function") {

@@ -886,22 +886,37 @@
     // ABRIR MODAL CREAR BUG
     // ===================================================================
 
-    function abrirModalCrearBug(casoId) {
+    window.abrirModalCrearBug = function abrirModalCrearBug(casoId) {
         console.log("🐛 Abriendo modal crear bug...");
         console.log("   Caso relacionado:", casoId || "Ninguno (bug manual)");
 
-        // Asegurar que la función esté disponible globalmente
-        window.abrirModalCrearBug = abrirModalCrearBug;
+        console.log("🔍 Verificando elementos del DOM para el modal...");
 
-        const modal = document.getElementById("modalCrearBug");
-        const titulo = document.getElementById("tituloModalBug");
-        const infoCaso = document.getElementById("infoCasoRelacionado");
+        // Validar elementos críticos
+        const elementosRequeridos = {
+            modal: document.getElementById("modalCrearBug"),
+            titulo: document.getElementById("tituloModalBug"),
+            infoCaso: document.getElementById("infoCasoRelacionado"),
+        };
 
-        if (!modal) {
-            console.error("❌ Modal modalCrearBug no encontrado");
-            mostrarToast("Error: Modal de bugs no disponible", "error");
+        // Verificar elementos faltantes
+        const elementosFaltantes = Object.entries(elementosRequeridos)
+            .filter(([_, element]) => !element)
+            .map(([name, _]) => name);
+
+        if (elementosFaltantes.length > 0) {
+            console.error(
+                "❌ Elementos no encontrados:",
+                elementosFaltantes.join(", ")
+            );
+            mostrarToast(
+                "Error: Modal de bugs no disponible - Faltan elementos",
+                "error"
+            );
             return;
         }
+
+        const { modal, titulo, infoCaso } = elementosRequeridos;
 
         // Limpiar campos manualmente (sin usar form.reset)
         document.getElementById("bugTitulo").value = "";
@@ -994,14 +1009,29 @@
             if (notConfigured) notConfigured.style.display = "none";
         }
 
-        if (typeof abrirModal === "function") {
-            abrirModal("modalCrearBug");
-        } else {
-            console.error("❌ Función abrirModal no disponible");
-            modal.classList.add("active");
-            document.body.style.overflow = "hidden";
+        // Si abrirModal no está disponible, usar una implementación local
+        const abrirModalFn =
+            typeof abrirModal === "function"
+                ? abrirModal
+                : function (id) {
+                      const modalElement = document.getElementById(id);
+                      if (modalElement) {
+                          modalElement.classList.add("active");
+                          document.body.style.overflow = "hidden";
+                      }
+                  };
+
+        try {
+            abrirModalFn("modalCrearBug");
+        } catch (e) {
+            console.error("❌ Error al abrir modal:", e);
+            // Último intento de abrir el modal
+            if (modal) {
+                modal.classList.add("active");
+                document.body.style.overflow = "hidden";
+            }
         }
-    }
+    };
 
     function preLlenarDesdeCaso(caso) {
         console.log("📝 Pre-llenando formulario desde caso...");

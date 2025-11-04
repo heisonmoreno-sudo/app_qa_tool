@@ -890,6 +890,9 @@
         console.log("🐛 Abriendo modal crear bug...");
         console.log("   Caso relacionado:", casoId || "Ninguno (bug manual)");
 
+        // Asegurar que la función esté disponible globalmente
+        window.abrirModalCrearBug = abrirModalCrearBug;
+
         const modal = document.getElementById("modalCrearBug");
         const titulo = document.getElementById("tituloModalBug");
         const infoCaso = document.getElementById("infoCasoRelacionado");
@@ -1296,6 +1299,9 @@
      * Carga la configuración de Trello para este workspace y prepara la UI del modal
      */
     function cargarTrelloModal() {
+        // Asegurar que la función esté disponible globalmente
+        window.cargarTrelloModal = cargarTrelloModal;
+
         try {
             const elements = {
                 enviarCheck: document.getElementById("bugEnviarATrello"),
@@ -1468,11 +1474,9 @@
         } catch (e) {
             console.error("Error en cargarListasModalPorBoard:", e);
         }
+        // Asegurar que la función esté disponible globalmente
+        window.cargarListasModalPorBoard = cargarListasModalPorBoard;
     }
-
-    // Exportar al scope global
-    window.cargarTrelloModal = cargarTrelloModal;
-    window.cargarListasModalPorBoard = cargarListasModalPorBoard;
 
     // ===================================================================
     // CONFIGURACIÓN TRELLO INLINE DENTRO DEL MODAL

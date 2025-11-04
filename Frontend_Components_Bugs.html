@@ -662,6 +662,22 @@
                                 class="form-input"
                                 placeholder="64 chars"
                             />
+                            <div style="margin-top: 0.25rem">
+                                <a
+                                    href="#"
+                                    id="trelloTokenLink"
+                                    target="_blank"
+                                    rel="noopener"
+                                    style="font-size: 0.85rem; color: #2563eb"
+                                >
+                                    Generar token
+                                </a>
+                                <span
+                                    style="font-size: 0.85rem; color: #64748b"
+                                >
+                                    • Pega el token aquí</span
+                                >
+                            </div>
                         </div>
                     </div>
 
@@ -1432,6 +1448,18 @@
     // CONFIGURACIÓN TRELLO INLINE DENTRO DEL MODAL
     // ===================================================================
 
+    function actualizarTrelloTokenUrl() {
+        const apiKey = document
+            .getElementById("trelloApiKeyInline")
+            .value.trim();
+        const tokenLink = document.getElementById("trelloTokenLink");
+        if (apiKey) {
+            tokenLink.href = `https://trello.com/1/authorize?expiration=never&name=AppQATool&scope=read,write&response_type=token&key=${apiKey}`;
+        } else {
+            tokenLink.href = "#";
+        }
+    }
+
     function abrirConfiguracionTrelloInline() {
         try {
             // Mostrar el inline config y ocultar mensajes previos
@@ -1444,10 +1472,16 @@
             google.script.run
                 .withSuccessHandler(function (config) {
                     if (!config) config = {};
-                    document.getElementById("trelloApiKeyInline").value =
-                        config.apiKey || "";
+                    const apiKeyInput =
+                        document.getElementById("trelloApiKeyInline");
+                    apiKeyInput.value = config.apiKey || "";
+                    apiKeyInput.addEventListener(
+                        "input",
+                        actualizarTrelloTokenUrl
+                    );
                     document.getElementById("trelloTokenInline").value =
                         config.token || "";
+                    actualizarTrelloTokenUrl();
 
                     // Si ya hay credentials, mostrar paso de boards
                     if (config.apiKey && config.token) {
@@ -1484,12 +1518,12 @@
             .value.trim();
         const token = document.getElementById("trelloTokenInline").value.trim();
 
-        if (!apiKey || apiKey.length !== 32) {
-            mostrarToast("La API Key debe tener 32 caracteres", "warning");
+        if (!apiKey || apiKey.length < 10) {
+            mostrarToast("La API Key es requerida", "warning");
             return;
         }
-        if (!token || token.length !== 64) {
-            mostrarToast("El Token debe tener 64 caracteres", "warning");
+        if (!token || token.length < 10) {
+            mostrarToast("El Token es requerido", "warning");
             return;
         }
 
@@ -1641,12 +1675,12 @@
         const boardId = selectBoard ? selectBoard.value : "";
         const listId = selectList ? selectList.value : "";
 
-        if (!apiKey || apiKey.length !== 32) {
-            mostrarToast("La API Key debe tener 32 caracteres", "warning");
+        if (!apiKey || apiKey.length < 10) {
+            mostrarToast("La API Key es requerida", "warning");
             return;
         }
-        if (!token || token.length !== 64) {
-            mostrarToast("El Token debe tener 64 caracteres", "warning");
+        if (!token || token.length < 10) {
+            mostrarToast("El Token es requerido", "warning");
             return;
         }
         if (!boardId || !listId) {

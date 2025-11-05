@@ -8,7 +8,6 @@
 /**
  * Genera un ID único para un bug
  * Formato: BUG-1, BUG-2, BUG-3...
- * ACTUALIZADO: Usa obtenerProximoIdBug() de Config.gs (feature/bugs-trello)
  * @param {string} sheetUrl - URL del Sheet (opcional, usa currentSheetUrl si no se pasa)
  * @returns {string} ID del bug
  */
@@ -29,27 +28,17 @@ function generarIdBug(sheetUrl) {
             return "BUG-" + new Date().getTime();
         }
 
-        // Usar la función centralizada de Config.gs
-        if (typeof obtenerProximoIdBug === "function") {
-            return obtenerProximoIdBug(sheetUrl);
-        } else {
-            // Fallback al método anterior
-            var contadorActual = obtenerValorConfig(
-                "ultimo_bug_id",
-                "0",
-                sheetUrl
-            );
-            var nuevoContador = parseInt(contadorActual) + 1;
-            guardarValorConfig(
-                "ultimo_bug_id",
-                nuevoContador.toString(),
-                sheetUrl
-            );
+        // Obtener contador actual
+        var contadorActual = obtenerValorConfig("ultimo_bug_id", "0", sheetUrl);
+        var nuevoContador = parseInt(contadorActual) + 1;
 
-            var nuevoId = "BUG-" + nuevoContador;
-            Logger.log("✅ ID generado (fallback): " + nuevoId);
-            return nuevoId;
-        }
+        // Guardar nuevo contador
+        guardarValorConfig("ultimo_bug_id", nuevoContador.toString(), sheetUrl);
+
+        var nuevoId = "BUG-" + nuevoContador;
+        Logger.log("✅ ID generado: " + nuevoId);
+
+        return nuevoId;
     } catch (error) {
         Logger.log("❌ Error generando ID: " + error.toString());
         // Fallback: usar timestamp
@@ -155,236 +144,39 @@ function crearBug(datosBug) {
 
         // Preparar fila de datos
         var fila = [
-            bugId,
-            datosBug.titulo || "",
-            datosBug.descripcion || "",
-            datosBug.severidad || "Media",
-            datosBug.prioridad || "Media",
-            "Abierto",
-            datosBug.etiquetas || "",
-            datosBug.tieneCasoDiseñado ? "Si" : "No",
-            datosBug.casosRelacionados || "",
-            datosBug.origenSinCaso || "",
-            datosBug.precondiciones || "",
-            datosBug.datosPrueba || "",
-            datosBug.pasosReproducir || "",
-            datosBug.resultadoEsperado || "",
-            datosBug.resultadoObtenido || "",
-            datosBug.ambiente || "",
-            datosBug.navegador || "",
-            datosBug.evidencias ? datosBug.evidencias.join("\n") : "",
-            fechaHoy,
-            usuario,
-            datosBug.asignadoA || "",
-            "",
-            "",
-            "",
-            datosBug.notas || "",
+            bugId, // ID
+            datosBug.titulo || "", // Titulo
+            datosBug.descripcion || "", // Descripcion
+            datosBug.severidad || "Media", // Severidad
+            datosBug.prioridad || "Media", // Prioridad
+            "Abierto", // Estado (siempre Abierto al crear)
+            datosBug.etiquetas || "", // Etiquetas
+            datosBug.tieneCasoDiseñado ? "Si" : "No", // TieneCasoDiseñado
+            datosBug.casosRelacionados || "", // CasosRelacionados
+            datosBug.origenSinCaso || "", // OrigenSinCaso
+            datosBug.precondiciones || "", // Precondiciones
+            datosBug.datosPrueba || "", // DatosPrueba
+            datosBug.pasosReproducir || "", // PasosReproducir
+            datosBug.resultadoEsperado || "", // ResultadoEsperado
+            datosBug.resultadoObtenido || "", // ResultadoObtenido
+            datosBug.ambiente || "", // Ambiente
+            datosBug.navegador || "", // Navegador
+            datosBug.evidencias ? datosBug.evidencias.join("\n") : "", // EvidenciasURL
+            fechaHoy, // FechaDeteccion
+            usuario, // DetectadoPor
+            datosBug.asignadoA || "", // AsignadoA
+            "", // FechaResolucion
+            "", // TrelloCardID
+            "", // TrelloCardURL
+            datosBug.notas || "", // Notas
         ];
 
         // Agregar fila a la hoja
         hojaBugs.appendRow(fila);
-        Logger.log("✅ Bug creado en Sheet: " + bugId);
 
-        // ═══════════════════════════════════════════════════════════════════════
-        // SUBIR EVIDENCIAS A DRIVE (MEJORA 4 - permanente)
-        // ═══════════════════════════════════════════════════════════════════════
-        var evidenciasUrls = [];
-        var urlCarpetaEvidencias = "";
+        Logger.log("✅ Bug creado: " + bugId);
 
-        if (datosBug.evidenciasBase64 && datosBug.evidenciasBase64.length > 0) {
-            Logger.log(
-                "📤 Subiendo " +
-                    datosBug.evidenciasBase64.length +
-                    " evidencias a Drive..."
-            );
-
-            try {
-                var carpetaEvidencias =
-                    obtenerOCrearCarpetaEvidencias(spreadsheet);
-                var nombreCarpetaBug =
-                    bugId + " - " + limpiarNombreArchivo(datosBug.titulo);
-                var carpetaBug =
-                    carpetaEvidencias.createFolder(nombreCarpetaBug);
-
-                Logger.log("📁 Carpeta creada: " + carpetaBug.getName());
-
-                datosBug.evidenciasBase64.forEach(function (evidencia) {
-                    try {
-                        Logger.log("  📎 Subiendo: " + evidencia.nombre);
-                        var bytes = Utilities.base64Decode(
-                            evidencia.contenidoBase64
-                        );
-                        var blob = Utilities.newBlob(
-                            bytes,
-                            evidencia.mimeType,
-                            evidencia.nombre
-                        );
-                        var archivo = carpetaBug.createFile(blob);
-                        archivo.setSharing(
-                            DriveApp.Access.ANYONE_WITH_LINK,
-                            DriveApp.Permission.VIEW
-                        );
-                        var urlArchivo = archivo.getUrl();
-                        evidenciasUrls.push(urlArchivo);
-                        Logger.log("    ✅ Subido: " + urlArchivo);
-                    } catch (errorArchivo) {
-                        Logger.log(
-                            '    ❌ Error con evidencia "' +
-                                evidencia.nombre +
-                                '": ' +
-                                errorArchivo.toString()
-                        );
-                    }
-                });
-
-                urlCarpetaEvidencias = carpetaBug.getUrl();
-                Logger.log(
-                    "✅ " +
-                        evidenciasUrls.length +
-                        " evidencias subidas exitosamente"
-                );
-                Logger.log("📂 Carpeta: " + urlCarpetaEvidencias);
-
-                actualizarBug(sheetUrl, bugId, {
-                    EvidenciasURL: evidenciasUrls.join("\n"),
-                });
-            } catch (errorDrive) {
-                Logger.log(
-                    "❌ Error subiendo evidencias: " + errorDrive.toString()
-                );
-            }
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════
-        // INTEGRACIÓN CON TRELLO (feature/bugs-trello)
-        // ═══════════════════════════════════════════════════════════════════════
-        var resultadoTrello = {
-            intentado: false,
-            exito: false,
-            cardUrl: "",
-            cardId: "",
-            error: "",
-        };
-
-        var mensajeFinal = "";
-        var trelloCardUrl = "";
-        var trelloCardId = "";
-
-        var configTrello = obtenerConfigTrello(sheetUrl);
-        Logger.log(
-            "📋 Config Trello - Configurado: " + configTrello.configurado
-        );
-
-        // Permitir override desde el frontend: datosBug.enviarATrello (bool) y datosBug.trelloListOverride
-        var enviarATrello = true;
-        if (typeof datosBug.enviarATrello !== "undefined") {
-            enviarATrello = !!datosBug.enviarATrello;
-        }
-
-        // Si envío deshabilitado por el usuario, no se intenta sincronizar
-        if (enviarATrello && configTrello.configurado) {
-            // Si el frontend dio una lista específica para este bug, usarla
-            if (
-                datosBug.trelloListOverride &&
-                datosBug.trelloListOverride !== ""
-            ) {
-                configTrello.listId = datosBug.trelloListOverride;
-            }
-            Logger.log("🎫 Intentando crear tarjeta en Trello...");
-
-            var bugCompleto = {
-                id: bugId,
-                titulo: datosBug.titulo,
-                descripcion: datosBug.descripcion,
-                severidad: datosBug.severidad,
-                prioridad: datosBug.prioridad,
-                estado: "Abierto",
-                casoRelacionado: datosBug.casosRelacionados || "-",
-                precondiciones: datosBug.precondiciones || "-",
-                datosPrueba: datosBug.datosPrueba || "-",
-                pasosReproducir: datosBug.pasosReproducir,
-                resultadoEsperado: datosBug.resultadoEsperado,
-                resultadoObtenido: datosBug.resultadoObtenido,
-                navegador: datosBug.navegador || "-",
-                ambiente: datosBug.ambiente || "-",
-                evidencias: datosBug.evidencias || [],
-                fechaCreacion: fechaHoy,
-                reportadoPor: usuario,
-            };
-
-            if (evidenciasUrls.length > 0) {
-                bugCompleto.evidenciasUrls = evidenciasUrls;
-                bugCompleto.carpetaEvidencias = urlCarpetaEvidencias;
-            }
-
-            try {
-                resultadoTrello = crearTarjetaTrello(bugCompleto, configTrello);
-                resultadoTrello.intentado = true;
-
-                if (resultadoTrello.exito) {
-                    Logger.log(
-                        "✅ Tarjeta creada en Trello: " +
-                            resultadoTrello.cardUrl
-                    );
-                    trelloCardUrl = resultadoTrello.cardUrl;
-                    trelloCardId = resultadoTrello.cardId;
-
-                    actualizarBug(sheetUrl, bugId, {
-                        LinkTrello: trelloCardUrl,
-                        TrelloCardID: trelloCardId,
-                    });
-
-                    mensajeFinal =
-                        "Bug " +
-                        bugId +
-                        " creado y enviado a Trello exitosamente";
-                } else {
-                    Logger.log(
-                        "⚠️ Bug guardado pero error en Trello: " +
-                            resultadoTrello.error
-                    );
-                    actualizarBug(sheetUrl, bugId, {
-                        Estado: "Pendiente sincronización Trello",
-                        Notas: "Error Trello: " + resultadoTrello.error,
-                    });
-                    mensajeFinal =
-                        "Bug " +
-                        bugId +
-                        " guardado. Error al sincronizar con Trello: " +
-                        resultadoTrello.error;
-                }
-            } catch (trelloError) {
-                Logger.log(
-                    "💥 Excepción con Trello: " + trelloError.toString()
-                );
-                resultadoTrello.intentado = true;
-                resultadoTrello.exito = false;
-                resultadoTrello.error =
-                    trelloError.message || trelloError.toString();
-                mensajeFinal =
-                    "Bug " +
-                    bugId +
-                    " guardado. Error al sincronizar con Trello: " +
-                    resultadoTrello.error;
-            }
-        } else {
-            if (!enviarATrello) {
-                Logger.log(
-                    "ℹ️ Usuario deshabilitó el envío a Trello para este bug"
-                );
-                mensajeFinal =
-                    "Bug " + bugId + " guardado. Envío a Trello deshabilitado";
-            } else {
-                Logger.log("ℹ️ Trello no configurado, solo se guarda en Sheet");
-                mensajeFinal =
-                    "Bug " + bugId + " guardado. Trello no configurado";
-            }
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════
-        // ACTUALIZAR CASOS RELACIONADOS
-        // ═══════════════════════════════════════════════════════════════════════
+        // Si tiene casos relacionados, actualizar esos casos
         if (datosBug.casosRelacionados && datosBug.casosRelacionados !== "") {
             var casosIds = datosBug.casosRelacionados
                 .split(",")
@@ -399,28 +191,20 @@ function crearBug(datosBug) {
             });
         }
 
-        // ═══════════════════════════════════════════════════════════════════════
-        // RESPUESTA FINAL
-        // ═══════════════════════════════════════════════════════════════════════
         return {
             success: true,
             data: {
                 bugId: bugId,
                 titulo: datosBug.titulo,
                 estado: "Abierto",
-                trelloCreado: resultadoTrello.exito,
-                trelloUrl: trelloCardUrl,
-                trelloCardId: trelloCardId,
-                trelloIntentado: resultadoTrello.intentado,
-                trelloError: resultadoTrello.error || "",
             },
-            mensaje: mensajeFinal,
+            mensaje: "Bug creado exitosamente",
         };
     } catch (error) {
-        Logger.log("❌ Error al crear bug: " + error);
+        Logger.log("❌ Error creando bug: " + error.toString());
         return {
             success: false,
-            mensaje: "Error al crear bug: " + error,
+            mensaje: "Error al crear bug: " + error.message,
         };
     }
 }
@@ -530,11 +314,34 @@ function listarBugs(sheetUrl, filtros) {
         var headers = datos[0];
         var bugs = [];
 
-        // Convertir filas a objetos
+        // Convertir filas a objetos y sanitizar datos
         for (var i = 1; i < datos.length; i++) {
             var bug = {};
             for (var j = 0; j < headers.length; j++) {
-                bug[headers[j]] = datos[i][j];
+                var valor = datos[i][j];
+
+                // Convertir undefined a null (evita problemas de serialización)
+                if (valor === undefined) {
+                    valor = null;
+                }
+
+                // Convertir Date a string ISO (evita problemas de serialización)
+                if (valor instanceof Date) {
+                    valor = valor.toISOString();
+                }
+
+                // Truncar campos de texto largo para evitar exceder límites de Apps Script
+                if (typeof valor === "string" && valor.length > 1000) {
+                    valor = valor.substring(0, 997) + "...";
+                }
+
+                // Sanitizar strings (remover caracteres de control que pueden romper JSON)
+                if (typeof valor === "string") {
+                    // Remover caracteres null, control characters, etc.
+                    valor = valor.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
+                }
+
+                bug[headers[j]] = valor;
             }
             bugs.push(bug);
         }
@@ -547,13 +354,32 @@ function listarBugs(sheetUrl, filtros) {
             Logger.log("   Total bugs después de filtros: " + bugs.length);
         }
 
-        return {
+        // Crear objeto de respuesta limpio y serializable
+        var respuesta = {
             success: true,
             data: {
                 bugs: bugs,
                 total: bugs.length,
             },
         };
+
+        // Verificar que sea serializable (test de seguridad)
+        try {
+            var test = JSON.stringify(respuesta);
+            Logger.log(
+                "✅ Respuesta serializable. Tamaño: " + test.length + " bytes"
+            );
+        } catch (jsonError) {
+            Logger.log("⚠️ Error de serialización: " + jsonError.toString());
+            // Si falla, retornar versión simplificada
+            return {
+                success: false,
+                mensaje:
+                    "Error: Los datos no pueden serializarse. Contacta al administrador.",
+            };
+        }
+
+        return respuesta;
     } catch (error) {
         Logger.log("❌ Error listando bugs: " + error.toString());
         return {
@@ -832,205 +658,6 @@ function cambiarEstadoBug(sheetUrl, bugId, nuevoEstado) {
         return {
             success: false,
             mensaje: "Error al cambiar estado: " + error.message,
-        };
-    }
-}
-
-/**
- * Valida el cambio de estado de un bug verificando casos asociados
- * MEJORA 5: Advertir sobre casos en estado No_OK
- * @param {string} sheetUrl - URL del Sheet
- * @param {string} bugId - ID del bug
- * @param {string} nuevoEstado - Estado al que se quiere cambiar
- * @returns {Object} Resultado con advertencias y casos afectados
- */
-function validarCambioEstadoBug(sheetUrl, bugId, nuevoEstado) {
-    try {
-        Logger.log(
-            "🔍 Validando cambio de estado de bug " +
-                bugId +
-                " a: " +
-                nuevoEstado
-        );
-
-        // Obtener el bug
-        var detalleBug = obtenerDetalleBug(sheetUrl, bugId);
-
-        if (!detalleBug.success) {
-            return {
-                success: false,
-                mensaje: "Bug no encontrado",
-            };
-        }
-
-        var bug = detalleBug.data;
-        var casosRelacionados = bug.CasosRelacionados || "";
-
-        // Si no tiene casos relacionados, no hay problema
-        if (
-            !casosRelacionados ||
-            casosRelacionados === "" ||
-            casosRelacionados === "-"
-        ) {
-            return {
-                success: true,
-                puedeCompletar: true,
-                tieneCasosAsociados: false,
-                mensaje: "Sin casos asociados, puede proceder",
-            };
-        }
-
-        // Separar IDs de casos
-        var casosIds = casosRelacionados
-            .split(",")
-            .map(function (id) {
-                return id.trim();
-            })
-            .filter(function (id) {
-                return id !== "";
-            });
-
-        Logger.log("   Casos relacionados: " + casosIds.join(", "));
-
-        // Si el nuevo estado es "Cerrado" o "Resuelto", verificar casos No_OK
-        if (nuevoEstado === "Cerrado" || nuevoEstado === "Resuelto") {
-            var spreadsheet = SpreadsheetApp.openByUrl(sheetUrl);
-            var casosEnNoOK = [];
-
-            casosIds.forEach(function (casoId) {
-                var resultado = buscarCasoEnTodasHojas(spreadsheet, casoId);
-
-                if (resultado) {
-                    var headers = resultado.headers;
-                    var fila = resultado.fila;
-                    var hoja = resultado.hoja;
-                    var datos = hoja
-                        .getRange(fila, 1, 1, headers.length)
-                        .getValues()[0];
-
-                    var colEstado = headers.indexOf("ResultadoUltimaEjecucion");
-
-                    if (colEstado > -1) {
-                        var estadoCaso = datos[colEstado];
-
-                        if (estadoCaso === "No_OK") {
-                            casosEnNoOK.push({
-                                id: casoId,
-                                titulo: datos[headers.indexOf("Titulo")] || "",
-                                hoja: resultado.nombreHoja,
-                            });
-                        }
-                    }
-                }
-            });
-
-            Logger.log("   Casos en No_OK encontrados: " + casosEnNoOK.length);
-
-            return {
-                success: true,
-                tieneCasosAsociados: true,
-                casosEnNoOK: casosEnNoOK,
-                requiereConfirmacion: casosEnNoOK.length > 0,
-                mensaje:
-                    casosEnNoOK.length > 0
-                        ? "Hay " +
-                          casosEnNoOK.length +
-                          " caso(s) en estado No_OK relacionado(s) con este bug"
-                        : "Todos los casos asociados están OK o sin ejecutar",
-            };
-        }
-
-        // Para otros cambios de estado, no requiere validación especial
-        return {
-            success: true,
-            puedeCompletar: true,
-            tieneCasosAsociados: true,
-            mensaje: "Puede proceder con el cambio de estado",
-        };
-    } catch (error) {
-        Logger.log("❌ Error validando cambio de estado: " + error.toString());
-        return {
-            success: false,
-            mensaje: "Error al validar: " + error.message,
-        };
-    }
-}
-
-/**
- * Actualiza los casos relacionados con un bug que se cierra/resuelve
- * MEJORA 5: Cambiar casos de No_OK a OK automáticamente
- * @param {string} sheetUrl - URL del Sheet
- * @param {string} bugId - ID del bug
- * @param {Array} casosIds - IDs de los casos a actualizar
- * @returns {Object} Resultado
- */
-function actualizarCasosAlCerrarBug(sheetUrl, bugId, casosIds) {
-    try {
-        Logger.log("🔄 Actualizando casos relacionados al cerrar bug " + bugId);
-
-        var spreadsheet = SpreadsheetApp.openByUrl(sheetUrl);
-        var casosActualizados = [];
-        var errores = [];
-
-        casosIds.forEach(function (casoId) {
-            try {
-                var resultado = buscarCasoEnTodasHojas(spreadsheet, casoId);
-
-                if (resultado) {
-                    var headers = resultado.headers;
-                    var fila = resultado.fila;
-                    var hoja = resultado.hoja;
-
-                    var colEstado =
-                        headers.indexOf("ResultadoUltimaEjecucion") + 1;
-                    var colComentarios =
-                        headers.indexOf("ComentariosEjecucion") + 1;
-
-                    if (colEstado > 0) {
-                        // Cambiar estado a OK
-                        hoja.getRange(fila, colEstado).setValue("OK");
-
-                        // Agregar comentario
-                        if (colComentarios > 0) {
-                            var comentarioActual =
-                                hoja
-                                    .getRange(fila, colComentarios)
-                                    .getValue() || "";
-                            var nuevoComentario =
-                                (comentarioActual
-                                    ? comentarioActual + "\n"
-                                    : "") +
-                                "Bug " +
-                                bugId +
-                                " resuelto - Caso actualizado a OK automáticamente";
-                            hoja.getRange(fila, colComentarios).setValue(
-                                nuevoComentario
-                            );
-                        }
-
-                        casosActualizados.push(casoId);
-                        Logger.log("  ✅ Caso " + casoId + " actualizado a OK");
-                    }
-                }
-            } catch (e) {
-                Logger.log(
-                    "  ⚠️ Error con caso " + casoId + ": " + e.toString()
-                );
-                errores.push(casoId);
-            }
-        });
-
-        return {
-            success: true,
-            casosActualizados: casosActualizados,
-            errores: errores,
-            mensaje: casosActualizados.length + " caso(s) actualizado(s) a OK",
-        };
-    } catch (error) {
-        Logger.log("❌ Error actualizando casos: " + error.toString());
-        return {
-            success: false,
-            mensaje: "Error al actualizar casos: " + error.message,
         };
     }
 }
@@ -1730,174 +1357,5 @@ function eliminarBug(sheetUrl, bugId) {
             success: false,
             mensaje: "Error eliminando bug: " + e.message,
         };
-    }
-}
-
-/**
- * Reintenta sincronizar un bug con Trello
- * Útil cuando falló la sincronización inicial
- * Rama: feature/bugs-trello
- * @param {string} sheetUrl - URL del Sheet
- * @param {string} bugId - ID del bug
- * @returns {Object} Resultado de la operación
- */
-function reintentarSincronizacionTrello(sheetUrl, bugId) {
-    try {
-        Logger.log("🔄 Reintentando sincronización con Trello para: " + bugId);
-
-        // Obtener el bug
-        var detalleBug = obtenerDetalleBug(sheetUrl, bugId);
-
-        if (!detalleBug.success) {
-            return {
-                success: false,
-                mensaje: "Bug no encontrado: " + bugId,
-            };
-        }
-
-        var bug = detalleBug.data;
-
-        // Verificar que no tenga ya una tarjeta de Trello
-        if (bug.TrelloCardURL && bug.TrelloCardURL !== "") {
-            return {
-                success: false,
-                mensaje: "El bug ya tiene una tarjeta de Trello asociada",
-            };
-        }
-
-        // Obtener configuración de Trello
-        var configTrello = obtenerConfigTrello(sheetUrl);
-
-        if (!configTrello.configurado) {
-            return {
-                success: false,
-                mensaje: "Trello no está configurado",
-            };
-        }
-
-        // Preparar datos del bug para Trello
-        var bugCompleto = {
-            id: bug.ID,
-            titulo: bug.Titulo,
-            descripcion: bug.Descripcion,
-            severidad: bug.Severidad,
-            prioridad: bug.Prioridad,
-            estado: bug.Estado,
-            casoRelacionado: bug.CasosRelacionados || "-",
-            precondiciones: bug.Precondiciones || "-",
-            datosPrueba: bug.DatosPrueba || "-",
-            pasosReproducir: bug.PasosReproducir,
-            resultadoEsperado: bug.ResultadoEsperado,
-            resultadoObtenido: bug.ResultadoObtenido,
-            navegador: bug.Navegador || "-",
-            ambiente: bug.Ambiente || "-",
-            evidencias: bug.EvidenciasURL ? bug.EvidenciasURL.split("\n") : [],
-            fechaCreacion: bug.FechaDeteccion,
-            reportadoPor: bug.DetectadoPor,
-        };
-
-        // Intentar crear tarjeta
-        var resultadoTrello = crearTarjetaTrello(bugCompleto, configTrello);
-
-        if (resultadoTrello.exito) {
-            // Actualizar bug con URL de Trello
-            actualizarBug(sheetUrl, bugId, {
-                TrelloCardURL: resultadoTrello.cardUrl,
-                TrelloCardID: resultadoTrello.cardId,
-                Estado: "Abierto",
-                Notas: "Sincronizado con Trello",
-            });
-
-            Logger.log("✅ Bug sincronizado con Trello");
-
-            return {
-                success: true,
-                mensaje: "Bug sincronizado exitosamente con Trello",
-                data: {
-                    bugId: bugId,
-                    trelloUrl: resultadoTrello.cardUrl,
-                },
-            };
-        } else {
-            Logger.log("❌ Error al sincronizar: " + resultadoTrello.error);
-
-            return {
-                success: false,
-                mensaje: "Error al sincronizar: " + resultadoTrello.error,
-            };
-        }
-    } catch (error) {
-        Logger.log(
-            "❌ Error en reintento de sincronización: " + error.toString()
-        );
-        return {
-            success: false,
-            mensaje: "Error al reintentar sincronización: " + error.message,
-        };
-    }
-}
-
-/**
- * Obtiene o crea la carpeta de evidencias en Drive
- * MEJORA 4: Gestión de evidencias
- * @param {Spreadsheet} spreadsheet - Spreadsheet activo
- * @returns {Folder} Carpeta de evidencias
- */
-function obtenerOCrearCarpetaEvidencias(spreadsheet) {
-    try {
-        // Obtener ID de carpeta desde Config
-        var config = obtenerConfiguracion();
-        var carpetaId = config["drive_folder_id"];
-
-        if (carpetaId && carpetaId !== "") {
-            try {
-                return DriveApp.getFolderById(carpetaId);
-            } catch (e) {
-                Logger.log(
-                    "⚠️ Carpeta configurada no existe, creando nueva..."
-                );
-            }
-        }
-
-        /**
-         * Limpia un nombre para usarlo como nombre de carpeta/archivo
-         * Remueve caracteres especiales y limita longitud
-         * @param {string} texto - Texto a limpiar
-         * @returns {string} Texto limpio
-         */
-        function limpiarNombreArchivo(texto) {
-            if (!texto) return "sin_nombre";
-
-            return texto
-                .substring(0, 50) // Máximo 50 caracteres
-                .replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-_]/g, "") // Solo alfanuméricos y espacios
-                .replace(/\s+/g, "_") // Espacios a guiones bajos
-                .trim();
-        }
-
-        // Crear carpeta junto al Sheet
-        var archivoSheet = DriveApp.getFileById(spreadsheet.getId());
-        var carpetasPadre = archivoSheet.getParents();
-
-        var carpetaPadre = carpetasPadre.hasNext()
-            ? carpetasPadre.next()
-            : DriveApp.getRootFolder();
-
-        var nombreCarpeta = spreadsheet.getName() + " - Evidencias QA";
-        var carpetaEvidencias = carpetaPadre.createFolder(nombreCarpeta);
-
-        // Guardar ID en Config para próximas veces
-        guardarValorConfig("drive_folder_id", carpetaEvidencias.getId());
-
-        Logger.log(
-            "✅ Carpeta de evidencias creada: " + carpetaEvidencias.getName()
-        );
-
-        return carpetaEvidencias;
-    } catch (error) {
-        Logger.log(
-            "❌ Error creando carpeta de evidencias: " + error.toString()
-        );
-        throw error;
     }
 }

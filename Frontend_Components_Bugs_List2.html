@@ -25,7 +25,7 @@
             <div style="display: flex; gap: 0.5rem">
                 <button
                     class="btn btn-primary"
-                    onclick="abrirModalCrearBugProxy('')"
+                    onclick="abrirModalCrearBug('')"
                 >
                     Nuevo Bug
                 </button>
@@ -98,340 +98,310 @@
 </div>
 
 <script>
-    // Top-level guard to avoid unhandled exceptions stopping component initialization
-    try {
-        function mostrarPanelBugs() {
-            try {
-                console.log("[Bugs] Abrir historial");
-            } catch (e) {}
-            var bugsScreen = document.getElementById("bugsScreen");
-            var casosScreen = document.getElementById("casosScreen");
-            if (casosScreen) casosScreen.classList.add("hidden");
-            if (bugsScreen) bugsScreen.classList.remove("hidden");
-            try {
-                cargarBugs();
-            } catch (e) {
-                console.error("[Bugs] Error cargarBugs init:", e);
-            }
-        }
-
-        function ocultarPanelBugs() {
-            var bugsScreen = document.getElementById("bugsScreen");
-            var casosScreen = document.getElementById("casosScreen");
-            if (bugsScreen) bugsScreen.classList.add("hidden");
-            if (casosScreen) casosScreen.classList.remove("hidden");
-        }
-
-        function cargarBugs() {
-            var url =
-                typeof recuperarSheetUrl === "function"
-                    ? recuperarSheetUrl()
-                    : null;
-            if (!url) {
-                console.warn("[Bugs] No hay sheetUrl");
-                if (typeof mostrarToast === "function")
-                    mostrarToast("Conecta un Sheet primero", "warning");
-                return;
-            }
-            var filtros = {};
-            var busqueda = document.getElementById("bugFiltroBusqueda")
-                ? document.getElementById("bugFiltroBusqueda").value.trim()
-                : "";
-            var estado = document.getElementById("bugFiltroEstado")
-                ? document.getElementById("bugFiltroEstado").value
-                : "Todos";
-            var severidad = document.getElementById("bugFiltroSeveridad")
-                ? document.getElementById("bugFiltroSeveridad").value
-                : "Todas";
-            var relacion = document.getElementById("bugFiltroConCaso")
-                ? document.getElementById("bugFiltroConCaso").value
-                : "Todos";
-            if (busqueda) filtros.busqueda = busqueda;
-            if (estado && estado !== "Todos") filtros.estado = estado;
-            if (severidad && severidad !== "Todas")
-                filtros.severidad = severidad;
-            if (relacion === "ConCaso") filtros.conCaso = true;
-            else if (relacion === "SinCaso") filtros.conCaso = false;
-            console.log("[Bugs] Listar con filtros:", filtros);
-            if (typeof mostrarSpinner === "function") mostrarSpinner();
-
-            // Llamada directa a listarBugs (sin wrapper)
-            google.script.run
-                .withSuccessHandler(function (res) {
-                    console.log("[Bugs] Respuesta listarBugs:", res);
-                    if (typeof ocultarSpinner === "function") ocultarSpinner();
-
-                    if (!res) {
-                        console.error("[Bugs] listarBugs devolvió null");
-                        if (typeof mostrarToast === "function")
-                            mostrarToast(
-                                "Error: No se recibió respuesta del servidor",
-                                "error"
-                            );
-                        renderizarTablaBugs([]);
-                        return;
-                    }
-
-                    if (!res.success) {
-                        console.error("[Bugs] listarBugs falló:", res.mensaje);
-                        if (typeof mostrarToast === "function")
-                            mostrarToast(
-                                "No se pudieron listar bugs: " +
-                                    (res.mensaje || ""),
-                                "error"
-                            );
-                        renderizarTablaBugs([]);
-                        return;
-                    }
-
-                    renderizarTablaBugs(
-                        res.data && res.data.bugs ? res.data.bugs : []
-                    );
-                })
-                .withFailureHandler(function (err) {
-                    if (typeof ocultarSpinner === "function") ocultarSpinner();
-                    console.error("[Bugs] Error listarBugs:", err);
-                    if (typeof mostrarToast === "function")
-                        mostrarToast(
-                            "Error listando bugs: " + (err.message || err),
-                            "error"
-                        );
-                    renderizarTablaBugs([]);
-                })
-                // Use api_listarBugs wrapper to ensure consistent response structure
-                .api_listarBugs(url, filtros);
-        }
-
-        function renderizarTablaBugs(bugs) {
-            var tbody = document.getElementById("tablaBugs");
-            if (!tbody) return;
-            if (!bugs || bugs.length === 0) {
-                tbody.innerHTML =
-                    '<tr><td colspan="8" style="text-align:center; padding:1rem; color:#64748b;">Sin bugs para mostrar</td></tr>';
-                return;
-            }
-            var html = "";
-            bugs.forEach(function (b) {
-                var id = b.ID || "";
-                var titulo = b.Titulo || "";
-                var estado = b.Estado || "Abierto";
-                var sev = b.Severidad || "";
-                var casos = b.CasosRelacionados || "";
-                var link = b.LinkCasoPrueba || "";
-                var fecha = (function () {
-                    try {
-                        return (
-                            b.FechaDeteccion &&
-                            new Date(b.FechaDeteccion).toLocaleDateString()
-                        );
-                    } catch (e) {
-                        return "";
-                    }
-                })();
-                var badge =
-                    estado === "Cerrado"
-                        ? '<span class="badge badge-success">Cerrado</span>'
-                        : '<span class="badge badge-danger">Abierto</span>';
-                var linkHtml = link
-                    ? link
-                          .split("\n")
-                          .map(function (l) {
-                              return (
-                                  '<a href="' + l + '" target="_blank">Link</a>'
-                              );
-                          })
-                          .join("<br>")
-                    : "";
-                html +=
-                    "<tr>" +
-                    "<td>" +
-                    id +
-                    "</td>" +
-                    "<td>" +
-                    titulo +
-                    "</td>" +
-                    "<td>" +
-                    badge +
-                    "</td>" +
-                    "<td>" +
-                    sev +
-                    "</td>" +
-                    "<td>" +
-                    (casos || "") +
-                    "</td>" +
-                    "<td>" +
-                    linkHtml +
-                    "</td>" +
-                    "<td>" +
-                    (fecha || "") +
-                    "</td>" +
-                    '<td style="display:flex; gap:0.35rem; flex-wrap:wrap;">' +
-                    '<button class="btn btn-secondary btn-sm" onclick="abrirModalCrearBugProxy(\'' +
-                    id +
-                    "')\">Ver/Editar</button>" +
-                    (estado === "Abierto"
-                        ? '<button class="btn btn-success btn-sm" onclick="cambiarEstadoBugUI(\'' +
-                          id +
-                          "','Cerrado')\">Cerrar</button>"
-                        : '<button class="btn btn-primary btn-sm" onclick="cambiarEstadoBugUI(\'' +
-                          id +
-                          "','Abierto')\">Abrir</button>") +
-                    '<button class="btn btn-danger btn-sm" onclick="eliminarBugUI(\'' +
-                    id +
-                    "')\">Eliminar</button>" +
-                    "</td>" +
-                    "</tr>";
-            });
-            tbody.innerHTML = html;
-        }
-
-        function cambiarEstadoBugUI(bugId, nuevoEstado) {
-            var url =
-                typeof recuperarSheetUrl === "function"
-                    ? recuperarSheetUrl()
-                    : null;
-            if (!url) return;
-            if (typeof mostrarSpinner === "function") mostrarSpinner();
-            google.script.run
-                .withSuccessHandler(function (r) {
-                    if (typeof ocultarSpinner === "function") ocultarSpinner();
-                    if (r && r.success) {
-                        cargarBugs();
-                        if (typeof mostrarToast === "function")
-                            mostrarToast("Estado actualizado", "success");
-                    } else {
-                        if (typeof mostrarToast === "function")
-                            mostrarToast(
-                                "Error: " + (r && r.mensaje ? r.mensaje : ""),
-                                "error"
-                            );
-                    }
-                })
-                .withFailureHandler(function (e) {
-                    if (typeof ocultarSpinner === "function") ocultarSpinner();
-                    if (typeof mostrarToast === "function")
-                        mostrarToast(
-                            "Error: " + (e && e.message ? e.message : e),
-                            "error"
-                        );
-                })
-                .cambiarEstadoBug(url, bugId, nuevoEstado);
-        }
-
-        async function eliminarBugUI(bugId) {
-            var confirmar =
-                typeof mostrarConfirmacionApp === "function"
-                    ? await mostrarConfirmacionApp({
-                          titulo: "Eliminar Bug",
-                          icono: "!",
-                          mensaje:
-                              "Al eliminar este bug, los casos vinculados que estén en No_OK y sin otros bugs abiertos pasarán a Sin ejecutar. ¿Confirmas?",
-                          textoOk: "Sí, eliminar",
-                          textoCancelar: "Cancelar",
-                      })
-                    : confirm(
-                          "Eliminar bug " +
-                              bugId +
-                              "? Los casos con No_OK podrían pasar a Sin ejecutar."
-                      );
-            if (!confirmar) return;
-            var url =
-                typeof recuperarSheetUrl === "function"
-                    ? recuperarSheetUrl()
-                    : null;
-            if (!url) return;
-            if (typeof mostrarSpinner === "function") mostrarSpinner();
-            google.script.run
-                .withSuccessHandler(function (r) {
-                    if (typeof ocultarSpinner === "function") ocultarSpinner();
-                    if (r && r.success) {
-                        if (typeof mostrarToast === "function")
-                            mostrarToast("Bug eliminado", "success");
-                        cargarBugs();
-                        if (typeof cargarTodosLosCasos === "function")
-                            setTimeout(function () {
-                                cargarTodosLosCasos();
-                            }, 400);
-                    } else {
-                        if (typeof mostrarToast === "function")
-                            mostrarToast(
-                                "Error: " + (r && r.mensaje ? r.mensaje : ""),
-                                "error"
-                            );
-                    }
-                })
-                .withFailureHandler(function (e) {
-                    if (typeof ocultarSpinner === "function") ocultarSpinner();
-                    if (typeof mostrarToast === "function")
-                        mostrarToast(
-                            "Error eliminando bug: " +
-                                (e && e.message ? e.message : e),
-                            "error"
-                        );
-                })
-                .eliminarBug(url, bugId);
-        }
-
-        // Proxy to safely call abrirModalCrearBug from other fragments
-        function abrirModalCrearBugProxy(casoId) {
-            try {
-                if (
-                    typeof window.abrirModalCrearBug === "function" &&
-                    !window.abrirModalCrearBug.__isStub
-                ) {
-                    return window.abrirModalCrearBug(casoId);
-                }
-
-                var attempts = 0;
-                var maxAttempts = 60; // ~9 seconds max (60 * 150ms)
-                var interval = setInterval(function () {
-                    attempts++;
-                    if (
-                        typeof window.abrirModalCrearBug === "function" &&
-                        !window.abrirModalCrearBug.__isStub
-                    ) {
-                        clearInterval(interval);
-                        window.abrirModalCrearBug(casoId);
-                        return;
-                    }
-                    if (attempts >= maxAttempts) {
-                        clearInterval(interval);
-                        console.error(
-                            "[Bugs] abrirModalCrearBug no disponible después de reintentos"
-                        );
-                        if (typeof mostrarToast === "function")
-                            mostrarToast(
-                                "Función abrirModalCrearBug no disponible",
-                                "error"
-                            );
-                    }
-                }, 150);
-            } catch (e) {
-                console.error("[Bugs] abrirModalCrearBugProxy error:", e);
-            }
-        }
-
-        window.mostrarPanelBugs = mostrarPanelBugs;
-        window.ocultarPanelBugs = ocultarPanelBugs;
-        window.cargarBugs = cargarBugs;
-        window.renderizarTablaBugs = renderizarTablaBugs;
-        window.cambiarEstadoBugUI = cambiarEstadoBugUI;
-        window.eliminarBugUI = eliminarBugUI;
-        window.abrirModalCrearBugProxy = abrirModalCrearBugProxy;
-    } catch (e) {
-        console.error(
-            "❌ Error crítico cargando Frontend_Components_Bugs_List2.html:",
-            e
-        );
+    function mostrarPanelBugs() {
         try {
-            if (typeof mostrarToast === "function")
-                mostrarToast(
-                    "Error cargando módulo Bugs List 2: " +
-                        (e && e.message ? e.message : ""),
-                    "error"
-                );
-        } catch (ee) {
-            console.error("Error mostrando toast tras fallo crítico:", ee);
+            console.log("[Bugs] Abrir historial");
+        } catch (e) {}
+        var bugsScreen = document.getElementById("bugsScreen");
+        var casosScreen = document.getElementById("casosScreen");
+        if (casosScreen) casosScreen.classList.add("hidden");
+        if (bugsScreen) bugsScreen.classList.remove("hidden");
+        try {
+            cargarBugs();
+        } catch (e) {
+            console.error("[Bugs] Error cargarBugs init:", e);
         }
     }
+
+    function ocultarPanelBugs() {
+        var bugsScreen = document.getElementById("bugsScreen");
+        var casosScreen = document.getElementById("casosScreen");
+        if (bugsScreen) bugsScreen.classList.add("hidden");
+        if (casosScreen) casosScreen.classList.remove("hidden");
+    }
+
+    function cargarBugs() {
+        // Recuperar URL del Sheet
+        var url =
+            window.currentSheetUrl ||
+            (typeof recuperarSheetUrl === "function"
+                ? recuperarSheetUrl()
+                : null);
+
+        console.log("[Bugs] URL recuperada:", url);
+        console.log("[Bugs] Tipo de URL:", typeof url);
+
+        if (!url || url === "" || url === "null" || url === "undefined") {
+            console.warn("[Bugs] No hay sheetUrl válida");
+            if (typeof mostrarToast === "function")
+                mostrarToast("Conecta un Sheet primero", "warning");
+            renderizarTablaBugs([]);
+            return;
+        }
+
+        // Preparar filtros
+        var filtros = {};
+        var busqueda = document.getElementById("bugFiltroBusqueda")
+            ? document.getElementById("bugFiltroBusqueda").value.trim()
+            : "";
+        var estado = document.getElementById("bugFiltroEstado")
+            ? document.getElementById("bugFiltroEstado").value
+            : "Todos";
+        var severidad = document.getElementById("bugFiltroSeveridad")
+            ? document.getElementById("bugFiltroSeveridad").value
+            : "Todas";
+        var relacion = document.getElementById("bugFiltroConCaso")
+            ? document.getElementById("bugFiltroConCaso").value
+            : "Todos";
+
+        if (busqueda) filtros.busqueda = busqueda;
+        if (estado && estado !== "Todos") filtros.estado = estado;
+        if (severidad && severidad !== "Todas") filtros.severidad = severidad;
+        if (relacion === "ConCaso") filtros.conCaso = true;
+        else if (relacion === "SinCaso") filtros.conCaso = false;
+
+        console.log("[Bugs] Filtros:", filtros);
+        console.log("[Bugs] Llamando listarBugs con URL:", url);
+
+        if (typeof mostrarSpinner === "function") mostrarSpinner();
+
+        // ✅ Llamada DIRECTA a listarBugs (Backend_Services_Bugs.js)
+        google.script.run
+            .withSuccessHandler(function (res) {
+                console.log("[Bugs] ✅ Respuesta recibida:", res);
+                console.log("[Bugs] Tipo de respuesta:", typeof res);
+
+                if (typeof ocultarSpinner === "function") ocultarSpinner();
+
+                // Validar respuesta
+                if (!res) {
+                    console.error("[Bugs] ❌ Respuesta es null/undefined");
+                    if (typeof mostrarToast === "function") {
+                        mostrarToast(
+                            "Error: Sin respuesta del servidor",
+                            "error"
+                        );
+                    }
+                    renderizarTablaBugs([]);
+                    return;
+                }
+
+                if (res.success === false) {
+                    console.error("[Bugs] ❌ Error del backend:", res.mensaje);
+                    if (typeof mostrarToast === "function") {
+                        mostrarToast(
+                            "Error: " +
+                                (res.mensaje ||
+                                    "No se pudieron cargar los bugs"),
+                            "error"
+                        );
+                    }
+                    renderizarTablaBugs([]);
+                    return;
+                }
+
+                // Renderizar bugs
+                var bugs =
+                    res.data && Array.isArray(res.data.bugs)
+                        ? res.data.bugs
+                        : [];
+                console.log("[Bugs] ✅ Total bugs recibidos:", bugs.length);
+                renderizarTablaBugs(bugs);
+
+                if (bugs.length === 0 && typeof mostrarToast === "function") {
+                    mostrarToast("No hay bugs registrados", "info");
+                }
+            })
+            .withFailureHandler(function (err) {
+                console.error("[Bugs] ❌ Error en la llamada:", err);
+                console.error("[Bugs] Tipo de error:", typeof err);
+                console.error("[Bugs] Error completo:", JSON.stringify(err));
+
+                if (typeof ocultarSpinner === "function") ocultarSpinner();
+
+                if (typeof mostrarToast === "function") {
+                    var mensaje =
+                        err && err.message ? err.message : "Error desconocido";
+                    mostrarToast("Error al cargar bugs: " + mensaje, "error");
+                }
+
+                renderizarTablaBugs([]);
+            })
+            .listarBugs(url, filtros);
+    }
+
+    function renderizarTablaBugs(bugs) {
+        var tbody = document.getElementById("tablaBugs");
+        if (!tbody) return;
+        if (!bugs || bugs.length === 0) {
+            tbody.innerHTML =
+                '<tr><td colspan="8" style="text-align:center; padding:1rem; color:#64748b;">Sin bugs para mostrar</td></tr>';
+            return;
+        }
+        var html = "";
+        bugs.forEach(function (b) {
+            var id = b.ID || "";
+            var titulo = b.Titulo || "";
+            var estado = b.Estado || "Abierto";
+            var sev = b.Severidad || "";
+            var casos = b.CasosRelacionados || "";
+            var link = b.LinkCasoPrueba || "";
+            var fecha = (function () {
+                try {
+                    return (
+                        b.FechaDeteccion &&
+                        new Date(b.FechaDeteccion).toLocaleDateString()
+                    );
+                } catch (e) {
+                    return "";
+                }
+            })();
+            var badge =
+                estado === "Cerrado"
+                    ? '<span class="badge badge-success">Cerrado</span>'
+                    : '<span class="badge badge-danger">Abierto</span>';
+            var linkHtml = link
+                ? link
+                      .split("\n")
+                      .map(function (l) {
+                          return '<a href="' + l + '" target="_blank">Link</a>';
+                      })
+                      .join("<br>")
+                : "";
+            html +=
+                "<tr>" +
+                "<td>" +
+                id +
+                "</td>" +
+                "<td>" +
+                titulo +
+                "</td>" +
+                "<td>" +
+                badge +
+                "</td>" +
+                "<td>" +
+                sev +
+                "</td>" +
+                "<td>" +
+                (casos || "") +
+                "</td>" +
+                "<td>" +
+                linkHtml +
+                "</td>" +
+                "<td>" +
+                (fecha || "") +
+                "</td>" +
+                '<td style="display:flex; gap:0.35rem; flex-wrap:wrap;">' +
+                '<button class="btn btn-secondary btn-sm" onclick="abrirModalCrearBug(\'' +
+                id +
+                "')\">Ver/Editar</button>" +
+                (estado === "Abierto"
+                    ? '<button class="btn btn-success btn-sm" onclick="cambiarEstadoBugUI(\'' +
+                      id +
+                      "','Cerrado')\">Cerrar</button>"
+                    : '<button class="btn btn-primary btn-sm" onclick="cambiarEstadoBugUI(\'' +
+                      id +
+                      "','Abierto')\">Abrir</button>") +
+                '<button class="btn btn-danger btn-sm" onclick="eliminarBugUI(\'' +
+                id +
+                "')\">Eliminar</button>" +
+                "</td>" +
+                "</tr>";
+        });
+        tbody.innerHTML = html;
+    }
+
+    function cambiarEstadoBugUI(bugId, nuevoEstado) {
+        var url =
+            typeof recuperarSheetUrl === "function"
+                ? recuperarSheetUrl()
+                : null;
+        if (!url) return;
+        if (typeof mostrarSpinner === "function") mostrarSpinner();
+        google.script.run
+            .withSuccessHandler(function (r) {
+                if (typeof ocultarSpinner === "function") ocultarSpinner();
+                if (r && r.success) {
+                    cargarBugs();
+                    if (typeof mostrarToast === "function")
+                        mostrarToast("Estado actualizado", "success");
+                } else {
+                    if (typeof mostrarToast === "function")
+                        mostrarToast(
+                            "Error: " + (r && r.mensaje ? r.mensaje : ""),
+                            "error"
+                        );
+                }
+            })
+            .withFailureHandler(function (e) {
+                if (typeof ocultarSpinner === "function") ocultarSpinner();
+                if (typeof mostrarToast === "function")
+                    mostrarToast(
+                        "Error: " + (e && e.message ? e.message : e),
+                        "error"
+                    );
+            })
+            .cambiarEstadoBug(url, bugId, nuevoEstado);
+    }
+
+    async function eliminarBugUI(bugId) {
+        var confirmar =
+            typeof mostrarConfirmacionApp === "function"
+                ? await mostrarConfirmacionApp({
+                      titulo: "Eliminar Bug",
+                      icono: "!",
+                      mensaje:
+                          "Al eliminar este bug, los casos vinculados que estén en No_OK y sin otros bugs abiertos pasarán a Sin ejecutar. ¿Confirmas?",
+                      textoOk: "Sí, eliminar",
+                      textoCancelar: "Cancelar",
+                  })
+                : confirm(
+                      "Eliminar bug " +
+                          bugId +
+                          "? Los casos con No_OK podrían pasar a Sin ejecutar."
+                  );
+        if (!confirmar) return;
+        var url =
+            typeof recuperarSheetUrl === "function"
+                ? recuperarSheetUrl()
+                : null;
+        if (!url) return;
+        if (typeof mostrarSpinner === "function") mostrarSpinner();
+        google.script.run
+            .withSuccessHandler(function (r) {
+                if (typeof ocultarSpinner === "function") ocultarSpinner();
+                if (r && r.success) {
+                    if (typeof mostrarToast === "function")
+                        mostrarToast("Bug eliminado", "success");
+                    cargarBugs();
+                    if (typeof cargarTodosLosCasos === "function")
+                        setTimeout(function () {
+                            cargarTodosLosCasos();
+                        }, 400);
+                } else {
+                    if (typeof mostrarToast === "function")
+                        mostrarToast(
+                            "Error: " + (r && r.mensaje ? r.mensaje : ""),
+                            "error"
+                        );
+                }
+            })
+            .withFailureHandler(function (e) {
+                if (typeof ocultarSpinner === "function") ocultarSpinner();
+                if (typeof mostrarToast === "function")
+                    mostrarToast(
+                        "Error eliminando bug: " +
+                            (e && e.message ? e.message : e),
+                        "error"
+                    );
+            })
+            .eliminarBug(url, bugId);
+    }
+
+    window.mostrarPanelBugs = mostrarPanelBugs;
+    window.ocultarPanelBugs = ocultarPanelBugs;
+    window.cargarBugs = cargarBugs;
+    window.renderizarTablaBugs = renderizarTablaBugs;
+    window.cambiarEstadoBugUI = cambiarEstadoBugUI;
+    window.eliminarBugUI = eliminarBugUI;
 </script>

@@ -482,522 +482,493 @@
 </div>
 
 <script>
-    // Top-level guard to avoid unhandled exceptions stopping component initialization
-    try {
-        // ===================================================================
-        // VARIABLES GLOBALES DE EJECUCIONES
-        // ===================================================================
+    // ===================================================================
+    // VARIABLES GLOBALES DE EJECUCIONES
+    // ===================================================================
 
-        (function () {
-            console.log(
-                "🔵 Iniciando carga de Frontend_Components_Ejecuciones.html"
-            );
+    (function () {
+        console.log(
+            "🔵 Iniciando carga de Frontend_Components_Ejecuciones.html"
+        );
 
-            if (!window.casoEnEjecucion) window.casoEnEjecucion = null;
-            if (!window.evidenciasTemporales) window.evidenciasTemporales = [];
-            if (!window.contadorLinks) window.contadorLinks = 0;
+        if (!window.casoEnEjecucion) window.casoEnEjecucion = null;
+        if (!window.evidenciasTemporales) window.evidenciasTemporales = [];
+        if (!window.contadorLinks) window.contadorLinks = 0;
 
-            console.log("✅ Variables globales de Ejecuciones inicializadas");
-        })();
+        console.log("✅ Variables globales de Ejecuciones inicializadas");
+    })();
 
-        // ===================================================================
-        // ABRIR MODAL DE EJECUCIÓN
-        // ===================================================================
+    // ===================================================================
+    // ABRIR MODAL DE EJECUCIÓN
+    // ===================================================================
 
-        function abrirModalEjecutarCaso(casoId) {
-            console.log("▶️ Abriendo modal de ejecución para caso:", casoId);
+    function abrirModalEjecutarCaso(casoId) {
+        console.log("▶️ Abriendo modal de ejecución para caso:", casoId);
 
-            const caso = window.casosActuales
-                ? window.casosActuales.find((c) => c.ID === casoId)
-                : null;
+        const caso = window.casosActuales
+            ? window.casosActuales.find((c) => c.ID === casoId)
+            : null;
 
-            if (!caso) {
-                mostrarToast("No se encontró el caso", "error");
-                return;
-            }
-
-            // Guardar caso en ejecución
-            window.casoEnEjecucion = caso;
-            window.evidenciasTemporales = [];
-            window.contadorLinks = 0;
-
-            // Mostrar información del caso
-            document.getElementById("ejecucionCasoId").textContent =
-                caso.ID || "-";
-            document.getElementById("ejecucionCasoTitulo").textContent =
-                caso.Titulo || "-";
-            document.getElementById("ejecucionCasoPrioridad").textContent =
-                caso.Prioridad || "-";
-            document.getElementById("ejecucionCasoFormato").textContent =
-                caso.Formato || "Clásico";
-
-            // Mostrar pasos según formato
-            let pasos = "";
-            if (caso.Formato === "Gherkin") {
-                if (caso.ScenarioGiven)
-                    pasos += "Dado: " + caso.ScenarioGiven + "\n\n";
-                if (caso.ScenarioWhen)
-                    pasos += "Cuando: " + caso.ScenarioWhen + "\n\n";
-                if (caso.ScenarioThen)
-                    pasos += "Entonces: " + caso.ScenarioThen;
-            } else {
-                pasos = caso.Pasos || "No hay pasos definidos";
-            }
-
-            document.getElementById("ejecucionPasos").textContent = pasos;
-            document.getElementById("ejecucionResultadoEsperado").textContent =
-                caso.ResultadoEsperado || "No definido";
-
-            // Mostrar estado actual con badge y seleccionar 'No ejecutado' si aplica
-            try {
-                const estadoActual =
-                    caso.ResultadoUltimaEjecucion || "Sin ejecutar";
-                let badge =
-                    typeof generarBadgeEstadoEjecucion === "function"
-                        ? generarBadgeEstadoEjecucion(estadoActual)
-                        : '<span class="badge badge-primary">' +
-                          (estadoActual || "Sin ejecutar") +
-                          "</span>";
-                badge = badge.replace("Sin ejecutar", "No ejecutado");
-                const cont = document.getElementById("ejecucionEstadoActual");
-                if (cont) cont.innerHTML = badge;
-                if (estadoActual === "Sin ejecutar") {
-                    try {
-                        seleccionarResultado("No_ejecutado");
-                    } catch (e) {}
-                }
-            } catch (e) {
-                console.warn("No se pudo renderizar estado actual", e);
-            }
-
-            // Limpiar formulario
-            document.getElementById("resultadoEjecucion").value = "";
-            document.getElementById("ejecucionComentarios").value = "";
-            document.getElementById("ambienteEjecucion").value = "";
-            document.getElementById("navegadorEjecucion").value = "";
-
-            // Limpiar selección de resultado
-            document.querySelectorAll(".resultado-option").forEach((opt) => {
-                opt.classList.remove("selected");
-            });
-
-            // Seleccionar tarjeta según estado actual
-            try {
-                switch (caso.ResultadoUltimaEjecucion || "Sin ejecutar") {
-                    case "OK":
-                        seleccionarResultado("OK");
-                        break;
-                    case "No_OK":
-                        seleccionarResultado("No_OK");
-                        break;
-                    case "Bloqueado":
-                        seleccionarResultado("Bloqueado");
-                        break;
-                    case "Descartado":
-                        seleccionarResultado("Descartado");
-                        break;
-                    case "Ejecutando":
-                        seleccionarResultado("Ejecutando");
-                        break;
-                    default:
-                        seleccionarResultado("No_ejecutado");
-                        break;
-                }
-            } catch (e) {}
-
-            // Limpiar evidencias
-            const listaEvidencias = document.getElementById(
-                "listaEvidenciasEjecucion"
-            );
-            if (listaEvidencias) listaEvidencias.classList.add("hidden");
-
-            const contenidoLista = document.getElementById(
-                "contenidoListaEvidencias"
-            );
-            if (contenidoLista) contenidoLista.innerHTML = "";
-
-            // Ocultar botón de reportar bug por defecto
-            const btnReportarBug = document.getElementById("btnReportarBug");
-            if (btnReportarBug) {
-                btnReportarBug.style.display = "none";
-            }
-
-            // Abrir modal
-            abrirModal("modalEjecutarCaso");
+        if (!caso) {
+            mostrarToast("No se encontró el caso", "error");
+            return;
         }
 
-        // ===================================================================
-        // SELECCIONAR RESULTADO
-        // ===================================================================
+        // Guardar caso en ejecución
+        window.casoEnEjecucion = caso;
+        window.evidenciasTemporales = [];
+        window.contadorLinks = 0;
 
-        function seleccionarResultado(resultado) {
-            console.log("🎯 Resultado seleccionado:", resultado);
+        // Mostrar información del caso
+        document.getElementById("ejecucionCasoId").textContent = caso.ID || "-";
+        document.getElementById("ejecucionCasoTitulo").textContent =
+            caso.Titulo || "-";
+        document.getElementById("ejecucionCasoPrioridad").textContent =
+            caso.Prioridad || "-";
+        document.getElementById("ejecucionCasoFormato").textContent =
+            caso.Formato || "Clásico";
 
-            document.getElementById("resultadoEjecucion").value = resultado;
+        // Mostrar pasos según formato
+        let pasos = "";
+        if (caso.Formato === "Gherkin") {
+            if (caso.ScenarioGiven)
+                pasos += "Dado: " + caso.ScenarioGiven + "\n\n";
+            if (caso.ScenarioWhen)
+                pasos += "Cuando: " + caso.ScenarioWhen + "\n\n";
+            if (caso.ScenarioThen) pasos += "Entonces: " + caso.ScenarioThen;
+        } else {
+            pasos = caso.Pasos || "No hay pasos definidos";
+        }
 
-            // Actualizar UI
-            document.querySelectorAll(".resultado-option").forEach((opt) => {
-                opt.classList.remove("selected");
-            });
+        document.getElementById("ejecucionPasos").textContent = pasos;
+        document.getElementById("ejecucionResultadoEsperado").textContent =
+            caso.ResultadoEsperado || "No definido";
 
-            // Marcar la opción seleccionada
-            const opcionSeleccionada = Array.from(
-                document.querySelectorAll(".resultado-option")
-            ).find((opt) => opt.querySelector("input").value === resultado);
-
-            if (opcionSeleccionada) {
-                opcionSeleccionada.classList.add("selected");
+        // Mostrar estado actual con badge y seleccionar 'No ejecutado' si aplica
+        try {
+            const estadoActual =
+                caso.ResultadoUltimaEjecucion || "Sin ejecutar";
+            let badge =
+                typeof generarBadgeEstadoEjecucion === "function"
+                    ? generarBadgeEstadoEjecucion(estadoActual)
+                    : '<span class="badge badge-primary">' +
+                      (estadoActual || "Sin ejecutar") +
+                      "</span>";
+            badge = badge.replace("Sin ejecutar", "No ejecutado");
+            const cont = document.getElementById("ejecucionEstadoActual");
+            if (cont) cont.innerHTML = badge;
+            if (estadoActual === "Sin ejecutar") {
+                try {
+                    seleccionarResultado("No_ejecutado");
+                } catch (e) {}
             }
-
-            // Mostrar/ocultar botón de reportar bug
-            const btnReportarBug = document.getElementById("btnReportarBug");
-
-            if (btnReportarBug) {
-                // Solo mostrar si es "No_OK"
-                btnReportarBug.style.display =
-                    resultado === "No_OK" ? "inline-flex" : "none";
-            }
+        } catch (e) {
+            console.warn("No se pudo renderizar estado actual", e);
         }
 
-        // ===================================================================
-        // MANEJO DE EVIDENCIAS
-        // ===================================================================
+        // Limpiar formulario
+        document.getElementById("resultadoEjecucion").value = "";
+        document.getElementById("ejecucionComentarios").value = "";
+        document.getElementById("ambienteEjecucion").value = "";
+        document.getElementById("navegadorEjecucion").value = "";
 
-        function handleDragOverEjecucion(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            document
-                .getElementById("dropzoneEjecucion")
-                .classList.add("drag-over");
-        }
-
-        function handleDragLeaveEjecucion(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            document
-                .getElementById("dropzoneEjecucion")
-                .classList.remove("drag-over");
-        }
-
-        function handleDropEjecucion(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            document
-                .getElementById("dropzoneEjecucion")
-                .classList.remove("drag-over");
-
-            const files = event.dataTransfer.files;
-            procesarArchivosEjecucion(files);
-        }
-
-        function handleFileSelectEjecucion(event) {
-            const files = event.target.files;
-            procesarArchivosEjecucion(files);
-            event.target.value = "";
-        }
-
-        // Click en dropzone
-        document.addEventListener("DOMContentLoaded", function () {
-            const dropzone = document.getElementById("dropzoneEjecucion");
-            if (dropzone) {
-                dropzone.addEventListener("click", function () {
-                    document.getElementById("inputArchivosEjecucion").click();
-                });
-            }
+        // Limpiar selección de resultado
+        document.querySelectorAll(".resultado-option").forEach((opt) => {
+            opt.classList.remove("selected");
         });
 
-        function procesarArchivosEjecucion(files) {
-            let archivosValidos = 0;
-
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-
-                if (file.size > 50 * 1024 * 1024) {
-                    mostrarToast(
-                        '❌ "' + file.name + '" excede los 50 MB',
-                        "error",
-                        4000
-                    );
-                    continue;
-                }
-
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    window.evidenciasTemporales.push({
-                        tipo: "archivo",
-                        nombre: file.name,
-                        tamaño: file.size,
-                        mimeType: file.type,
-                        contenidoBase64: e.target.result.split(",")[1],
-                    });
-
-                    renderizarListaEvidencias();
-
-                    const tamañoMB = (file.size / (1024 * 1024)).toFixed(2);
-                    mostrarToast(
-                        '✅ "' + file.name + '" listo (' + tamañoMB + " MB)",
-                        "success",
-                        2000
-                    );
-                };
-
-                reader.onerror = function () {
-                    mostrarToast(
-                        '❌ Error leyendo "' + file.name + '"',
-                        "error"
-                    );
-                };
-
-                reader.readAsDataURL(file);
-                archivosValidos++;
-            }
-
-            if (files.length > 1) {
-                setTimeout(() => {
-                    if (archivosValidos > 0) {
-                        mostrarToast(
-                            "📎 " + archivosValidos + " archivo(s) agregado(s)",
-                            "info",
-                            2000
-                        );
-                    }
-                }, 500);
-            }
-        }
-
-        function renderizarListaEvidencias() {
-            const lista = document.getElementById("listaEvidenciasEjecucion");
-            const contenido = document.getElementById(
-                "contenidoListaEvidencias"
-            );
-
-            if (
-                !window.evidenciasTemporales ||
-                window.evidenciasTemporales.length === 0
-            ) {
-                lista.classList.add("hidden");
-                return;
-            }
-
-            lista.classList.remove("hidden");
-
-            let html = "";
-            window.evidenciasTemporales.forEach((evidencia, index) => {
-                const tamañoMB = (evidencia.tamaño / (1024 * 1024)).toFixed(2);
-
-                html += '<div class="evidencia-item">';
-                html +=
-                    '  <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">';
-                html += '    <span style="font-size: 1.5rem;">📎</span>';
-                html += '    <div style="flex: 1;">';
-                html +=
-                    '      <div style="font-weight: 500; word-break: break-word;">' +
-                    evidencia.nombre +
-                    "</div>";
-                html +=
-                    '      <div style="font-size: 0.85rem; color: #64748b;">' +
-                    tamañoMB +
-                    " MB</div>";
-                html += "    </div>";
-                html += "  </div>";
-                html +=
-                    '  <button type="button" class="btn-eliminar-evidencia" onclick="eliminarEvidenciaEjecucion(' +
-                    index +
-                    ')" title="Eliminar">🗑️</button>';
-                html += "</div>";
-            });
-
-            contenido.innerHTML = html;
-        }
-
-        function eliminarEvidenciaEjecucion(index) {
-            window.evidenciasTemporales.splice(index, 1);
-            renderizarListaEvidencias();
-            mostrarToast("✅ Evidencia eliminada", "success");
-        }
-
-        // ===================================================================
-        // GUARDAR EJECUCIÓN
-        // ===================================================================
-
-        function guardarEjecucion() {
-            console.log("💾 Guardando ejecución...");
-
-            // VALIDACIONES
-            let resultado = document.getElementById("resultadoEjecucion").value;
-            if (resultado === "No_ejecutado") {
-                resultado = "Sin ejecutar";
-            }
-            const observaciones = document
-                .getElementById("ejecucionComentarios")
-                .value.trim();
-
-            if (!resultado) {
-                mostrarToast(
-                    "⚠️ Debes seleccionar un resultado (OK/No_OK)",
-                    "warning"
-                );
-                return;
-            }
-
-            if (
-                resultado === "No_OK" &&
-                (!observaciones || observaciones.length < 10)
-            ) {
-                mostrarToast(
-                    "⚠️ Si el resultado es No_OK, debes escribir observaciones (mín. 10 caracteres)",
-                    "warning"
-                );
-                return;
-            }
-
-            if (!window.casoEnEjecucion) {
-                mostrarToast("Error: No hay caso en ejecución", "error");
-                return;
-            }
-
-            const sheetUrl = window.currentSheetUrl;
-
-            if (!sheetUrl) {
-                mostrarToast("Error: No hay Sheet conectado", "error");
-                return;
-            }
-
-            const datosEjecucion = {
-                sheetUrl: sheetUrl,
-                casoId: window.casoEnEjecucion.ID,
-                casoTitulo: window.casoEnEjecucion.Titulo,
-                resultado: resultado,
-                observaciones: observaciones,
-                ambiente: document.getElementById("ambienteEjecucion").value,
-                navegador: document.getElementById("navegadorEjecucion").value,
-                evidencias: [],
-            };
-
-            // Agregar evidencias si hay
-            if (
-                window.evidenciasTemporales &&
-                window.evidenciasTemporales.length > 0
-            ) {
-                datosEjecucion.evidencias = window.evidenciasTemporales.map(
-                    (e) => e.nombre
-                );
-            }
-
-            console.log("📦 Datos de ejecución:", datosEjecucion);
-            mostrarSpinner();
-
-            google.script.run
-                .withSuccessHandler(function (response) {
-                    ocultarSpinner();
-                    console.log("📨 Respuesta del backend:", response);
-
-                    if (response.success) {
-                        mostrarToast(
-                            "✅ Ejecución guardada exitosamente",
-                            "success"
-                        );
-
-                        // Cerrar modal
-                        cerrarModalEjecucion();
-
-                        // Recargar tabla de casos
-                        if (typeof cargarTodosLosCasos === "function") {
-                            setTimeout(() => {
-                                cargarTodosLosCasos();
-                            }, 500);
-                        }
-
-                        // ✅ Actualizar la barra de progreso (800 ms después)
-                        if (typeof actualizarBarraEjecucion === "function") {
-                            setTimeout(() => {
-                                actualizarBarraEjecucion();
-                            }, 800);
-                        }
-                    } else {
-                        mostrarToast("Error: " + response.mensaje, "error");
-                    }
-                })
-                .withFailureHandler(function (error) {
-                    ocultarSpinner();
-                    console.error("💥 Error guardando ejecución:", error);
-                    mostrarToast(
-                        "Error al guardar ejecución: " + error.message,
-                        "error"
-                    );
-                })
-                .guardarEjecucion(datosEjecucion);
-        }
-
-        // ===================================================================
-        // REPORTAR BUG DESDE CASO
-        // ===================================================================
-
-        function reportarBugDesdeCaso() {
-            const casoId = window.casoEnEjecucion
-                ? window.casoEnEjecucion.ID
-                : null;
-
-            if (!casoId) {
-                mostrarToast("No hay caso en ejecución", "warning");
-                return;
-            }
-
-            // Abrir modal de bugs SIN cerrar el de ejecución
-            // (El z-index manejará que aparezca encima)
-            if (typeof abrirModalCrearBugProxy === "function") {
-                abrirModalCrearBugProxy(casoId);
-            } else if (typeof abrirModalCrearBug === "function") {
-                abrirModalCrearBug(casoId);
-            } else {
-                mostrarToast("Modal de bugs no disponible", "error");
-            }
-        }
-
-        // ===================================================================
-        // CERRAR MODAL
-        // ===================================================================
-
-        function cerrarModalEjecucion() {
-            cerrarModal("modalEjecutarCaso");
-            window.casoEnEjecucion = null;
-            window.evidenciasTemporales = [];
-        }
-
-        // ===================================================================
-        // EXPORTAR AL SCOPE GLOBAL
-        // ===================================================================
-
-        window.abrirModalEjecutarCaso = abrirModalEjecutarCaso;
-        window.cerrarModalEjecucion = cerrarModalEjecucion;
-        window.seleccionarResultado = seleccionarResultado;
-        window.guardarEjecucion = guardarEjecucion;
-        window.reportarBugDesdeCaso = reportarBugDesdeCaso;
-        window.handleDragOverEjecucion = handleDragOverEjecucion;
-        window.handleDragLeaveEjecucion = handleDragLeaveEjecucion;
-        window.handleDropEjecucion = handleDropEjecucion;
-        window.handleFileSelectEjecucion = handleFileSelectEjecucion;
-        window.procesarArchivosEjecucion = procesarArchivosEjecucion;
-        window.renderizarListaEvidencias = renderizarListaEvidencias;
-        window.eliminarEvidenciaEjecucion = eliminarEvidenciaEjecucion;
-
-        console.log(
-            "✅ Frontend_Components_Ejecuciones.html cargado correctamente"
-        );
-    } catch (e) {
-        console.error(
-            "❌ Error crítico cargando Frontend_Components_Ejecuciones.html:",
-            e
-        );
+        // Seleccionar tarjeta según estado actual
         try {
-            if (typeof mostrarToast === "function")
-                mostrarToast(
-                    "Error cargando módulo Ejecuciones: " +
-                        (e && e.message ? e.message : ""),
-                    "error"
-                );
-        } catch (ee) {
-            console.error("Error mostrando toast tras fallo crítico:", ee);
+            switch (caso.ResultadoUltimaEjecucion || "Sin ejecutar") {
+                case "OK":
+                    seleccionarResultado("OK");
+                    break;
+                case "No_OK":
+                    seleccionarResultado("No_OK");
+                    break;
+                case "Bloqueado":
+                    seleccionarResultado("Bloqueado");
+                    break;
+                case "Descartado":
+                    seleccionarResultado("Descartado");
+                    break;
+                case "Ejecutando":
+                    seleccionarResultado("Ejecutando");
+                    break;
+                default:
+                    seleccionarResultado("No_ejecutado");
+                    break;
+            }
+        } catch (e) {}
+
+        // Limpiar evidencias
+        const listaEvidencias = document.getElementById(
+            "listaEvidenciasEjecucion"
+        );
+        if (listaEvidencias) listaEvidencias.classList.add("hidden");
+
+        const contenidoLista = document.getElementById(
+            "contenidoListaEvidencias"
+        );
+        if (contenidoLista) contenidoLista.innerHTML = "";
+
+        // Ocultar botón de reportar bug por defecto
+        const btnReportarBug = document.getElementById("btnReportarBug");
+        if (btnReportarBug) {
+            btnReportarBug.style.display = "none";
+        }
+
+        // Abrir modal
+        abrirModal("modalEjecutarCaso");
+    }
+
+    // ===================================================================
+    // SELECCIONAR RESULTADO
+    // ===================================================================
+
+    function seleccionarResultado(resultado) {
+        console.log("🎯 Resultado seleccionado:", resultado);
+
+        document.getElementById("resultadoEjecucion").value = resultado;
+
+        // Actualizar UI
+        document.querySelectorAll(".resultado-option").forEach((opt) => {
+            opt.classList.remove("selected");
+        });
+
+        // Marcar la opción seleccionada
+        const opcionSeleccionada = Array.from(
+            document.querySelectorAll(".resultado-option")
+        ).find((opt) => opt.querySelector("input").value === resultado);
+
+        if (opcionSeleccionada) {
+            opcionSeleccionada.classList.add("selected");
+        }
+
+        // Mostrar/ocultar botón de reportar bug
+        const btnReportarBug = document.getElementById("btnReportarBug");
+
+        if (btnReportarBug) {
+            // Solo mostrar si es "No_OK"
+            btnReportarBug.style.display =
+                resultado === "No_OK" ? "inline-flex" : "none";
         }
     }
+
+    // ===================================================================
+    // MANEJO DE EVIDENCIAS
+    // ===================================================================
+
+    function handleDragOverEjecucion(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        document.getElementById("dropzoneEjecucion").classList.add("drag-over");
+    }
+
+    function handleDragLeaveEjecucion(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        document
+            .getElementById("dropzoneEjecucion")
+            .classList.remove("drag-over");
+    }
+
+    function handleDropEjecucion(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        document
+            .getElementById("dropzoneEjecucion")
+            .classList.remove("drag-over");
+
+        const files = event.dataTransfer.files;
+        procesarArchivosEjecucion(files);
+    }
+
+    function handleFileSelectEjecucion(event) {
+        const files = event.target.files;
+        procesarArchivosEjecucion(files);
+        event.target.value = "";
+    }
+
+    // Click en dropzone
+    document.addEventListener("DOMContentLoaded", function () {
+        const dropzone = document.getElementById("dropzoneEjecucion");
+        if (dropzone) {
+            dropzone.addEventListener("click", function () {
+                document.getElementById("inputArchivosEjecucion").click();
+            });
+        }
+    });
+
+    function procesarArchivosEjecucion(files) {
+        let archivosValidos = 0;
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+
+            if (file.size > 50 * 1024 * 1024) {
+                mostrarToast(
+                    '❌ "' + file.name + '" excede los 50 MB',
+                    "error",
+                    4000
+                );
+                continue;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                window.evidenciasTemporales.push({
+                    tipo: "archivo",
+                    nombre: file.name,
+                    tamaño: file.size,
+                    mimeType: file.type,
+                    contenidoBase64: e.target.result.split(",")[1],
+                });
+
+                renderizarListaEvidencias();
+
+                const tamañoMB = (file.size / (1024 * 1024)).toFixed(2);
+                mostrarToast(
+                    '✅ "' + file.name + '" listo (' + tamañoMB + " MB)",
+                    "success",
+                    2000
+                );
+            };
+
+            reader.onerror = function () {
+                mostrarToast('❌ Error leyendo "' + file.name + '"', "error");
+            };
+
+            reader.readAsDataURL(file);
+            archivosValidos++;
+        }
+
+        if (files.length > 1) {
+            setTimeout(() => {
+                if (archivosValidos > 0) {
+                    mostrarToast(
+                        "📎 " + archivosValidos + " archivo(s) agregado(s)",
+                        "info",
+                        2000
+                    );
+                }
+            }, 500);
+        }
+    }
+
+    function renderizarListaEvidencias() {
+        const lista = document.getElementById("listaEvidenciasEjecucion");
+        const contenido = document.getElementById("contenidoListaEvidencias");
+
+        if (
+            !window.evidenciasTemporales ||
+            window.evidenciasTemporales.length === 0
+        ) {
+            lista.classList.add("hidden");
+            return;
+        }
+
+        lista.classList.remove("hidden");
+
+        let html = "";
+        window.evidenciasTemporales.forEach((evidencia, index) => {
+            const tamañoMB = (evidencia.tamaño / (1024 * 1024)).toFixed(2);
+
+            html += '<div class="evidencia-item">';
+            html +=
+                '  <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">';
+            html += '    <span style="font-size: 1.5rem;">📎</span>';
+            html += '    <div style="flex: 1;">';
+            html +=
+                '      <div style="font-weight: 500; word-break: break-word;">' +
+                evidencia.nombre +
+                "</div>";
+            html +=
+                '      <div style="font-size: 0.85rem; color: #64748b;">' +
+                tamañoMB +
+                " MB</div>";
+            html += "    </div>";
+            html += "  </div>";
+            html +=
+                '  <button type="button" class="btn-eliminar-evidencia" onclick="eliminarEvidenciaEjecucion(' +
+                index +
+                ')" title="Eliminar">🗑️</button>';
+            html += "</div>";
+        });
+
+        contenido.innerHTML = html;
+    }
+
+    function eliminarEvidenciaEjecucion(index) {
+        window.evidenciasTemporales.splice(index, 1);
+        renderizarListaEvidencias();
+        mostrarToast("✅ Evidencia eliminada", "success");
+    }
+
+    // ===================================================================
+    // GUARDAR EJECUCIÓN
+    // ===================================================================
+
+    function guardarEjecucion() {
+        console.log("💾 Guardando ejecución...");
+
+        // VALIDACIONES
+        let resultado = document.getElementById("resultadoEjecucion").value;
+        if (resultado === "No_ejecutado") {
+            resultado = "Sin ejecutar";
+        }
+        const observaciones = document
+            .getElementById("ejecucionComentarios")
+            .value.trim();
+
+        if (!resultado) {
+            mostrarToast(
+                "⚠️ Debes seleccionar un resultado (OK/No_OK)",
+                "warning"
+            );
+            return;
+        }
+
+        if (
+            resultado === "No_OK" &&
+            (!observaciones || observaciones.length < 10)
+        ) {
+            mostrarToast(
+                "⚠️ Si el resultado es No_OK, debes escribir observaciones (mín. 10 caracteres)",
+                "warning"
+            );
+            return;
+        }
+
+        if (!window.casoEnEjecucion) {
+            mostrarToast("Error: No hay caso en ejecución", "error");
+            return;
+        }
+
+        const sheetUrl = window.currentSheetUrl;
+
+        if (!sheetUrl) {
+            mostrarToast("Error: No hay Sheet conectado", "error");
+            return;
+        }
+
+        const datosEjecucion = {
+            sheetUrl: sheetUrl,
+            casoId: window.casoEnEjecucion.ID,
+            casoTitulo: window.casoEnEjecucion.Titulo,
+            resultado: resultado,
+            observaciones: observaciones,
+            ambiente: document.getElementById("ambienteEjecucion").value,
+            navegador: document.getElementById("navegadorEjecucion").value,
+            evidencias: [],
+        };
+
+        // Agregar evidencias si hay
+        if (
+            window.evidenciasTemporales &&
+            window.evidenciasTemporales.length > 0
+        ) {
+            datosEjecucion.evidencias = window.evidenciasTemporales.map(
+                (e) => e.nombre
+            );
+        }
+
+        console.log("📦 Datos de ejecución:", datosEjecucion);
+        mostrarSpinner();
+
+        google.script.run
+            .withSuccessHandler(function (response) {
+                ocultarSpinner();
+                console.log("📨 Respuesta del backend:", response);
+
+                if (response.success) {
+                    mostrarToast(
+                        "✅ Ejecución guardada exitosamente",
+                        "success"
+                    );
+
+                    // Cerrar modal
+                    cerrarModalEjecucion();
+
+                    // Recargar tabla de casos
+                    if (typeof cargarTodosLosCasos === "function") {
+                        setTimeout(() => {
+                            cargarTodosLosCasos();
+                        }, 500);
+                    }
+
+                    // ✅ Actualizar la barra de progreso (800 ms después)
+                    if (typeof actualizarBarraEjecucion === "function") {
+                        setTimeout(() => {
+                            actualizarBarraEjecucion();
+                        }, 800);
+                    }
+                } else {
+                    mostrarToast("Error: " + response.mensaje, "error");
+                }
+            })
+            .withFailureHandler(function (error) {
+                ocultarSpinner();
+                console.error("💥 Error guardando ejecución:", error);
+                mostrarToast(
+                    "Error al guardar ejecución: " + error.message,
+                    "error"
+                );
+            })
+            .guardarEjecucion(datosEjecucion);
+    }
+
+    // ===================================================================
+    // REPORTAR BUG DESDE CASO
+    // ===================================================================
+
+    function reportarBugDesdeCaso() {
+        const casoId = window.casoEnEjecucion
+            ? window.casoEnEjecucion.ID
+            : null;
+
+        if (!casoId) {
+            mostrarToast("No hay caso en ejecución", "warning");
+            return;
+        }
+
+        // Abrir modal de bugs SIN cerrar el de ejecución
+        // (El z-index manejará que aparezca encima)
+        if (typeof abrirModalCrearBug === "function") {
+            abrirModalCrearBug(casoId);
+        } else {
+            mostrarToast("Modal de bugs no disponible", "error");
+        }
+    }
+
+    // ===================================================================
+    // CERRAR MODAL
+    // ===================================================================
+
+    function cerrarModalEjecucion() {
+        cerrarModal("modalEjecutarCaso");
+        window.casoEnEjecucion = null;
+        window.evidenciasTemporales = [];
+    }
+
+    // ===================================================================
+    // EXPORTAR AL SCOPE GLOBAL
+    // ===================================================================
+
+    window.abrirModalEjecutarCaso = abrirModalEjecutarCaso;
+    window.cerrarModalEjecucion = cerrarModalEjecucion;
+    window.seleccionarResultado = seleccionarResultado;
+    window.guardarEjecucion = guardarEjecucion;
+    window.reportarBugDesdeCaso = reportarBugDesdeCaso;
+    window.handleDragOverEjecucion = handleDragOverEjecucion;
+    window.handleDragLeaveEjecucion = handleDragLeaveEjecucion;
+    window.handleDropEjecucion = handleDropEjecucion;
+    window.handleFileSelectEjecucion = handleFileSelectEjecucion;
+    window.procesarArchivosEjecucion = procesarArchivosEjecucion;
+    window.renderizarListaEvidencias = renderizarListaEvidencias;
+    window.eliminarEvidenciaEjecucion = eliminarEvidenciaEjecucion;
+
+    console.log(
+        "✅ Frontend_Components_Ejecuciones.html cargado correctamente"
+    );
 </script>

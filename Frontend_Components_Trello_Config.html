@@ -1,0 +1,705 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     FRONTEND_COMPONENTS_TRELLO_CONFIG.HTML
+     Componente para configuración de integración con Trello (OAuth)
+     ═══════════════════════════════════════════════════════════════════════════ -->
+
+<!-- Cargar jQuery (requerido por Trello Client.js) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Cargar Trello Client.js (librería oficial) -->
+<script src="https://api.trello.com/1/client.js?key=bd17b51dde22fc0487c621d9ea5cc81a"></script>
+
+<style>
+    /* ═══════════════════════════════════════════════════════ */
+    /* ESTILOS DE CONFIGURACIÓN TRELLO                          */
+    /* ═══════════════════════════════════════════════════════ */
+
+    .trello-config-card {
+        background: linear-gradient(135deg, #0079bf 0%, #026aa7 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+    }
+
+    .trello-config-card h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.3rem;
+    }
+
+    .trello-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .trello-status.connected {
+        background: #10b981;
+        color: white;
+    }
+
+    .trello-status.disconnected {
+        background: #ef4444;
+        color: white;
+    }
+
+    .trello-help-box {
+        background: #eff6ff;
+        border-left: 4px solid #3b82f6;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 1rem 0;
+    }
+
+    .trello-help-box ul {
+        margin: 0.5rem 0 0 1.5rem;
+        line-height: 1.8;
+    }
+
+    .trello-connect-btn {
+        background: linear-gradient(135deg, #0079bf 0%, #026aa7 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        transition: all 0.3s;
+        box-shadow: 0 4px 12px rgba(0, 121, 191, 0.3);
+    }
+
+    .trello-connect-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 121, 191, 0.4);
+    }
+
+    .trello-connect-btn:active {
+        transform: translateY(0);
+    }
+
+    .trello-user-card {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        border: 2px solid #10b981;
+        border-radius: 12px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .trello-user-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .trello-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #0079bf;
+        border: 3px solid #0079bf;
+    }
+
+    .trello-disconnect-btn {
+        background: #ef4444;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+
+    .trello-disconnect-btn:hover {
+        background: #dc2626;
+    }
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL DE CONFIGURACIÓN DE TRELLO                                            -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+<div id="modalConfigTrello" class="modal-overlay">
+    <div class="modal" style="max-width: 700px">
+        <div class="modal-header">
+            <h3 class="modal-title">
+                <span>🔗</span>
+                <span>Configurar Integración con Trello</span>
+            </h3>
+            <button
+                class="modal-close"
+                onclick="cerrarModal('modalConfigTrello')"
+            >
+                ✕
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <!-- Estado: No conectado -->
+            <div id="trelloNotConnected" style="text-align: center">
+                <div style="font-size: 4rem; margin-bottom: 1rem">🔗</div>
+                <h3 style="color: #1e293b; margin-bottom: 0.5rem">
+                    Conecta tu cuenta de Trello
+                </h3>
+                <p style="color: #64748b; margin-bottom: 2rem">
+                    Autoriza esta aplicación en 3 pasos simples
+                </p>
+
+                <!-- Paso 1 -->
+                <div
+                    style="
+                        background: #f8fafc;
+                        border: 2px solid #e2e8f0;
+                        border-radius: 12px;
+                        padding: 1.5rem;
+                        margin-bottom: 1rem;
+                        text-align: left;
+                    "
+                >
+                    <div
+                        style="
+                            display: flex;
+                            align-items: center;
+                            gap: 0.75rem;
+                            margin-bottom: 1rem;
+                        "
+                    >
+                        <div
+                            style="
+                                background: #3b82f6;
+                                color: white;
+                                width: 32px;
+                                height: 32px;
+                                border-radius: 50%;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-weight: bold;
+                            "
+                        >
+                            1
+                        </div>
+                        <h4 style="margin: 0; color: #1e293b">
+                            Obtén tu Token de Trello
+                        </h4>
+                    </div>
+                    <button
+                        class="trello-connect-btn"
+                        onclick="abrirAutorizacionTrello()"
+                        style="margin: 0 auto"
+                    >
+                        <svg
+                            width="24"
+                            height="24"
+                            viewBox="0 0 256 256"
+                            fill="currentColor"
+                        >
+                            <rect
+                                x="0"
+                                y="0"
+                                width="256"
+                                height="256"
+                                rx="25"
+                                fill="white"
+                            />
+                            <rect
+                                x="32"
+                                y="32"
+                                width="87"
+                                height="176"
+                                rx="12"
+                                fill="#0079bf"
+                            />
+                            <rect
+                                x="137"
+                                y="32"
+                                width="87"
+                                height="112"
+                                rx="12"
+                                fill="#0079bf"
+                            />
+                        </svg>
+                        <span>Ir a Trello para Autorizar</span>
+                    </button>
+                </div>
+
+                <!-- Paso 2 -->
+                <div
+                    style="
+                        background: #f8fafc;
+                        border: 2px solid #e2e8f0;
+                        border-radius: 12px;
+                        padding: 1.5rem;
+                        margin-bottom: 1rem;
+                        text-align: left;
+                    "
+                >
+                    <div
+                        style="
+                            display: flex;
+                            align-items: center;
+                            gap: 0.75rem;
+                            margin-bottom: 1rem;
+                        "
+                    >
+                        <div
+                            style="
+                                background: #10b981;
+                                color: white;
+                                width: 32px;
+                                height: 32px;
+                                border-radius: 50%;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-weight: bold;
+                            "
+                        >
+                            2
+                        </div>
+                        <h4 style="margin: 0; color: #1e293b">
+                            Copia el Token que te muestra Trello
+                        </h4>
+                    </div>
+                    <p style="color: #64748b; margin: 0; font-size: 0.9rem">
+                        Después de autorizar, Trello te mostrará un token largo.
+                        Cópialo completo.
+                    </p>
+                </div>
+
+                <!-- Paso 3 -->
+                <div
+                    style="
+                        background: #f8fafc;
+                        border: 2px solid #e2e8f0;
+                        border-radius: 12px;
+                        padding: 1.5rem;
+                        margin-bottom: 1rem;
+                        text-align: left;
+                    "
+                >
+                    <div
+                        style="
+                            display: flex;
+                            align-items: center;
+                            gap: 0.75rem;
+                            margin-bottom: 1rem;
+                        "
+                    >
+                        <div
+                            style="
+                                background: #f59e0b;
+                                color: white;
+                                width: 32px;
+                                height: 32px;
+                                border-radius: 50%;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-weight: bold;
+                            "
+                        >
+                            3
+                        </div>
+                        <h4 style="margin: 0; color: #1e293b">
+                            Pega el Token aquí
+                        </h4>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem">
+                        <input
+                            type="text"
+                            id="trelloTokenInput"
+                            placeholder="Pega aquí el token de Trello..."
+                            style="
+                                flex: 1;
+                                padding: 0.75rem;
+                                border: 2px solid #cbd5e1;
+                                border-radius: 8px;
+                                font-family: monospace;
+                                font-size: 0.9rem;
+                            "
+                        />
+                        <button
+                            class="btn btn-primary"
+                            onclick="guardarTokenManual()"
+                            style="white-space: nowrap; padding: 0.75rem 1.5rem"
+                        >
+                            ✅ Conectar
+                        </button>
+                    </div>
+                </div>
+
+                <div
+                    style="
+                        background: #fef3c7;
+                        border-left: 4px solid #f59e0b;
+                        padding: 1rem;
+                        border-radius: 8px;
+                        margin: 1rem 0;
+                    "
+                >
+                    <p style="margin: 0; color: #92400e; font-size: 0.9rem">
+                        <strong>🔒 Seguridad:</strong> El token se guarda de
+                        forma segura y solo tú tienes acceso a él.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Estado: Conectado -->
+            <div id="trelloConnected" class="hidden" style="text-align: center">
+                <div style="font-size: 4rem; margin-bottom: 1rem">✅</div>
+                <h3 style="color: #065f46; margin-bottom: 1rem">
+                    ¡Conectado a Trello!
+                </h3>
+
+                <!-- Tarjeta de usuario -->
+                <div class="trello-user-card">
+                    <div class="trello-user-info">
+                        <div class="trello-avatar" id="trelloUserAvatar">?</div>
+                        <div style="text-align: left">
+                            <div
+                                style="
+                                    font-weight: 700;
+                                    color: #065f46;
+                                    font-size: 1.1rem;
+                                "
+                                id="trelloUserName"
+                            >
+                                Usuario de Trello
+                            </div>
+                            <div
+                                style="color: #059669; font-size: 0.9rem"
+                                id="trelloUserEmail"
+                            >
+                                email@ejemplo.com
+                            </div>
+                        </div>
+                    </div>
+                    <button
+                        class="trello-disconnect-btn"
+                        onclick="desconectarTrello()"
+                    >
+                        <span>🚪</span>
+                        <span>Desconectar</span>
+                    </button>
+                </div>
+
+                <div
+                    style="
+                        background: #d1fae5;
+                        border-left: 4px solid #10b981;
+                        padding: 1rem;
+                        border-radius: 8px;
+                        margin: 1.5rem 0;
+                        text-align: left;
+                    "
+                >
+                    <p style="margin: 0; color: #065f46; font-size: 0.9rem">
+                        <strong>✨ ¡Todo listo!</strong> Ahora cuando reportes
+                        un bug, podrás seleccionar el tablero y lista de Trello
+                        donde se creará automáticamente la tarjeta.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!-- SCRIPTS DE CONFIGURACIÓN TRELLO                                             -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+<script>
+    // ===================================================================
+    // CONFIGURACIÓN DE TRELLO CLIENT.JS
+    // ===================================================================
+
+    // NOTA: Esta API Key es de la aplicación, no del usuario
+    // API Key obtenida de https://trello.com/app-key
+    window.TRELLO_APP_KEY = "bd17b51dde22fc0487c621d9ea5cc81a";
+
+    // ===================================================================
+    // FUNCIONES DE AUTORIZACIÓN OAUTH
+    // ===================================================================
+
+    /**
+     * Abre el modal de configuración de Trello
+     */
+    function abrirModalConfigTrello() {
+        console.log("🔗 Abriendo configuración de Trello...");
+
+        // Verificar estado actual
+        verificarEstadoTrelloOAuth();
+
+        // Abrir modal
+        if (typeof abrirModal === "function") {
+            abrirModal("modalConfigTrello");
+        } else {
+            document
+                .getElementById("modalConfigTrello")
+                .classList.add("active");
+        }
+    }
+
+    /**
+     * Verifica si el usuario ya está autorizado con Trello
+     */
+    function verificarEstadoTrelloOAuth() {
+        console.log("🔍 Verificando estado de autorización...");
+
+        // Verificar si Trello está disponible
+        if (typeof Trello === "undefined") {
+            console.warn("⚠️ Trello Client.js no está cargado aún");
+            mostrarEstadoDesconectado();
+            return;
+        }
+
+        // Verificar con el backend si tenemos token guardado
+        google.script.run
+            .withSuccessHandler(function (response) {
+                if (response.success && response.configurado) {
+                    console.log("✅ Usuario ya autorizado");
+                    mostrarEstadoConectado(response.usuario);
+                } else {
+                    console.log("⚠️ Usuario no autorizado");
+                    mostrarEstadoDesconectado();
+                }
+            })
+            .withFailureHandler(function (error) {
+                console.error("Error verificando estado:", error);
+                mostrarEstadoDesconectado();
+            })
+            .verificarCredencialesTrello();
+    }
+
+    /**
+     * Abre la página de autorización de Trello en nueva pestaña
+     */
+    function abrirAutorizacionTrello() {
+        console.log("🔐 Abriendo autorización de Trello...");
+
+        // Construir URL de autorización simple
+        const scope = "read,write";
+        const expiration = "never";
+        const appName = "QA Management System";
+
+        const authUrl =
+            "https://trello.com/1/authorize?" +
+            "expiration=" +
+            expiration +
+            "&name=" +
+            encodeURIComponent(appName) +
+            "&scope=" +
+            scope +
+            "&response_type=token" +
+            "&key=" +
+            window.TRELLO_APP_KEY;
+
+        console.log("🔗 Abriendo URL de autorización en nueva pestaña...");
+
+        // Abrir en nueva pestaña
+        window.open(authUrl, "_blank");
+
+        // Mostrar instrucción
+        mostrarToast(
+            "👉 Copia el token que te muestra Trello y pégalo aquí",
+            "info",
+            5000
+        );
+    }
+
+    /**
+     * Guarda el token que el usuario copió manualmente
+     */
+    function guardarTokenManual() {
+        const tokenInput = document.getElementById("trelloTokenInput");
+        const token = tokenInput.value.trim();
+
+        if (!token) {
+            mostrarToast("⚠️ Por favor pega el token de Trello", "warning");
+            tokenInput.focus();
+            return;
+        }
+
+        if (token.length < 64) {
+            mostrarToast(
+                "⚠️ El token parece incompleto. Debe tener al menos 64 caracteres.",
+                "warning"
+            );
+            tokenInput.focus();
+            return;
+        }
+
+        console.log("💾 Guardando token manualmente...");
+        mostrarSpinner("Guardando conexión con Trello...");
+
+        google.script.run
+            .withSuccessHandler(function (response) {
+                ocultarSpinner();
+
+                if (response.success) {
+                    console.log("✅ Token guardado exitosamente");
+
+                    // Limpiar input
+                    tokenInput.value = "";
+
+                    // Obtener info del usuario
+                    obtenerInfoUsuarioTrello(token);
+                } else {
+                    console.error(
+                        "❌ Error guardando token:",
+                        response.mensaje
+                    );
+                    mostrarToast(
+                        "❌ Error al guardar: " + response.mensaje,
+                        "error"
+                    );
+                }
+            })
+            .withFailureHandler(function (error) {
+                ocultarSpinner();
+                console.error("❌ Error en llamada al backend:", error);
+                mostrarToast(
+                    "❌ Error al guardar credenciales: " + error.message,
+                    "error"
+                );
+            })
+            .guardarCredencialesTrello(window.TRELLO_APP_KEY, token);
+    }
+
+    /**
+     * Desconecta la cuenta de Trello
+     */
+    function desconectarTrello() {
+        console.log("🚪 Desconectando de Trello...");
+
+        if (confirm("¿Estás seguro de que quieres desconectar Trello?")) {
+            // Limpiar autorización local
+            if (typeof Trello !== "undefined") {
+                Trello.deauthorize();
+            }
+
+            // Limpiar del backend (usamos un token vacío)
+            google.script.run
+                .withSuccessHandler(function (response) {
+                    console.log("✅ Desconectado");
+                    mostrarToast("✅ Desconectado de Trello", "success");
+                    mostrarEstadoDesconectado();
+                })
+                .withFailureHandler(function (error) {
+                    console.error("Error desconectando:", error);
+                    mostrarToast(
+                        "⚠️ Error al desconectar: " + error.message,
+                        "warning"
+                    );
+                    // Aún así mostrar como desconectado
+                    mostrarEstadoDesconectado();
+                })
+                .guardarCredencialesTrello("", ""); // Limpiar credenciales
+        }
+    }
+
+    /**
+     * Muestra la UI de estado conectado
+     */
+    function mostrarEstadoConectado(nombreUsuario, email) {
+        const notConnected = document.getElementById("trelloNotConnected");
+        const connected = document.getElementById("trelloConnected");
+
+        if (notConnected) notConnected.classList.add("hidden");
+        if (connected) connected.classList.remove("hidden");
+
+        // Actualizar información del usuario
+        const userName = document.getElementById("trelloUserName");
+        const userEmail = document.getElementById("trelloUserEmail");
+        const userAvatar = document.getElementById("trelloUserAvatar");
+
+        if (userName)
+            userName.textContent = nombreUsuario || "Usuario de Trello";
+        if (userEmail) userEmail.textContent = email || "";
+        if (userAvatar) {
+            const iniciales = (nombreUsuario || "U")
+                .substring(0, 2)
+                .toUpperCase();
+            userAvatar.textContent = iniciales;
+        }
+    }
+
+    /**
+     * Muestra la UI de estado desconectado
+     */
+    function mostrarEstadoDesconectado() {
+        const notConnected = document.getElementById("trelloNotConnected");
+        const connected = document.getElementById("trelloConnected");
+
+        if (notConnected) notConnected.classList.remove("hidden");
+        if (connected) connected.classList.add("hidden");
+    }
+
+    // ===================================================================
+    // INICIALIZACIÓN
+    // ===================================================================
+
+    // Verificar si Trello Client.js se cargó correctamente
+    window.addEventListener("load", function () {
+        setTimeout(function () {
+            if (typeof Trello === "undefined") {
+                console.warn(
+                    "⚠️ Trello Client.js no se cargó. Verifica la API Key en el script."
+                );
+            } else {
+                console.log("✅ Trello Client.js cargado correctamente");
+            }
+        }, 1000);
+    });
+
+    /**
+     * Obtiene información del usuario desde Trello usando el token
+     */
+    function obtenerInfoUsuarioTrello(token) {
+        const url =
+            "https://api.trello.com/1/members/me?key=" +
+            window.TRELLO_APP_KEY +
+            "&token=" +
+            token;
+
+        fetch(url)
+            .then((response) => response.json())
+            .then((member) => {
+                console.log("👤 Usuario obtenido:", member.fullName);
+                mostrarToast("✅ ¡Conectado exitosamente a Trello!", "success");
+                mostrarEstadoConectado(member.fullName, member.email);
+
+                // Abrir modal de configuración para mostrar el estado
+                setTimeout(() => {
+                    abrirModalConfigTrello();
+                }, 500);
+            })
+            .catch((error) => {
+                console.error("❌ Error obteniendo usuario:", error);
+                mostrarToast(
+                    "⚠️ Conectado, pero no se pudo obtener info de usuario",
+                    "warning"
+                );
+            });
+    }
+
+    console.log("✅ Frontend_Components_Trello_Config.html (OAuth) cargado");
+</script>

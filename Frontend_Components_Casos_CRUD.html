@@ -5,762 +5,985 @@
      ═══════════════════════════════════════════════════════════════════════════ -->
 
 <script>
-  // ===================================================================
-  // VARIABLES GLOBALES DE CRUD
-  // ===================================================================
-  
-  (function() {
-    if (!window.casoActualDetalle) window.casoActualDetalle = null;
-    if (!window.formularioTieneCambios) window.formularioTieneCambios = false;
-    
-    console.log('✅ Variables globales de CRUD inicializadas');
-  })();
+    // ===================================================================
+    // VARIABLES GLOBALES DE CRUD
+    // ===================================================================
 
-  // ===================================================================
-  // VER DETALLE DE CASO
-  // ===================================================================
-  
-  /**
-   * Obtiene y muestra el detalle completo de un caso
-   * @param {string} casoId - ID del caso
-   */
-  function verDetalleCaso(casoId) {
-    console.log('👁️ [CRUD] Viendo detalle de caso:', casoId);
-    mostrarSpinner();
-    
-    google.script.run
-      .withSuccessHandler(function(response) {
-        ocultarSpinner();
-        
-        if (response.success) {
-          console.log('✅ [CRUD] Detalle obtenido');
-          window.casoActualDetalle = response.data;
-          mostrarModalDetalle(response.data);
-        } else {
-          console.error('❌ [CRUD] Error:', response.mensaje);
-          mostrarToast('Error: ' + response.mensaje, 'error');
-        }
-      })
-      .withFailureHandler(function(error) {
-        ocultarSpinner();
-        console.error('💥 [CRUD] Error crítico:', error);
-        mostrarToast('Error al obtener detalle: ' + error.message, 'error');
-      })
-      .obtenerDetalleCaso(recuperarSheetUrl(), casoId);
-  }
+    (function () {
+        if (!window.casoActualDetalle) window.casoActualDetalle = null;
+        if (!window.formularioTieneCambios)
+            window.formularioTieneCambios = false;
 
-  /**
-   * Muestra el modal con el detalle del caso
-   * @param {Object} caso - Objeto con datos del caso
-   */
-  function mostrarModalDetalle(caso) {
-    const esEliminado = caso.Estado === 'Eliminado' || caso.EstadoDiseño === 'Eliminado';
+        console.log("✅ Variables globales de CRUD inicializadas");
+    })();
 
-    // Actualizar título del modal (textContent es seguro)
-    document.getElementById('detalleCasoIcono').textContent = esEliminado ? '👻' : '📋';
-    document.getElementById('detalleCasoTitulo').textContent = caso.ID + ': ' + caso.Titulo;
+    // ===================================================================
+    // VER DETALLE DE CASO
+    // ===================================================================
 
-    // Función helper para sanitizar valores
-    const safe = function(val) {
-      return escapeHtml(val) || '-';
-    };
+    /**
+     * Obtiene y muestra el detalle completo de un caso
+     * @param {string} casoId - ID del caso
+     */
+    function verDetalleCaso(casoId) {
+        console.log("👁️ [CRUD] Viendo detalle de caso:", casoId);
+        mostrarSpinner();
 
-    // Construir contenido con valores sanitizados
-    let html = '<div class="detalle-grid">';
-    html += '<div class="detalle-label">🆔 ID:</div><div class="detalle-valor">' + safe(caso.ID) + '</div>';
-    html += '<div class="detalle-label">📂 Hoja/Módulo:</div><div class="detalle-valor">' + safe(caso.Hoja || 'Casos') + '</div>';
-    html += '<div class="detalle-label">📋 Título:</div><div class="detalle-valor"><strong>' + safe(caso.Titulo) + '</strong></div>';
-    html += '<div class="detalle-label">📝 Descripción:</div><div class="detalle-valor">' + safe(caso.Descripcion) + '</div>';
-    html += '<div class="detalle-label">⚡ Prioridad:</div><div class="detalle-valor"><span class="badge ' + getBadgePrioridad(caso.Prioridad) + '">' + safe(caso.Prioridad) + '</span></div>';
-    html += '<div class="detalle-label">📊 Estado:</div><div class="detalle-valor"><span class="badge ' + getBadgeEstado(caso.Estado || caso.EstadoDiseño) + '">' + safe(caso.Estado || caso.EstadoDiseño) + '</span></div>';
-    html += '<div class="detalle-label">🔧 Formato:</div><div class="detalle-valor">' + safe(caso.Formato) + '</div>';
-    html += '<div class="detalle-label">🎯 Tipo de Prueba:</div><div class="detalle-valor">' + safe(caso.TipoPrueba) + '</div>';
-    html += '</div>';
+        google.script.run
+            .withSuccessHandler(function (response) {
+                ocultarSpinner();
 
-    // Mostrar pasos según formato
-    if (caso.Formato === 'Clasico') {
-      html += '<div class="detalle-seccion">';
-      html += '<div class="detalle-seccion-titulo">📝 Pasos</div>';
-      html += '<div style="white-space: pre-wrap; background: #f8fafc; padding: 1rem; border-radius: 6px;">' + safe(caso.Pasos || 'No especificados') + '</div>';
-      html += '</div>';
-
-      html += '<div class="detalle-seccion">';
-      html += '<div class="detalle-seccion-titulo">✅ Resultado Esperado</div>';
-      html += '<div style="white-space: pre-wrap; background: #f8fafc; padding: 1rem; border-radius: 6px;">' + safe(caso.ResultadoEsperado || 'No especificado') + '</div>';
-      html += '</div>';
-    } else if (caso.Formato === 'Gherkin') {
-      html += '<div class="detalle-seccion">';
-      html += '<div class="detalle-seccion-titulo">🥒 Escenario Gherkin</div>';
-      html += '<div style="white-space: pre-wrap; background: #f8fafc; padding: 1rem; border-radius: 6px;">';
-      html += '<strong>Given:</strong> ' + safe(caso.ScenarioGiven) + '<br>';
-      html += '<strong>When:</strong> ' + safe(caso.ScenarioWhen) + '<br>';
-      html += '<strong>Then:</strong> ' + safe(caso.ScenarioThen);
-      html += '</div>';
-      html += '</div>';
+                if (response.success) {
+                    console.log("✅ [CRUD] Detalle obtenido");
+                    window.casoActualDetalle = response.data;
+                    mostrarModalDetalle(response.data);
+                } else {
+                    console.error("❌ [CRUD] Error:", response.mensaje);
+                    mostrarToast("Error: " + response.mensaje, "error");
+                }
+            })
+            .withFailureHandler(function (error) {
+                ocultarSpinner();
+                console.error("💥 [CRUD] Error crítico:", error);
+                mostrarToast(
+                    "Error al obtener detalle: " + error.message,
+                    "error"
+                );
+            })
+            .obtenerDetalleCaso(recuperarSheetUrl(), casoId);
     }
 
-    // Precondiciones
-    if (caso.Precondiciones) {
-      html += '<div class="detalle-seccion">';
-      html += '<div class="detalle-seccion-titulo">⚙️ Precondiciones</div>';
-      html += '<div style="white-space: pre-wrap; background: #f8fafc; padding: 1rem; border-radius: 6px;">' + safe(caso.Precondiciones) + '</div>';
-      html += '</div>';
-    }
+    /**
+     * Muestra el modal con el detalle del caso
+     * @param {Object} caso - Objeto con datos del caso
+     */
+    function mostrarModalDetalle(caso) {
+        const esEliminado =
+            caso.Estado === "Eliminado" || caso.EstadoDiseño === "Eliminado";
 
-    // Información adicional
-    html += '<div class="detalle-seccion">';
-    html += '<div class="detalle-seccion-titulo">ℹ️ Información Adicional</div>';
-    html += '<div class="detalle-grid">';
-    html += '<div class="detalle-label">⭐ Flujo Crítico:</div><div class="detalle-valor">' + (caso.FlujoCritico === 'Si' || caso.FlujoCritico === 'Sí' ? '✅ Sí' : '❌ No') + '</div>';
-    html += '<div class="detalle-label">🔄 Candidato Regresión:</div><div class="detalle-valor">' + (caso.CandidatoRegresion === 'Si' || caso.CandidatoRegresion === 'Sí' ? '✅ Sí' : '❌ No') + '</div>';
-    html += '<div class="detalle-label">👤 Creado por:</div><div class="detalle-valor">' + safe(caso.CreadoPor) + '</div>';
-    html += '<div class="detalle-label">📅 Fecha creación:</div><div class="detalle-valor">' + (caso.FechaCreacion ? safe(formatearFecha(caso.FechaCreacion)) : '-') + '</div>';
-    html += '<div class="detalle-label">🔗 URI:</div><div class="detalle-valor" style="font-family: monospace; font-size: 0.85rem;">' + safe(caso.CasoURI) + '</div>';
-    html += '</div>';
-    html += '</div>';
+        // Actualizar título del modal (textContent es seguro)
+        document.getElementById("detalleCasoIcono").textContent = esEliminado
+            ? "👻"
+            : "📋";
+        document.getElementById("detalleCasoTitulo").textContent =
+            caso.ID + ": " + caso.Titulo;
 
-    // Notas
-    if (caso.Notas) {
-      html += '<div class="detalle-seccion">';
-      html += '<div class="detalle-seccion-titulo">📌 Notas</div>';
-      html += '<div style="white-space: pre-wrap; background: #fef3c7; padding: 1rem; border-radius: 6px;">' + safe(caso.Notas) + '</div>';
-      html += '</div>';
-    }
+        // Función helper para sanitizar valores
+        const safe = function (val) {
+            return escapeHtml(val) || "-";
+        };
 
-    document.getElementById('detalleCasoContenido').innerHTML = html;
-    
-    // Mostrar/ocultar botones según estado
-    if (esEliminado) {
-      document.getElementById('btnEditarCasoDetalle').classList.add('hidden');
-      document.getElementById('btnEliminarCasoDetalle').classList.add('hidden');
-      document.getElementById('btnRestaurarCasoDetalle').classList.remove('hidden');
-    } else {
-      document.getElementById('btnEditarCasoDetalle').classList.remove('hidden');
-      document.getElementById('btnEliminarCasoDetalle').classList.remove('hidden');
-      document.getElementById('btnRestaurarCasoDetalle').classList.add('hidden');
-    }
-    
-    abrirModal('modalDetalleCaso');
-  }
+        // Construir contenido con valores sanitizados
+        let html = '<div class="detalle-grid">';
+        html +=
+            '<div class="detalle-label">🆔 ID:</div><div class="detalle-valor">' +
+            safe(caso.ID) +
+            "</div>";
+        html +=
+            '<div class="detalle-label">📂 Hoja/Módulo:</div><div class="detalle-valor">' +
+            safe(caso.Hoja || "Casos") +
+            "</div>";
+        html +=
+            '<div class="detalle-label">📋 Título:</div><div class="detalle-valor"><strong>' +
+            safe(caso.Titulo) +
+            "</strong></div>";
+        html +=
+            '<div class="detalle-label">📝 Descripción:</div><div class="detalle-valor">' +
+            safe(caso.Descripcion) +
+            "</div>";
+        html +=
+            '<div class="detalle-label">⚡ Prioridad:</div><div class="detalle-valor"><span class="badge ' +
+            getBadgePrioridad(caso.Prioridad) +
+            '">' +
+            safe(caso.Prioridad) +
+            "</span></div>";
+        html +=
+            '<div class="detalle-label">📊 Estado:</div><div class="detalle-valor"><span class="badge ' +
+            getBadgeEstado(caso.Estado || caso.EstadoDiseño) +
+            '">' +
+            safe(caso.Estado || caso.EstadoDiseño) +
+            "</span></div>";
+        html +=
+            '<div class="detalle-label">🔧 Formato:</div><div class="detalle-valor">' +
+            safe(caso.Formato) +
+            "</div>";
+        html +=
+            '<div class="detalle-label">🎯 Tipo de Prueba:</div><div class="detalle-valor">' +
+            safe(caso.TipoPrueba) +
+            "</div>";
+        html += "</div>";
 
-  // ===================================================================
-  // EDITAR CASO
-  // ===================================================================
-  
-  /**
-   * Obtiene un caso y lo carga en el formulario para editar
-   * @param {string} casoId - ID del caso
-   */
-  function editarCaso(casoId) {
-    console.log('✏️ [CRUD] Editando caso:', casoId);
-    mostrarSpinner();
-    
-    google.script.run
-      .withSuccessHandler(function(response) {
-        ocultarSpinner();
-        
-        if (response.success) {
-          console.log('✅ [CRUD] Caso obtenido para edición');
-          cargarCasoEnFormulario(response.data);
-        } else {
-          console.error('❌ [CRUD] Error:', response.mensaje);
-          mostrarToast('Error: ' + response.mensaje, 'error');
-        }
-      })
-      .withFailureHandler(function(error) {
-        ocultarSpinner();
-        console.error('💥 [CRUD] Error crítico:', error);
-        mostrarToast('Error al obtener caso: ' + error.message, 'error');
-      })
-      .obtenerDetalleCaso(recuperarSheetUrl(), casoId);
-  }
+        // Mostrar pasos según formato
+        if (caso.Formato === "Clasico") {
+            html += '<div class="detalle-seccion">';
+            html += '<div class="detalle-seccion-titulo">📝 Pasos</div>';
+            html +=
+                '<div style="white-space: pre-wrap; background: #f8fafc; padding: 1rem; border-radius: 6px;">' +
+                safe(caso.Pasos || "No especificados") +
+                "</div>";
+            html += "</div>";
 
-  /**
-   * Edita el caso desde el modal de detalle
-   */
-  function editarCasoDesdeDetalle() {
-    if (window.casoActualDetalle) {
-      console.log('✏️ [CRUD] Editando desde detalle');
-      cerrarModal('modalDetalleCaso');
-      cargarCasoEnFormulario(window.casoActualDetalle);
-    }
-  }
+            html += '<div class="detalle-seccion">';
+            html +=
+                '<div class="detalle-seccion-titulo">✅ Resultado Esperado</div>';
+            html +=
+                '<div style="white-space: pre-wrap; background: #f8fafc; padding: 1rem; border-radius: 6px;">' +
+                safe(caso.ResultadoEsperado || "No especificado") +
+                "</div>";
+            html += "</div>";
+        } else if (caso.Formato === "Gherkin") {
+            html += '<div class="detalle-seccion">';
+            html +=
+                '<div class="detalle-seccion-titulo">🥒 Escenario Gherkin</div>';
+            html +=
+                '<div style="white-space: pre-wrap; background: #f8fafc; padding: 1rem; border-radius: 6px;">';
+            html +=
+                "<strong>Given:</strong> " + safe(caso.ScenarioGiven) + "<br>";
+            html +=
+                "<strong>When:</strong> " + safe(caso.ScenarioWhen) + "<br>";
+            html += "<strong>Then:</strong> " + safe(caso.ScenarioThen);
+            html += "</div>";
+            html += "</div>";
+        }
 
-  /**
-   * Carga los datos de un caso en el formulario
-   * @param {Object} caso - Objeto con datos del caso
-   */
-  function cargarCasoEnFormulario(caso) {
-    console.log('📝 [CRUD] Cargando caso en formulario:', caso);
-    
-    // Abrir modal
-    const modal = document.getElementById('modalCrearCaso');
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
-    // Cambiar título del modal
-    document.getElementById('tituloModalCaso').textContent = '✏️ Editar Caso: ' + caso.ID;
-    
-    // Guardar datos de edición
-    document.getElementById('casoIdEdicion').value = caso.ID;
-    
-    const hojaOriginal = caso.Hoja || 'Casos';
-    document.getElementById('casoHojaOriginal').value = hojaOriginal;
-    
-    console.log('📂 [CRUD] Hoja original del caso:', hojaOriginal);
-    
-    // Llenar campos con delay para asegurar que el DOM esté listo
-    setTimeout(() => {
-      try {
-        // Select de hoja
-        const selectHoja = document.getElementById('casoHoja');
-        if (selectHoja) {
-          // Verificar si la hoja existe en el select
-          let hojaEncontrada = false;
-          
-          for (let i = 0; i < selectHoja.options.length; i++) {
-            if (selectHoja.options[i].value === hojaOriginal) {
-              hojaEncontrada = true;
-              break;
-            }
-          }
-          
-          // Si no está, agregarla temporalmente
-          if (!hojaEncontrada && hojaOriginal !== '' && hojaOriginal !== 'Casos') {
-            const option = document.createElement('option');
-            option.value = hojaOriginal;
-            option.textContent = hojaOriginal;
-            selectHoja.insertBefore(option, selectHoja.options[1]);
-            console.log('➕ [CRUD] Hoja agregada temporalmente al select:', hojaOriginal);
-          }
-          
-          // Seleccionar la hoja
-          if (hojaOriginal === 'Casos' || hojaOriginal === '') {
-            selectHoja.value = '';
-          } else {
-            selectHoja.value = hojaOriginal;
-          }
-          
-          console.log('✅ [CRUD] Hoja seleccionada:', selectHoja.value || '(vacío = Casos default)');
-        }
-        
-        // Formato
-        const selectFormato = document.getElementById('casoFormato');
-        if (selectFormato) {
-          selectFormato.value = caso.Formato || 'Clasico';
-        }
-        
-        // Campos de texto
-        document.getElementById('casoTitulo').value = caso.Titulo || '';
-        document.getElementById('casoDescripcion').value = caso.Descripcion || '';
-        
-        // Prioridad
-        const selectPrioridad = document.getElementById('casoPrioridad');
-        if (selectPrioridad) {
-          selectPrioridad.value = caso.Prioridad || 'Media';
-        }
-        
-        // Tipo de prueba
-        const selectTipo = document.getElementById('casoTipoPrueba');
-        if (selectTipo) {
-          selectTipo.value = caso.TipoPrueba || 'Funcional';
-        }
-        
-        // Campos según formato
-        if (caso.Formato === 'Clasico') {
-          document.getElementById('casoPasos').value = caso.Pasos || '';
-          document.getElementById('casoResultadoEsperado').value = caso.ResultadoEsperado || '';
-        } else if (caso.Formato === 'Gherkin') {
-          document.getElementById('casoGiven').value = caso.ScenarioGiven || '';
-          document.getElementById('casoWhen').value = caso.ScenarioWhen || '';
-          document.getElementById('casoThen').value = caso.ScenarioThen || '';
-        }
-        
         // Precondiciones
-        document.getElementById('casoPrecondiciones').value = caso.Precondiciones || '';
-        
-        // Checkboxes
-        document.getElementById('casoFlujoCritico').checked = (caso.FlujoCritico === 'Si' || caso.FlujoCritico === 'Sí');
-        document.getElementById('casoCandidatoRegresion').checked = (caso.CandidatoRegresion === 'Si' || caso.CandidatoRegresion === 'Sí');
-        
+        if (caso.Precondiciones) {
+            html += '<div class="detalle-seccion">';
+            html +=
+                '<div class="detalle-seccion-titulo">⚙️ Precondiciones</div>';
+            html +=
+                '<div style="white-space: pre-wrap; background: #f8fafc; padding: 1rem; border-radius: 6px;">' +
+                safe(caso.Precondiciones) +
+                "</div>";
+            html += "</div>";
+        }
+
+        // Información adicional
+        html += '<div class="detalle-seccion">';
+        html +=
+            '<div class="detalle-seccion-titulo">ℹ️ Información Adicional</div>';
+        html += '<div class="detalle-grid">';
+        html +=
+            '<div class="detalle-label">⭐ Flujo Crítico:</div><div class="detalle-valor">' +
+            (caso.FlujoCritico === "Si" || caso.FlujoCritico === "Sí"
+                ? "✅ Sí"
+                : "❌ No") +
+            "</div>";
+        html +=
+            '<div class="detalle-label">🔄 Candidato Regresión:</div><div class="detalle-valor">' +
+            (caso.CandidatoRegresion === "Si" ||
+            caso.CandidatoRegresion === "Sí"
+                ? "✅ Sí"
+                : "❌ No") +
+            "</div>";
+        html +=
+            '<div class="detalle-label">👤 Creado por:</div><div class="detalle-valor">' +
+            safe(caso.CreadoPor) +
+            "</div>";
+        html +=
+            '<div class="detalle-label">📅 Fecha creación:</div><div class="detalle-valor">' +
+            (caso.FechaCreacion
+                ? safe(formatearFecha(caso.FechaCreacion))
+                : "-") +
+            "</div>";
+        html +=
+            '<div class="detalle-label">🔗 URI:</div><div class="detalle-valor" style="font-family: monospace; font-size: 0.85rem;">' +
+            safe(caso.CasoURI) +
+            "</div>";
+        html += "</div>";
+        html += "</div>";
+
+        // Notas
+        if (caso.Notas) {
+            html += '<div class="detalle-seccion">';
+            html += '<div class="detalle-seccion-titulo">📌 Notas</div>';
+            html +=
+                '<div style="white-space: pre-wrap; background: #fef3c7; padding: 1rem; border-radius: 6px;">' +
+                safe(caso.Notas) +
+                "</div>";
+            html += "</div>";
+        }
+
+        document.getElementById("detalleCasoContenido").innerHTML = html;
+
+        // Mostrar/ocultar botones según estado
+        if (esEliminado) {
+            document
+                .getElementById("btnEditarCasoDetalle")
+                .classList.add("hidden");
+            document
+                .getElementById("btnEliminarCasoDetalle")
+                .classList.add("hidden");
+            document
+                .getElementById("btnRestaurarCasoDetalle")
+                .classList.remove("hidden");
+        } else {
+            document
+                .getElementById("btnEditarCasoDetalle")
+                .classList.remove("hidden");
+            document
+                .getElementById("btnEliminarCasoDetalle")
+                .classList.remove("hidden");
+            document
+                .getElementById("btnRestaurarCasoDetalle")
+                .classList.add("hidden");
+        }
+
+        abrirModal("modalDetalleCaso");
+    }
+
+    // ===================================================================
+    // EDITAR CASO
+    // ===================================================================
+
+    /**
+     * Obtiene un caso y lo carga en el formulario para editar
+     * @param {string} casoId - ID del caso
+     */
+    function editarCaso(casoId) {
+        console.log("✏️ [CRUD] Editando caso:", casoId);
+        mostrarSpinner();
+
+        google.script.run
+            .withSuccessHandler(function (response) {
+                ocultarSpinner();
+
+                if (response.success) {
+                    console.log("✅ [CRUD] Caso obtenido para edición");
+                    cargarCasoEnFormulario(response.data);
+                } else {
+                    console.error("❌ [CRUD] Error:", response.mensaje);
+                    mostrarToast("Error: " + response.mensaje, "error");
+                }
+            })
+            .withFailureHandler(function (error) {
+                ocultarSpinner();
+                console.error("💥 [CRUD] Error crítico:", error);
+                mostrarToast(
+                    "Error al obtener caso: " + error.message,
+                    "error"
+                );
+            })
+            .obtenerDetalleCaso(recuperarSheetUrl(), casoId);
+    }
+
+    /**
+     * Edita el caso desde el modal de detalle
+     */
+    function editarCasoDesdeDetalle() {
+        if (window.casoActualDetalle) {
+            console.log("✏️ [CRUD] Editando desde detalle");
+            cerrarModal("modalDetalleCaso");
+            cargarCasoEnFormulario(window.casoActualDetalle);
+        }
+    }
+
+    /**
+     * Carga los datos de un caso en el formulario
+     * @param {Object} caso - Objeto con datos del caso
+     */
+    function cargarCasoEnFormulario(caso) {
+        console.log("📝 [CRUD] Cargando caso en formulario:", caso);
+
+        // Abrir modal
+        const modal = document.getElementById("modalCrearCaso");
+        modal.classList.add("active");
+        document.body.style.overflow = "hidden";
+
+        // Cambiar título del modal
+        document.getElementById("tituloModalCaso").textContent =
+            "✏️ Editar Caso: " + caso.ID;
+
+        // Guardar datos de edición
+        document.getElementById("casoIdEdicion").value = caso.ID;
+
+        const hojaOriginal = caso.Hoja || "Casos";
+        document.getElementById("casoHojaOriginal").value = hojaOriginal;
+
+        console.log("📂 [CRUD] Hoja original del caso:", hojaOriginal);
+
+        // Llenar campos con delay para asegurar que el DOM esté listo
+        setTimeout(() => {
+            try {
+                // Select de hoja
+                const selectHoja = document.getElementById("casoHoja");
+                if (selectHoja) {
+                    // Verificar si la hoja existe en el select
+                    let hojaEncontrada = false;
+
+                    for (let i = 0; i < selectHoja.options.length; i++) {
+                        if (selectHoja.options[i].value === hojaOriginal) {
+                            hojaEncontrada = true;
+                            break;
+                        }
+                    }
+
+                    // Si no está, agregarla temporalmente
+                    if (
+                        !hojaEncontrada &&
+                        hojaOriginal !== "" &&
+                        hojaOriginal !== "Casos"
+                    ) {
+                        const option = document.createElement("option");
+                        option.value = hojaOriginal;
+                        option.textContent = hojaOriginal;
+                        selectHoja.insertBefore(option, selectHoja.options[1]);
+                        console.log(
+                            "➕ [CRUD] Hoja agregada temporalmente al select:",
+                            hojaOriginal
+                        );
+                    }
+
+                    // Seleccionar la hoja
+                    if (hojaOriginal === "Casos" || hojaOriginal === "") {
+                        selectHoja.value = "";
+                    } else {
+                        selectHoja.value = hojaOriginal;
+                    }
+
+                    console.log(
+                        "✅ [CRUD] Hoja seleccionada:",
+                        selectHoja.value || "(vacío = Casos default)"
+                    );
+                }
+
+                // Formato
+                const selectFormato = document.getElementById("casoFormato");
+                if (selectFormato) {
+                    selectFormato.value = caso.Formato || "Clasico";
+                }
+
+                // Campos de texto
+                document.getElementById("casoTitulo").value = caso.Titulo || "";
+                document.getElementById("casoDescripcion").value =
+                    caso.Descripcion || "";
+
+                // Prioridad
+                const selectPrioridad =
+                    document.getElementById("casoPrioridad");
+                if (selectPrioridad) {
+                    selectPrioridad.value = caso.Prioridad || "Media";
+                }
+
+                // Tipo de prueba
+                const selectTipo = document.getElementById("casoTipoPrueba");
+                if (selectTipo) {
+                    selectTipo.value = caso.TipoPrueba || "Funcional";
+                }
+
+                // Campos según formato
+                if (caso.Formato === "Clasico") {
+                    document.getElementById("casoPasos").value =
+                        caso.Pasos || "";
+                    document.getElementById("casoResultadoEsperado").value =
+                        caso.ResultadoEsperado || "";
+                } else if (caso.Formato === "Gherkin") {
+                    document.getElementById("casoGiven").value =
+                        caso.ScenarioGiven || "";
+                    document.getElementById("casoWhen").value =
+                        caso.ScenarioWhen || "";
+                    document.getElementById("casoThen").value =
+                        caso.ScenarioThen || "";
+                }
+
+                // Precondiciones
+                document.getElementById("casoPrecondiciones").value =
+                    caso.Precondiciones || "";
+
+                // Checkboxes
+                document.getElementById("casoFlujoCritico").checked =
+                    caso.FlujoCritico === "Si" || caso.FlujoCritico === "Sí";
+                document.getElementById("casoCandidatoRegresion").checked =
+                    caso.CandidatoRegresion === "Si" ||
+                    caso.CandidatoRegresion === "Sí";
+
+                // Mostrar campos según formato
+                cambiarFormatoCaso();
+
+                // Resetear flag de cambios
+                window.formularioTieneCambios = false;
+
+                // Configurar listeners de cambios
+                const inputs = document.querySelectorAll(
+                    "#formCrearCaso input, #formCrearCaso textarea, #formCrearCaso select"
+                );
+                inputs.forEach((input) => {
+                    input.removeEventListener("change", marcarCambios);
+                    input.removeEventListener("input", marcarCambios);
+                    input.addEventListener("change", marcarCambios);
+                    input.addEventListener("input", marcarCambios);
+                });
+
+                console.log("✅ [CRUD] Formulario cargado completamente");
+            } catch (error) {
+                console.error("❌ [CRUD] Error llenando formulario:", error);
+                mostrarToast("Error al cargar datos del caso", "error");
+            }
+        }, 150);
+    }
+
+    // ===================================================================
+    // MODAL CREAR/EDITAR
+    // ===================================================================
+
+    /**
+     * Abre el modal para crear un nuevo caso
+     */
+    function abrirModalCrearCaso() {
+        console.log("➕ [CRUD] Abriendo modal para crear nuevo caso");
+
+        // Cambiar título
+        document.getElementById("tituloModalCaso").textContent =
+            "➕ Nuevo Caso de Prueba";
+        document.getElementById("casoIdEdicion").value = "";
+        document.getElementById("casoHojaOriginal").value = "";
+
+        // Abrir modal
+        abrirModal("modalCrearCaso");
+
+        // Resetear formulario
+        document.getElementById("formCrearCaso").reset();
+
         // Mostrar campos según formato
         cambiarFormatoCaso();
-        
+
         // Resetear flag de cambios
         window.formularioTieneCambios = false;
-        
+
         // Configurar listeners de cambios
-        const inputs = document.querySelectorAll('#formCrearCaso input, #formCrearCaso textarea, #formCrearCaso select');
-        inputs.forEach(input => {
-          input.removeEventListener('change', marcarCambios);
-          input.removeEventListener('input', marcarCambios);
-          input.addEventListener('change', marcarCambios);
-          input.addEventListener('input', marcarCambios);
+        const inputs = document.querySelectorAll(
+            "#formCrearCaso input, #formCrearCaso textarea, #formCrearCaso select"
+        );
+        inputs.forEach((input) => {
+            input.removeEventListener("change", marcarCambios);
+            input.removeEventListener("input", marcarCambios);
+            input.addEventListener("change", marcarCambios);
+            input.addEventListener("input", marcarCambios);
         });
-        
-        console.log('✅ [CRUD] Formulario cargado completamente');
-        
-      } catch (error) {
-        console.error('❌ [CRUD] Error llenando formulario:', error);
-        mostrarToast('Error al cargar datos del caso', 'error');
-      }
-    }, 150);
-  }
+    }
 
-  // ===================================================================
-  // MODAL CREAR/EDITAR
-  // ===================================================================
-  
-  /**
-   * Abre el modal para crear un nuevo caso
-   */
-  function abrirModalCrearCaso() {
-    console.log('➕ [CRUD] Abriendo modal para crear nuevo caso');
-    
-    // Cambiar título
-    document.getElementById('tituloModalCaso').textContent = '➕ Nuevo Caso de Prueba';
-    document.getElementById('casoIdEdicion').value = '';
-    document.getElementById('casoHojaOriginal').value = '';
-    
-    // Abrir modal
-    abrirModal('modalCrearCaso');
-    
-    // Resetear formulario
-    document.getElementById('formCrearCaso').reset();
-    
-    // Mostrar campos según formato
-    cambiarFormatoCaso();
-    
-    // Resetear flag de cambios
-    window.formularioTieneCambios = false;
-    
-    // Configurar listeners de cambios
-    const inputs = document.querySelectorAll('#formCrearCaso input, #formCrearCaso textarea, #formCrearCaso select');
-    inputs.forEach(input => {
-      input.removeEventListener('change', marcarCambios);
-      input.removeEventListener('input', marcarCambios);
-      input.addEventListener('change', marcarCambios);
-      input.addEventListener('input', marcarCambios);
-    });
-  }
+    /**
+     * Cierra el modal de crear/editar caso
+     */
+    async function cerrarModalCaso() {
+        if (window.formularioTieneCambios) {
+            const confirmar = await mostrarConfirmacionApp({
+                titulo: "Cambios sin guardar",
+                mensaje:
+                    "Tienes cambios sin guardar.<br><br>¿Deseas descartar los cambios y cerrar?",
+                icono: "⚠️",
+                textoOk: "Descartar cambios",
+                textoCancelar: "Seguir editando",
+            });
 
-  /**
-   * Cierra el modal de crear/editar caso
-   */
-  async function cerrarModalCaso() {
-    if (window.formularioTieneCambios) {
-      const confirmar = await mostrarConfirmacionApp({
-        titulo: 'Cambios sin guardar',
-        mensaje: 'Tienes cambios sin guardar.<br><br>¿Deseas descartar los cambios y cerrar?',
-        icono: '⚠️',
-        textoOk: 'Descartar cambios',
-        textoCancelar: 'Seguir editando'
-      });
-      
-      if (confirmar) {
-        cerrarModal('modalCrearCaso');
-        window.formularioTieneCambios = false;
-        
-        // Resetear formulario
-        document.getElementById('formCrearCaso').reset();
-        document.getElementById('casoIdEdicion').value = '';
-        document.getElementById('casoHojaOriginal').value = '';
-        document.getElementById('tituloModalCaso').textContent = '➕ Nuevo Caso de Prueba';
-        
-        // Mostrar toast si había hoja recién creada
-        if (window.hojaRecienCreada) {
-          setTimeout(() => {
-            mostrarToast('💡 La hoja "' + window.hojaRecienCreada + '" quedó guardada en tu Google Sheet', 'info', 4000);
-          }, 500);
-          window.hojaRecienCreada = null;
+            if (confirmar) {
+                cerrarModal("modalCrearCaso");
+                window.formularioTieneCambios = false;
+
+                // Resetear formulario
+                document.getElementById("formCrearCaso").reset();
+                document.getElementById("casoIdEdicion").value = "";
+                document.getElementById("casoHojaOriginal").value = "";
+                document.getElementById("tituloModalCaso").textContent =
+                    "➕ Nuevo Caso de Prueba";
+
+                // Mostrar toast si había hoja recién creada
+                if (window.hojaRecienCreada) {
+                    setTimeout(() => {
+                        mostrarToast(
+                            '💡 La hoja "' +
+                                window.hojaRecienCreada +
+                                '" quedó guardada en tu Google Sheet',
+                            "info",
+                            4000
+                        );
+                    }, 500);
+                    window.hojaRecienCreada = null;
+                }
+            }
+        } else {
+            cerrarModal("modalCrearCaso");
+            document.getElementById("formCrearCaso").reset();
+            document.getElementById("casoIdEdicion").value = "";
+            document.getElementById("casoHojaOriginal").value = "";
+            document.getElementById("tituloModalCaso").textContent =
+                "➕ Nuevo Caso de Prueba";
+
+            if (window.hojaRecienCreada) {
+                window.hojaRecienCreada = null;
+            }
         }
-      }
-    } else {
-      cerrarModal('modalCrearCaso');
-      document.getElementById('formCrearCaso').reset();
-      document.getElementById('casoIdEdicion').value = '';
-      document.getElementById('casoHojaOriginal').value = '';
-      document.getElementById('tituloModalCaso').textContent = '➕ Nuevo Caso de Prueba';
-      
-      if (window.hojaRecienCreada) {
-        window.hojaRecienCreada = null;
-      }
     }
-  }
 
-  /**
-   * Cambia la visibilidad de campos según el formato seleccionado
-   */
-  function cambiarFormatoCaso() {
-    const formato = document.getElementById('casoFormato').value;
-    const camposClasico = document.getElementById('camposClasico');
-    const camposGherkin = document.getElementById('camposGherkin');
-    
-    if (formato === 'Gherkin') {
-      camposClasico.classList.add('hidden');
-      camposGherkin.classList.remove('hidden');
-    } else {
-      camposClasico.classList.remove('hidden');
-      camposGherkin.classList.add('hidden');
-    }
-  }
+    /**
+     * Cambia la visibilidad de campos según el formato seleccionado
+     */
+    function cambiarFormatoCaso() {
+        const formato = document.getElementById("casoFormato").value;
+        const camposClasico = document.getElementById("camposClasico");
+        const camposGherkin = document.getElementById("camposGherkin");
 
-  // ===================================================================
-  // GUARDAR CASO (CREAR O ACTUALIZAR)
-  // ===================================================================
-  
-  /**
-   * Guarda el caso (crea nuevo o actualiza existente)
-   */
-  async function guardarCaso() {
-    const formato = document.getElementById('casoFormato').value;
-    const hojaSeleccionada = document.getElementById('casoHoja').value;
-    const urlActual = recuperarSheetUrl();
-    const casoIdEdicion = document.getElementById('casoIdEdicion').value;
-    const hojaOriginal = document.getElementById('casoHojaOriginal').value;
-    const modoEdicion = casoIdEdicion !== '';
-    
-    console.log('💾 [CRUD] Guardando caso - Modo:', modoEdicion ? 'EDICIÓN' : 'CREAR');
-    console.log('  Hoja seleccionada:', hojaSeleccionada || 'Casos');
-    console.log('  Hoja original:', hojaOriginal);
-    
-    if (!urlActual) {
-      mostrarToast('Error: No hay Sheet conectado', 'error');
-      return;
+        if (formato === "Gherkin") {
+            camposClasico.classList.add("hidden");
+            camposGherkin.classList.remove("hidden");
+        } else {
+            camposClasico.classList.remove("hidden");
+            camposGherkin.classList.add("hidden");
+        }
     }
-    
-    // Validar si no hay hoja seleccionada en modo crear
-    if (!hojaSeleccionada && !modoEdicion) {
-      const confirmar = await mostrarConfirmacionApp({
-        titulo: 'Hoja no seleccionada',
-        mensaje: 'El caso se guardará en la hoja <strong>"Casos"</strong> por defecto.<br><br>¿Deseas continuar?',
-        icono: '📋',
-        textoOk: 'Guardar en "Casos"',
-        textoCancelar: 'Seleccionar hoja'
-      });
-      
-      if (!confirmar) return;
+
+    // ===================================================================
+    // GUARDAR CASO (CREAR O ACTUALIZAR)
+    // ===================================================================
+
+    /**
+     * Guarda el caso (crea nuevo o actualiza existente)
+     */
+    async function guardarCaso() {
+        const formato = document.getElementById("casoFormato").value;
+        const hojaSeleccionada = document.getElementById("casoHoja").value;
+        const urlActual = recuperarSheetUrl();
+        const casoIdEdicion = document.getElementById("casoIdEdicion").value;
+        const hojaOriginal = document.getElementById("casoHojaOriginal").value;
+        const modoEdicion = casoIdEdicion !== "";
+
+        console.log(
+            "💾 [CRUD] Guardando caso - Modo:",
+            modoEdicion ? "EDICIÓN" : "CREAR"
+        );
+        console.log("  Hoja seleccionada:", hojaSeleccionada || "Casos");
+        console.log("  Hoja original:", hojaOriginal);
+
+        if (!urlActual) {
+            mostrarToast("Error: No hay Sheet conectado", "error");
+            return;
+        }
+
+        // Validar si no hay hoja seleccionada en modo crear
+        if (!hojaSeleccionada && !modoEdicion) {
+            const confirmar = await mostrarConfirmacionApp({
+                titulo: "Hoja no seleccionada",
+                mensaje:
+                    'El caso se guardará en la hoja <strong>"Casos"</strong> por defecto.<br><br>¿Deseas continuar?',
+                icono: "📋",
+                textoOk: 'Guardar en "Casos"',
+                textoCancelar: "Seleccionar hoja",
+            });
+
+            if (!confirmar) return;
+        }
+
+        if (modoEdicion) {
+            // ═══════════════════════════════════════════════════════════
+            // MODO EDICIÓN
+            // ═══════════════════════════════════════════════════════════
+
+            const hojaFinal = hojaSeleccionada || "Casos";
+            const cambioDeHoja = hojaFinal !== hojaOriginal;
+
+            console.log("🔍 [CRUD] Detectando cambio de hoja:", cambioDeHoja);
+
+            if (cambioDeHoja) {
+                // Usuario cambió la hoja → MOVER caso
+                console.log(
+                    "📦 [CRUD] Se detectó cambio de hoja, iniciando movimiento..."
+                );
+
+                const confirmar = await mostrarConfirmacionApp({
+                    titulo: "Mover Caso",
+                    mensaje:
+                        "⚠️ <strong>Estás cambiando la hoja de este caso</strong><br><br>" +
+                        'De: <strong>"' +
+                        hojaOriginal +
+                        '"</strong><br>' +
+                        'A: <strong>"' +
+                        hojaFinal +
+                        '"</strong><br><br>' +
+                        'El caso desaparecerá de "' +
+                        hojaOriginal +
+                        '" y aparecerá en "' +
+                        hojaFinal +
+                        '".<br><br>' +
+                        "El ID <strong>" +
+                        casoIdEdicion +
+                        "</strong> se mantendrá igual.<br><br>" +
+                        "¿Continuar?",
+                    icono: "📦",
+                    textoOk: "Sí, Mover Caso",
+                    textoCancelar: "Cancelar",
+                });
+
+                if (!confirmar) {
+                    console.log("❌ [CRUD] Usuario canceló el movimiento");
+                    return;
+                }
+
+                // Primero MOVER el caso
+                console.log(
+                    "📦 [CRUD] Moviendo caso " +
+                        casoIdEdicion +
+                        " a hoja: " +
+                        hojaFinal
+                );
+                mostrarSpinner();
+
+                google.script.run
+                    .withSuccessHandler(function (responseMover) {
+                        console.log(
+                            "📦 [CRUD] Respuesta de moverCaso:",
+                            responseMover
+                        );
+
+                        if (responseMover.success) {
+                            console.log(
+                                "✅ [CRUD] Caso movido exitosamente, ahora actualizando campos..."
+                            );
+
+                            // LUEGO actualizar los demás campos en la nueva ubicación
+                            const datosActualizados =
+                                construirDatosActualizados(formato, hojaFinal);
+
+                            google.script.run
+                                .withSuccessHandler(function (
+                                    responseActualizar
+                                ) {
+                                    ocultarSpinner();
+
+                                    if (responseActualizar.success) {
+                                        mostrarToast(
+                                            "✅ Caso movido y actualizado exitosamente",
+                                            "success"
+                                        );
+                                        window.formularioTieneCambios = false;
+                                        window.hojaRecienCreada = null;
+                                        cerrarModal("modalCrearCaso");
+                                        cargarTodosLosCasos();
+                                    } else {
+                                        mostrarToast(
+                                            "⚠️ Caso movido pero no se pudieron actualizar todos los campos: " +
+                                                responseActualizar.mensaje,
+                                            "warning"
+                                        );
+                                        cargarTodosLosCasos();
+                                    }
+                                })
+                                .withFailureHandler(function (error) {
+                                    ocultarSpinner();
+                                    mostrarToast(
+                                        "⚠️ Caso movido pero error al actualizar: " +
+                                            error.message,
+                                        "warning"
+                                    );
+                                    cargarTodosLosCasos();
+                                })
+                                .actualizarCaso(
+                                    urlActual,
+                                    casoIdEdicion,
+                                    datosActualizados
+                                );
+                        } else {
+                            ocultarSpinner();
+                            mostrarToast(
+                                "Error al mover: " + responseMover.mensaje,
+                                "error"
+                            );
+                        }
+                    })
+                    .withFailureHandler(function (error) {
+                        ocultarSpinner();
+                        console.error("💥 [CRUD] Error al mover caso:", error);
+                        mostrarToast(
+                            "Error al mover caso: " + error.message,
+                            "error"
+                        );
+                    })
+                    .moverCaso(urlActual, casoIdEdicion, hojaFinal);
+            } else {
+                // NO cambió de hoja → ACTUALIZACIÓN NORMAL
+                console.log("✏️ [CRUD] Actualización normal (sin mover)");
+
+                const datosActualizados = construirDatosActualizados(
+                    formato,
+                    hojaFinal
+                );
+
+                mostrarSpinner();
+
+                google.script.run
+                    .withSuccessHandler(function (response) {
+                        ocultarSpinner();
+
+                        if (response.success) {
+                            mostrarToast(
+                                "✅ Caso actualizado exitosamente",
+                                "success"
+                            );
+                            window.formularioTieneCambios = false;
+                            window.hojaRecienCreada = null;
+                            cerrarModal("modalCrearCaso");
+                            cargarTodosLosCasos();
+                        } else {
+                            mostrarToast("Error: " + response.mensaje, "error");
+                        }
+                    })
+                    .withFailureHandler(function (error) {
+                        ocultarSpinner();
+                        mostrarToast(
+                            "Error al actualizar: " + error.message,
+                            "error"
+                        );
+                    })
+                    .actualizarCaso(
+                        urlActual,
+                        casoIdEdicion,
+                        datosActualizados
+                    );
+            }
+        } else {
+            // ═══════════════════════════════════════════════════════════
+            // MODO CREAR
+            // ═══════════════════════════════════════════════════════════
+
+            const hojaFinal = hojaSeleccionada || "Casos";
+
+            const datosCaso = {
+                sheetUrl: urlActual,
+                hoja: hojaFinal,
+                titulo: document.getElementById("casoTitulo").value,
+                descripcion: document.getElementById("casoDescripcion").value,
+                prioridad: document.getElementById("casoPrioridad").value,
+                tipoPrueba: document.getElementById("casoTipoPrueba").value,
+                formatoCaso: formato,
+                flujoCritico:
+                    document.getElementById("casoFlujoCritico").checked,
+                candidatoRegresion: document.getElementById(
+                    "casoCandidatoRegresion"
+                ).checked,
+                precondiciones:
+                    document.getElementById("casoPrecondiciones").value,
+            };
+
+            if (formato === "Clasico") {
+                datosCaso.pasos = document.getElementById("casoPasos").value;
+                datosCaso.resultadoEsperado = document.getElementById(
+                    "casoResultadoEsperado"
+                ).value;
+            } else {
+                datosCaso.scenarioGiven =
+                    document.getElementById("casoGiven").value;
+                datosCaso.scenarioWhen =
+                    document.getElementById("casoWhen").value;
+                datosCaso.scenarioThen =
+                    document.getElementById("casoThen").value;
+            }
+
+            console.log("➕ [CRUD] Creando nuevo caso en hoja:", hojaFinal);
+            mostrarSpinner();
+
+            google.script.run
+                .withSuccessHandler(function (response) {
+                    ocultarSpinner();
+
+                    if (response.success) {
+                        const hojaUsada = response.data.hoja || "Casos";
+                        const idCaso = response.data.idCaso || "TC-X";
+                        const mensaje =
+                            "✅ Caso " +
+                            idCaso +
+                            ' creado exitosamente en hoja "' +
+                            hojaUsada +
+                            '"';
+                        mostrarToast(mensaje, "success");
+
+                        window.formularioTieneCambios = false;
+                        window.hojaRecienCreada = null;
+
+                        cerrarModal("modalCrearCaso");
+                        cargarTodosLosCasos();
+                    } else {
+                        mostrarToast("Error: " + response.mensaje, "error");
+                    }
+                })
+                .withFailureHandler(function (error) {
+                    ocultarSpinner();
+                    mostrarToast(
+                        "Error al crear caso: " + error.message,
+                        "error"
+                    );
+                })
+                .crearCaso(datosCaso);
+        }
     }
-    
-    if (modoEdicion) {
-      // ═══════════════════════════════════════════════════════════
-      // MODO EDICIÓN
-      // ═══════════════════════════════════════════════════════════
-      
-      const hojaFinal = hojaSeleccionada || 'Casos';
-      const cambioDeHoja = hojaFinal !== hojaOriginal;
-      
-      console.log('🔍 [CRUD] Detectando cambio de hoja:', cambioDeHoja);
-      
-      if (cambioDeHoja) {
-        // Usuario cambió la hoja → MOVER caso
-        console.log('📦 [CRUD] Se detectó cambio de hoja, iniciando movimiento...');
-        
+
+    /**
+     * Construye el objeto con datos actualizados
+     */
+    function construirDatosActualizados(formato, hojaFinal) {
+        const datosActualizados = {
+            Hoja: hojaFinal,
+            Formato: formato,
+            Titulo: document.getElementById("casoTitulo").value,
+            Descripcion: document.getElementById("casoDescripcion").value,
+            Prioridad: document.getElementById("casoPrioridad").value,
+            TipoPrueba: document.getElementById("casoTipoPrueba").value,
+            Precondiciones: document.getElementById("casoPrecondiciones").value,
+            FlujoCritico: document.getElementById("casoFlujoCritico").checked
+                ? "Si"
+                : "No",
+            CandidatoRegresion: document.getElementById(
+                "casoCandidatoRegresion"
+            ).checked
+                ? "Si"
+                : "No",
+        };
+
+        if (formato === "Clasico") {
+            datosActualizados.Pasos =
+                document.getElementById("casoPasos").value;
+            datosActualizados.ResultadoEsperado = document.getElementById(
+                "casoResultadoEsperado"
+            ).value;
+            datosActualizados.ScenarioGiven = "";
+            datosActualizados.ScenarioWhen = "";
+            datosActualizados.ScenarioThen = "";
+        } else {
+            datosActualizados.ScenarioGiven =
+                document.getElementById("casoGiven").value;
+            datosActualizados.ScenarioWhen =
+                document.getElementById("casoWhen").value;
+            datosActualizados.ScenarioThen =
+                document.getElementById("casoThen").value;
+            datosActualizados.Pasos = "";
+            datosActualizados.ResultadoEsperado = "";
+        }
+
+        return datosActualizados;
+    }
+
+    // ===================================================================
+    // ELIMINAR Y RESTAURAR
+    // ===================================================================
+
+    /**
+     * Confirma antes de eliminar un caso
+     */
+    async function confirmarEliminarCaso(casoId) {
         const confirmar = await mostrarConfirmacionApp({
-          titulo: 'Mover Caso',
-          mensaje: '⚠️ <strong>Estás cambiando la hoja de este caso</strong><br><br>' +
-                   'De: <strong>"' + hojaOriginal + '"</strong><br>' +
-                   'A: <strong>"' + hojaFinal + '"</strong><br><br>' +
-                   'El caso desaparecerá de "' + hojaOriginal + '" y aparecerá en "' + hojaFinal + '".<br><br>' +
-                   'El ID <strong>' + casoIdEdicion + '</strong> se mantendrá igual.<br><br>' +
-                   '¿Continuar?',
-          icono: '📦',
-          textoOk: 'Sí, Mover Caso',
-          textoCancelar: 'Cancelar'
+            titulo: "Eliminar Caso de Prueba",
+            mensaje:
+                "¿Estás seguro de eliminar este caso?<br><br><strong>" +
+                casoId +
+                "</strong><br><br>⚠️ <strong>Esta acción no se puede deshacer fácilmente.</strong><br>El caso se marcará como eliminado y no aparecerá en los listados.",
+            icono: "🗑️",
+            textoOk: "Sí, Eliminar",
+            textoCancelar: "Cancelar",
         });
-        
-        if (!confirmar) {
-          console.log('❌ [CRUD] Usuario canceló el movimiento');
-          return;
-        }
-        
-        // Primero MOVER el caso
-        console.log('📦 [CRUD] Moviendo caso ' + casoIdEdicion + ' a hoja: ' + hojaFinal);
+
+        if (!confirmar) return;
+
+        eliminarCaso(casoId);
+    }
+
+    /**
+     * Elimina un caso (marca como eliminado)
+     */
+    function eliminarCaso(casoId) {
+        console.log("🗑️ [CRUD] Eliminando caso:", casoId);
         mostrarSpinner();
-        
+
         google.script.run
-          .withSuccessHandler(function(responseMover) {
-            console.log('📦 [CRUD] Respuesta de moverCaso:', responseMover);
-            
-            if (responseMover.success) {
-              console.log('✅ [CRUD] Caso movido exitosamente, ahora actualizando campos...');
-              
-              // LUEGO actualizar los demás campos en la nueva ubicación
-              const datosActualizados = construirDatosActualizados(formato, hojaFinal);
-              
-              google.script.run
-                .withSuccessHandler(function(responseActualizar) {
-                  ocultarSpinner();
-                  
-                  if (responseActualizar.success) {
-                    mostrarToast('✅ Caso movido y actualizado exitosamente', 'success');
-                    window.formularioTieneCambios = false;
-                    window.hojaRecienCreada = null; 
-                    cerrarModal('modalCrearCaso');
+            .withSuccessHandler(function (response) {
+                ocultarSpinner();
+
+                if (response.success) {
+                    console.log("✅ [CRUD] Caso eliminado");
+                    mostrarToast("✅ Caso eliminado correctamente", "success");
                     cargarTodosLosCasos();
-                  } else {
-                    mostrarToast('⚠️ Caso movido pero no se pudieron actualizar todos los campos: ' + responseActualizar.mensaje, 'warning');
-                    cargarTodosLosCasos();
-                  }
-                })
-                .withFailureHandler(function(error) {
-                  ocultarSpinner();
-                  mostrarToast('⚠️ Caso movido pero error al actualizar: ' + error.message, 'warning');
-                  cargarTodosLosCasos();
-                })
-                .actualizarCaso(urlActual, casoIdEdicion, datosActualizados);
-              
-            } else {
-              ocultarSpinner();
-              mostrarToast('Error al mover: ' + responseMover.mensaje, 'error');
-            }
-          })
-          .withFailureHandler(function(error) {
-            ocultarSpinner();
-            console.error('💥 [CRUD] Error al mover caso:', error);
-            mostrarToast('Error al mover caso: ' + error.message, 'error');
-          })
-          .moverCaso(urlActual, casoIdEdicion, hojaFinal);
-        
-      } else {
-        // NO cambió de hoja → ACTUALIZACIÓN NORMAL
-        console.log('✏️ [CRUD] Actualización normal (sin mover)');
-        
-        const datosActualizados = construirDatosActualizados(formato, hojaFinal);
-        
+                } else {
+                    mostrarToast("Error: " + response.mensaje, "error");
+                }
+            })
+            .withFailureHandler(function (error) {
+                ocultarSpinner();
+                mostrarToast("Error al eliminar: " + error.message, "error");
+            })
+            .eliminarCaso(recuperarSheetUrl(), casoId);
+    }
+
+    /**
+     * Elimina el caso desde el modal de detalle
+     */
+    function eliminarCasoDesdeDetalle() {
+        if (window.casoActualDetalle) {
+            cerrarModal("modalDetalleCaso");
+            confirmarEliminarCaso(window.casoActualDetalle.ID);
+        }
+    }
+
+    /**
+     * Restaura un caso eliminado
+     */
+    async function restaurarCaso(casoId) {
+        const confirmar = await mostrarConfirmacionApp({
+            titulo: "Restaurar Caso",
+            mensaje:
+                "¿Deseas restaurar este caso?<br><br><strong>" +
+                casoId +
+                '</strong><br><br>El caso volverá a estar disponible con estado "Pendiente".',
+            icono: "↩️",
+            textoOk: "Sí, Restaurar",
+            textoCancelar: "Cancelar",
+        });
+
+        if (!confirmar) return;
+
+        console.log("↩️ [CRUD] Restaurando caso:", casoId);
         mostrarSpinner();
-        
+
         google.script.run
-          .withSuccessHandler(function(response) {
-            ocultarSpinner();
-            
-            if (response.success) {
-              mostrarToast('✅ Caso actualizado exitosamente', 'success');
-              window.formularioTieneCambios = false;
-              window.hojaRecienCreada = null; 
-              cerrarModal('modalCrearCaso');
-              cargarTodosLosCasos();
-            } else {
-              mostrarToast('Error: ' + response.mensaje, 'error');
-            }
-          })
-          .withFailureHandler(function(error) {
-            ocultarSpinner();
-            mostrarToast('Error al actualizar: ' + error.message, 'error');
-          })
-          .actualizarCaso(urlActual, casoIdEdicion, datosActualizados);
-      }
-      
-    } else {
-      // ═══════════════════════════════════════════════════════════
-      // MODO CREAR
-      // ═══════════════════════════════════════════════════════════
-      
-      const hojaFinal = hojaSeleccionada || 'Casos';
-      
-      const datosCaso = {
-        sheetUrl: urlActual,
-        hoja: hojaFinal,
-        titulo: document.getElementById('casoTitulo').value,
-        descripcion: document.getElementById('casoDescripcion').value,
-        prioridad: document.getElementById('casoPrioridad').value,
-        tipoPrueba: document.getElementById('casoTipoPrueba').value,
-        formatoCaso: formato,
-        flujoCritico: document.getElementById('casoFlujoCritico').checked,
-        candidatoRegresion: document.getElementById('casoCandidatoRegresion').checked,
-        precondiciones: document.getElementById('casoPrecondiciones').value
-      };
+            .withSuccessHandler(function (response) {
+                ocultarSpinner();
 
-      if (formato === 'Clasico') {
-        datosCaso.pasos = document.getElementById('casoPasos').value;
-        datosCaso.resultadoEsperado = document.getElementById('casoResultadoEsperado').value;
-      } else {
-        datosCaso.scenarioGiven = document.getElementById('casoGiven').value;
-        datosCaso.scenarioWhen = document.getElementById('casoWhen').value;
-        datosCaso.scenarioThen = document.getElementById('casoThen').value;
-      }
-
-      console.log('➕ [CRUD] Creando nuevo caso en hoja:', hojaFinal);
-      mostrarSpinner();
-
-      google.script.run
-        .withSuccessHandler(function(response) {
-          ocultarSpinner();
-          
-          if (response.success) {
-            const hojaUsada = response.data.hoja || 'Casos';
-            const idCaso = response.data.idCaso || 'TC-X';
-            const mensaje = '✅ Caso ' + idCaso + ' creado exitosamente en hoja "' + hojaUsada + '"';
-            mostrarToast(mensaje, 'success');
-            
-            window.formularioTieneCambios = false;
-            window.hojaRecienCreada = null; 
-            
-            cerrarModal('modalCrearCaso');
-            cargarTodosLosCasos();
-          } else {
-            mostrarToast('Error: ' + response.mensaje, 'error');
-          }
-        })
-        .withFailureHandler(function(error) {
-          ocultarSpinner();
-          mostrarToast('Error al crear caso: ' + error.message, 'error');
-        })
-        .crearCaso(datosCaso);
+                if (response.success) {
+                    console.log("✅ [CRUD] Caso restaurado");
+                    mostrarToast("✅ Caso restaurado correctamente", "success");
+                    cargarTodosLosCasos();
+                } else {
+                    mostrarToast("Error: " + response.mensaje, "error");
+                }
+            })
+            .withFailureHandler(function (error) {
+                ocultarSpinner();
+                mostrarToast("Error al restaurar: " + error.message, "error");
+            })
+            .restaurarCaso(recuperarSheetUrl(), casoId);
     }
-  }
 
-  /**
-   * Construye el objeto con datos actualizados
-   */
-  function construirDatosActualizados(formato, hojaFinal) {
-    const datosActualizados = {
-      Hoja: hojaFinal,
-      Formato: formato,
-      Titulo: document.getElementById('casoTitulo').value,
-      Descripcion: document.getElementById('casoDescripcion').value,
-      Prioridad: document.getElementById('casoPrioridad').value,
-      TipoPrueba: document.getElementById('casoTipoPrueba').value,
-      Precondiciones: document.getElementById('casoPrecondiciones').value,
-      FlujoCritico: document.getElementById('casoFlujoCritico').checked ? 'Si' : 'No',
-      CandidatoRegresion: document.getElementById('casoCandidatoRegresion').checked ? 'Si' : 'No'
-    };
-    
-    if (formato === 'Clasico') {
-      datosActualizados.Pasos = document.getElementById('casoPasos').value;
-      datosActualizados.ResultadoEsperado = document.getElementById('casoResultadoEsperado').value;
-      datosActualizados.ScenarioGiven = '';
-      datosActualizados.ScenarioWhen = '';
-      datosActualizados.ScenarioThen = '';
-    } else {
-      datosActualizados.ScenarioGiven = document.getElementById('casoGiven').value;
-      datosActualizados.ScenarioWhen = document.getElementById('casoWhen').value;
-      datosActualizados.ScenarioThen = document.getElementById('casoThen').value;
-      datosActualizados.Pasos = '';
-      datosActualizados.ResultadoEsperado = '';
-    }
-    
-    return datosActualizados;
-  }
-
-  // ===================================================================
-  // ELIMINAR Y RESTAURAR
-  // ===================================================================
-  
-  /**
-   * Confirma antes de eliminar un caso
-   */
-  async function confirmarEliminarCaso(casoId) {
-    const confirmar = await mostrarConfirmacionApp({
-      titulo: 'Eliminar Caso de Prueba',
-      mensaje: '¿Estás seguro de eliminar este caso?<br><br><strong>' + casoId + '</strong><br><br>⚠️ <strong>Esta acción no se puede deshacer fácilmente.</strong><br>El caso se marcará como eliminado y no aparecerá en los listados.',
-      icono: '🗑️',
-      textoOk: 'Sí, Eliminar',
-      textoCancelar: 'Cancelar'
-    });
-
-    if (!confirmar) return;
-
-    eliminarCaso(casoId);
-  }
-
-  /**
-   * Elimina un caso (marca como eliminado)
-   */
-  function eliminarCaso(casoId) {
-    console.log('🗑️ [CRUD] Eliminando caso:', casoId);
-    mostrarSpinner();
-    
-    google.script.run
-      .withSuccessHandler(function(response) {
-        ocultarSpinner();
-        
-        if (response.success) {
-          console.log('✅ [CRUD] Caso eliminado');
-          mostrarToast('✅ Caso eliminado correctamente', 'success');
-          cargarTodosLosCasos();
-        } else {
-          mostrarToast('Error: ' + response.mensaje, 'error');
+    /**
+     * Restaura el caso desde el modal de detalle
+     */
+    function restaurarCasoDesdeDetalle() {
+        if (window.casoActualDetalle) {
+            cerrarModal("modalDetalleCaso");
+            restaurarCaso(window.casoActualDetalle.ID);
         }
-      })
-      .withFailureHandler(function(error) {
-        ocultarSpinner();
-        mostrarToast('Error al eliminar: ' + error.message, 'error');
-      })
-      .eliminarCaso(recuperarSheetUrl(), casoId);
-  }
-
-  /**
-   * Elimina el caso desde el modal de detalle
-   */
-  function eliminarCasoDesdeDetalle() {
-    if (window.casoActualDetalle) {
-      cerrarModal('modalDetalleCaso');
-      confirmarEliminarCaso(window.casoActualDetalle.ID);
     }
-  }
 
-  /**
-   * Restaura un caso eliminado
-   */
-  async function restaurarCaso(casoId) {
-    const confirmar = await mostrarConfirmacionApp({
-      titulo: 'Restaurar Caso',
-      mensaje: '¿Deseas restaurar este caso?<br><br><strong>' + casoId + '</strong><br><br>El caso volverá a estar disponible con estado "Pendiente".',
-      icono: '↩️',
-      textoOk: 'Sí, Restaurar',
-      textoCancelar: 'Cancelar'
-    });
-    
-    if (!confirmar) return;
-    
-    console.log('↩️ [CRUD] Restaurando caso:', casoId);
-    mostrarSpinner();
-    
-    google.script.run
-      .withSuccessHandler(function(response) {
-        ocultarSpinner();
-        
-        if (response.success) {
-          console.log('✅ [CRUD] Caso restaurado');
-          mostrarToast('✅ Caso restaurado correctamente', 'success');
-          cargarTodosLosCasos();
-        } else {
-          mostrarToast('Error: ' + response.mensaje, 'error');
-        }
-      })
-      .withFailureHandler(function(error) {
-        ocultarSpinner();
-        mostrarToast('Error al restaurar: ' + error.message, 'error');
-      })
-      .restaurarCaso(recuperarSheetUrl(), casoId);
-  }
+    // ===================================================================
+    // EXPORTAR FUNCIONES AL SCOPE GLOBAL
+    // ===================================================================
 
-  /**
-   * Restaura el caso desde el modal de detalle
-   */
-  function restaurarCasoDesdeDetalle() {
-    if (window.casoActualDetalle) {
-      cerrarModal('modalDetalleCaso');
-      restaurarCaso(window.casoActualDetalle.ID);
-    }
-  }
+    window.verDetalleCaso = verDetalleCaso;
+    window.editarCaso = editarCaso;
+    window.editarCasoDesdeDetalle = editarCasoDesdeDetalle;
+    window.abrirModalCrearCaso = abrirModalCrearCaso;
+    window.cerrarModalCaso = cerrarModalCaso;
+    window.cambiarFormatoCaso = cambiarFormatoCaso;
+    window.guardarCaso = guardarCaso;
+    window.confirmarEliminarCaso = confirmarEliminarCaso;
+    window.eliminarCasoDesdeDetalle = eliminarCasoDesdeDetalle;
+    window.restaurarCaso = restaurarCaso;
+    window.restaurarCasoDesdeDetalle = restaurarCasoDesdeDetalle;
 
-  // ===================================================================
-  // EXPORTAR FUNCIONES AL SCOPE GLOBAL
-  // ===================================================================
-  
-  window.verDetalleCaso = verDetalleCaso;
-  window.editarCaso = editarCaso;
-  window.editarCasoDesdeDetalle = editarCasoDesdeDetalle;
-  window.abrirModalCrearCaso = abrirModalCrearCaso;
-  window.cerrarModalCaso = cerrarModalCaso;
-  window.cambiarFormatoCaso = cambiarFormatoCaso;
-  window.guardarCaso = guardarCaso;
-  window.confirmarEliminarCaso = confirmarEliminarCaso;
-  window.eliminarCasoDesdeDetalle = eliminarCasoDesdeDetalle;
-  window.restaurarCaso = restaurarCaso;
-  window.restaurarCasoDesdeDetalle = restaurarCasoDesdeDetalle;
-
-  console.log('✅ Frontend_Components_Casos_CRUD.html cargado');
+    console.log("✅ Frontend_Components_Casos_CRUD.html cargado");
 </script>

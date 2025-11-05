@@ -148,7 +148,7 @@ function ws_crearHojaConfig(spreadsheet, resultado) {
     // Headers
     var headers = ["Clave", "Valor", "Descripcion"];
 
-    // Datos iniciales (feature/bugs-trello actualizado)
+    // Datos iniciales
     var datos = [
         ["workspace_nombre", spreadsheet.getName(), "Nombre del workspace"],
         ["workspace_creado", new Date().toISOString(), "Fecha de creacion"],
@@ -156,14 +156,9 @@ function ws_crearHojaConfig(spreadsheet, resultado) {
         ["workspace_activo", "SI", "Estado del workspace"],
         ["ultimo_caso_id", "0", "Ultimo ID de caso generado"],
         ["ultimo_bug_id", "0", "Ultimo ID de bug generado"],
-        ["trello_api_key", "", "API Key de Trello (32 caracteres)"],
-        ["trello_token", "", "Token de Trello (64 caracteres)"],
-        ["trello_board_id", "", "ID del tablero de Trello"],
-        ["trello_list_id", "", "ID de la lista de Trello para bugs"],
-        ["trello_board_url", "", "URL del tablero de Trello"],
-        ["trello_board_name", "", "Nombre del tablero de Trello"],
-        ["trello_list_name", "", "Nombre de la lista de Trello"],
-        ["drive_folder_id", "", "ID de carpeta de evidencias en Drive"],
+        ["trello_board_url", "", "URL del board de Trello (opcional)"],
+        ["trello_api_key", "", "API Key de Trello (opcional)"],
+        ["trello_token", "", "Token de Trello (opcional)"],
     ];
 
     // Escribir datos solo si la hoja esta vacia
@@ -260,7 +255,6 @@ function crearHojaCasos(spreadsheet, resultado) {
 
 /**
  * Crea o actualiza la hoja de Bugs
- * CORREGIDO: Headers sincronizados con Backend_Services_Bugs.js (feature/bugs-trello)
  */
 function crearHojaBugs(spreadsheet, resultado) {
     var nombreHoja = "Bugs";
@@ -273,33 +267,33 @@ function crearHojaBugs(spreadsheet, resultado) {
         resultado.hojasActualizadas.push(nombreHoja);
     }
 
-    // Headers CORREGIDOS - Sincronizados con Backend_Services_Bugs.js
+    // Headers - UNIFICADO con Backend_Services_Bugs.js
     var headers = [
-        "ID", // A - BUG-1, BUG-2, etc.
-        "Titulo", // B
-        "Descripcion", // C
-        "Severidad", // D - Crítica/Alta/Media/Baja
-        "Prioridad", // E - Alta/Media/Baja
-        "Estado", // F - Abierto/Cerrado/Pendiente sincronización Trello
-        "Etiquetas", // G - Tags separadas por coma
-        "TieneCasoDiseñado", // H - Si/No
-        "CasosRelacionados", // I - IDs de casos separados por coma
-        "OrigenSinCaso", // J - Manual/Otro
-        "Precondiciones", // K
-        "DatosPrueba", // L
-        "PasosReproducir", // M
-        "ResultadoEsperado", // N
-        "ResultadoObtenido", // O
-        "Ambiente", // P - Producción/Staging/QA/Dev
-        "Navegador", // Q - Chrome/Firefox/Safari/Edge
-        "EvidenciasURL", // R - URLs separadas por salto de línea
-        "FechaDeteccion", // S - Timestamp
-        "DetectadoPor", // T - Email del usuario
-        "AsignadoA", // U - Email (opcional)
-        "FechaResolucion", // V - Timestamp (cuando se cierra)
-        "TrelloCardID", // W - ID de la tarjeta en Trello (feature/bugs-trello)
-        "TrelloCardURL", // X - URL de la tarjeta en Trello (feature/bugs-trello)
-        "Notas", // Y - Observaciones adicionales
+        "ID",
+        "Titulo",
+        "Descripcion",
+        "Severidad",
+        "Prioridad",
+        "Estado",
+        "Etiquetas",
+        "TieneCasoDiseñado",
+        "CasosRelacionados",
+        "OrigenSinCaso",
+        "Precondiciones",
+        "DatosPrueba",
+        "PasosReproducir",
+        "ResultadoEsperado",
+        "ResultadoObtenido",
+        "Ambiente",
+        "Navegador",
+        "EvidenciasURL",
+        "FechaDeteccion",
+        "DetectadoPor",
+        "AsignadoA",
+        "FechaResolucion",
+        "LinkTrello",
+        "Adjuntos",
+        "Notas",
     ];
 
     // Escribir headers solo si esta vacia
@@ -312,24 +306,13 @@ function crearHojaBugs(spreadsheet, resultado) {
             .setFontColor("#ffffff")
             .setFontWeight("bold");
 
-        // Anchos de columna optimizados
+        // Anchos
         hoja.setColumnWidth(1, 100); // ID
         hoja.setColumnWidth(2, 300); // Titulo
         hoja.setColumnWidth(3, 400); // Descripcion
-        hoja.setColumnWidth(4, 100); // Severidad
-        hoja.setColumnWidth(5, 100); // Prioridad
-        hoja.setColumnWidth(6, 150); // Estado
-        hoja.setColumnWidth(13, 350); // PasosReproducir
-        hoja.setColumnWidth(18, 300); // EvidenciasURL
-        hoja.setColumnWidth(23, 300); // TrelloCardID
-        hoja.setColumnWidth(24, 350); // TrelloCardURL
 
         hoja.setFrozenRows(1);
         hoja.setFrozenColumns(1);
-
-        Logger.log("✅ Hoja Bugs creada con headers correctos (25 columnas)");
-    } else {
-        Logger.log("ℹ️ Hoja Bugs ya existe, no se modifican headers");
     }
 
     return resultado;

@@ -1,0 +1,500 @@
+<!--
+  FRONTEND_COMPONENTS_METRICAS.HTML
+  Pantallas placeholder para Métricas y Regresiones
+  Preparadas para futura implementación
+-->
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!-- PANTALLA: MÉTRICAS DEL PROYECTO                                             -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+<div id="metricasProyectoScreen" class="hidden" style="padding: 1rem">
+    <div class="card" style="margin-top: 0.5rem">
+        <div
+            class="card-header"
+            style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                flex-wrap: wrap;
+            "
+        >
+            <div style="display: flex; align-items: center; gap: 0.5rem">
+                <button
+                    class="btn btn-secondary btn-sm"
+                    onclick="ocultarMetricasProyecto()"
+                >
+                    ⬅ Volver
+                </button>
+                <div style="font-weight: 700; color: #334155">
+                    📊 Métricas del Proyecto
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Placeholder Content -->
+            <div style="text-align: center; padding: 4rem 2rem">
+                <div
+                    style="font-size: 4rem; margin-bottom: 1.5rem; opacity: 0.5"
+                >
+                    📊
+                </div>
+                <h3
+                    style="
+                        font-size: 1.5rem;
+                        font-weight: 600;
+                        color: var(--text-primary);
+                        margin-bottom: 1rem;
+                    "
+                >
+                    Funcionalidad en desarrollo
+                </h3>
+                <p
+                    style="
+                        font-size: 1rem;
+                        color: var(--text-secondary);
+                        max-width: 600px;
+                        margin: 0 auto;
+                        line-height: 1.6;
+                    "
+                >
+                    Esta sección mostrará métricas globales del proyecto como:
+                </p>
+                <ul
+                    style="
+                        list-style: none;
+                        padding: 0;
+                        margin: 1.5rem auto;
+                        max-width: 500px;
+                        text-align: left;
+                        color: var(--text-secondary);
+                    "
+                >
+                    <li
+                        style="
+                            padding: 0.5rem 0;
+                            border-bottom: 1px solid #e2e8f0;
+                        "
+                    >
+                        📈 Progreso general de ejecución
+                    </li>
+                    <li
+                        style="
+                            padding: 0.5rem 0;
+                            border-bottom: 1px solid #e2e8f0;
+                        "
+                    >
+                        🐛 Cantidad de bugs abiertos vs cerrados
+                    </li>
+                    <li
+                        style="
+                            padding: 0.5rem 0;
+                            border-bottom: 1px solid #e2e8f0;
+                        "
+                    >
+                        ✅ Casos OK vs No_OK por módulo
+                    </li>
+                    <li
+                        style="
+                            padding: 0.5rem 0;
+                            border-bottom: 1px solid #e2e8f0;
+                        "
+                    >
+                        📊 Gráficos de tendencias y evolución
+                    </li>
+                    <li style="padding: 0.5rem 0">
+                        ⏱️ Tiempo promedio de ejecución
+                    </li>
+                </ul>
+                <div
+                    style="
+                        margin-top: 2rem;
+                        padding: 1rem;
+                        background: linear-gradient(
+                            135deg,
+                            #f0f9ff 0%,
+                            #e0f2fe 100%
+                        );
+                        border-radius: 8px;
+                        border-left: 4px solid #0ea5e9;
+                    "
+                >
+                    <p style="color: #0c4a6e; margin: 0; font-size: 0.9rem">
+                        💡 <strong>Próximamente:</strong> Visualización completa
+                        de métricas con gráficos interactivos
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!-- PANTALLA: MÉTRICAS POR QA                                                    -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+<div id="metricasQAScreen" class="hidden" style="padding: 1rem">
+    <div class="card" style="margin-top: 0.5rem">
+        <div
+            class="card-header"
+            style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                flex-wrap: wrap;
+            "
+        >
+            <div style="display: flex; align-items: center; gap: 0.5rem">
+                <button
+                    class="btn btn-secondary btn-sm"
+                    onclick="ocultarMetricasQA()"
+                >
+                    ⬅ Volver
+                </button>
+                <div style="font-weight: 700; color: #334155">
+                    👩‍💻 Métricas por QA
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Placeholder Content -->
+            <div style="text-align: center; padding: 4rem 2rem">
+                <div
+                    style="font-size: 4rem; margin-bottom: 1.5rem; opacity: 0.5"
+                >
+                    👩‍💻
+                </div>
+                <h3
+                    style="
+                        font-size: 1.5rem;
+                        font-weight: 600;
+                        color: var(--text-primary);
+                        margin-bottom: 1rem;
+                    "
+                >
+                    Funcionalidad en desarrollo
+                </h3>
+                <p
+                    style="
+                        font-size: 1rem;
+                        color: var(--text-secondary);
+                        max-width: 600px;
+                        margin: 0 auto;
+                        line-height: 1.6;
+                    "
+                >
+                    Esta sección mostrará métricas individuales por cada QA:
+                </p>
+                <ul
+                    style="
+                        list-style: none;
+                        padding: 0;
+                        margin: 1.5rem auto;
+                        max-width: 500px;
+                        text-align: left;
+                        color: var(--text-secondary);
+                    "
+                >
+                    <li
+                        style="
+                            padding: 0.5rem 0;
+                            border-bottom: 1px solid #e2e8f0;
+                        "
+                    >
+                        ✅ Casos ejecutados por persona
+                    </li>
+                    <li
+                        style="
+                            padding: 0.5rem 0;
+                            border-bottom: 1px solid #e2e8f0;
+                        "
+                    >
+                        🐛 Bugs reportados por QA
+                    </li>
+                    <li
+                        style="
+                            padding: 0.5rem 0;
+                            border-bottom: 1px solid #e2e8f0;
+                        "
+                    >
+                        📊 Tasa de éxito (OK/Total)
+                    </li>
+                    <li
+                        style="
+                            padding: 0.5rem 0;
+                            border-bottom: 1px solid #e2e8f0;
+                        "
+                    >
+                        ⏱️ Productividad diaria/semanal
+                    </li>
+                    <li style="padding: 0.5rem 0">
+                        🏆 Ranking y comparativas del equipo
+                    </li>
+                </ul>
+                <div
+                    style="
+                        margin-top: 2rem;
+                        padding: 1rem;
+                        background: linear-gradient(
+                            135deg,
+                            #fef3c7 0%,
+                            #fde68a 100%
+                        );
+                        border-radius: 8px;
+                        border-left: 4px solid #f59e0b;
+                    "
+                >
+                    <p style="color: #78350f; margin: 0; font-size: 0.9rem">
+                        💡 <strong>Próximamente:</strong> Dashboard individual
+                        de cada QA con estadísticas detalladas
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!-- PANTALLA: EJECUCIÓN DE REGRESIONES                                          -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+<div id="regresionesScreen" class="hidden" style="padding: 1rem">
+    <div class="card" style="margin-top: 0.5rem">
+        <div
+            class="card-header"
+            style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                flex-wrap: wrap;
+            "
+        >
+            <div style="display: flex; align-items: center; gap: 0.5rem">
+                <button
+                    class="btn btn-secondary btn-sm"
+                    onclick="ocultarRegresiones()"
+                >
+                    ⬅ Volver
+                </button>
+                <div style="font-weight: 700; color: #334155">
+                    🔁 Ejecución de Regresiones
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Placeholder Content -->
+            <div style="text-align: center; padding: 4rem 2rem">
+                <div
+                    style="font-size: 4rem; margin-bottom: 1.5rem; opacity: 0.5"
+                >
+                    🔁
+                </div>
+                <h3
+                    style="
+                        font-size: 1.5rem;
+                        font-weight: 600;
+                        color: var(--text-primary);
+                        margin-bottom: 1rem;
+                    "
+                >
+                    Funcionalidad en desarrollo
+                </h3>
+                <p
+                    style="
+                        font-size: 1rem;
+                        color: var(--text-secondary);
+                        max-width: 600px;
+                        margin: 0 auto;
+                        line-height: 1.6;
+                    "
+                >
+                    Esta sección permitirá ejecutar suites completas de
+                    regresión:
+                </p>
+                <ul
+                    style="
+                        list-style: none;
+                        padding: 0;
+                        margin: 1.5rem auto;
+                        max-width: 500px;
+                        text-align: left;
+                        color: var(--text-secondary);
+                    "
+                >
+                    <li
+                        style="
+                            padding: 0.5rem 0;
+                            border-bottom: 1px solid #e2e8f0;
+                        "
+                    >
+                        🔄 Selección de casos candidatos a regresión
+                    </li>
+                    <li
+                        style="
+                            padding: 0.5rem 0;
+                            border-bottom: 1px solid #e2e8f0;
+                        "
+                    >
+                        📋 Creación de suites personalizadas
+                    </li>
+                    <li
+                        style="
+                            padding: 0.5rem 0;
+                            border-bottom: 1px solid #e2e8f0;
+                        "
+                    >
+                        ⚡ Ejecución masiva de casos
+                    </li>
+                    <li
+                        style="
+                            padding: 0.5rem 0;
+                            border-bottom: 1px solid #e2e8f0;
+                        "
+                    >
+                        📊 Reporte consolidado de resultados
+                    </li>
+                    <li style="padding: 0.5rem 0">
+                        📅 Programación de regresiones automáticas
+                    </li>
+                </ul>
+                <div
+                    style="
+                        margin-top: 2rem;
+                        padding: 1rem;
+                        background: linear-gradient(
+                            135deg,
+                            #ecfdf5 0%,
+                            #d1fae5 100%
+                        );
+                        border-radius: 8px;
+                        border-left: 4px solid #10b981;
+                    "
+                >
+                    <p style="color: #065f46; margin: 0; font-size: 0.9rem">
+                        💡 <strong>Próximamente:</strong> Sistema completo de
+                        regresiones con ejecución batch y reportes automáticos
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ═══════════════════════════════════════════════════════════════════════════
+    // FUNCIONES: MÉTRICAS DEL PROYECTO
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    function mostrarMetricasProyecto() {
+        console.log("📊 [Métricas] Mostrar métricas del proyecto");
+
+        // Ocultar todas las pantallas
+        ocultarTodasLasPantallas();
+
+        // Mostrar pantalla de métricas proyecto
+        const metricasScreen = document.getElementById(
+            "metricasProyectoScreen"
+        );
+        if (metricasScreen) {
+            metricasScreen.classList.remove("hidden");
+        }
+    }
+
+    function ocultarMetricasProyecto() {
+        const metricasScreen = document.getElementById(
+            "metricasProyectoScreen"
+        );
+        const welcomeScreen = document.getElementById("welcomeScreen");
+
+        if (metricasScreen) metricasScreen.classList.add("hidden");
+        if (welcomeScreen) welcomeScreen.classList.remove("hidden");
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // FUNCIONES: MÉTRICAS POR QA
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    function mostrarMetricasQA() {
+        console.log("👩‍💻 [Métricas] Mostrar métricas por QA");
+
+        // Ocultar todas las pantallas
+        ocultarTodasLasPantallas();
+
+        // Mostrar pantalla de métricas QA
+        const metricasQAScreen = document.getElementById("metricasQAScreen");
+        if (metricasQAScreen) {
+            metricasQAScreen.classList.remove("hidden");
+        }
+    }
+
+    function ocultarMetricasQA() {
+        const metricasQAScreen = document.getElementById("metricasQAScreen");
+        const welcomeScreen = document.getElementById("welcomeScreen");
+
+        if (metricasQAScreen) metricasQAScreen.classList.add("hidden");
+        if (welcomeScreen) welcomeScreen.classList.remove("hidden");
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // FUNCIONES: EJECUCIÓN DE REGRESIONES
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    function mostrarRegresiones() {
+        console.log("🔁 [Regresiones] Mostrar ejecución de regresiones");
+
+        // Ocultar todas las pantallas
+        ocultarTodasLasPantallas();
+
+        // Mostrar pantalla de regresiones
+        const regresionesScreen = document.getElementById("regresionesScreen");
+        if (regresionesScreen) {
+            regresionesScreen.classList.remove("hidden");
+        }
+    }
+
+    function ocultarRegresiones() {
+        const regresionesScreen = document.getElementById("regresionesScreen");
+        const casosScreen = document.getElementById("casosScreen");
+
+        if (regresionesScreen) regresionesScreen.classList.add("hidden");
+        if (casosScreen) casosScreen.classList.remove("hidden");
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // HELPER: OCULTAR TODAS LAS PANTALLAS
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    function ocultarTodasLasPantallas() {
+        const screens = [
+            "welcomeScreen",
+            "casosScreen",
+            "bugsScreen",
+            "metricasProyectoScreen",
+            "metricasQAScreen",
+            "regresionesScreen",
+        ];
+
+        screens.forEach(function (screenId) {
+            const screen = document.getElementById(screenId);
+            if (screen) {
+                screen.classList.add("hidden");
+            }
+        });
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // EXPORTAR FUNCIONES GLOBALES
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    window.mostrarMetricasProyecto = mostrarMetricasProyecto;
+    window.ocultarMetricasProyecto = ocultarMetricasProyecto;
+    window.mostrarMetricasQA = mostrarMetricasQA;
+    window.ocultarMetricasQA = ocultarMetricasQA;
+    window.mostrarRegresiones = mostrarRegresiones;
+    window.ocultarRegresiones = ocultarRegresiones;
+
+    console.log("✅ Frontend_Components_Metricas.html cargado");
+</script>

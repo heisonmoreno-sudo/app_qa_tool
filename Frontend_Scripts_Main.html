@@ -4,394 +4,757 @@
      ═══════════════════════════════════════════════════════════════════════════ -->
 
 <script>
-// ─────────────────────────────────────────────────────────────────────────── 
-// FUNCIONES DE SPINNER Y LOADING
-// ─────────────────────────────────────────────────────────────────────────── 
+    // ───────────────────────────────────────────────────────────────────────────
+    // FUNCIONES DE SPINNER Y LOADING
+    // ───────────────────────────────────────────────────────────────────────────
 
-function mostrarSpinner() {
-  const overlay = document.getElementById('loadingOverlay');
-  if (overlay) {
-    overlay.classList.add('active');
-    
-    // Mensajes aleatorios de carga
-    const mensajes = [
-      'Preparando tu arsenal de testing...',
-      'Cargando casos de prueba...',
-      'Sincronizando con el servidor...',
-      'Configurando workspace...',
-      'Casi listo...',
-      'Verificando permisos...',
-      'Conectando con Google Sheets...'
-    ];
-    
-    const tips = [
-      '💡 Tip: Organiza tus casos por módulos',
-      '💡 Tip: Usa etiquetas descriptivas en tus bugs',
-      '💡 Tip: Los casos críticos van primero',
-      '💡 Tip: Documenta los pasos claramente',
-      '💡 Tip: Adjunta evidencias a tus ejecuciones'
-    ];
-    
-    const mensajeAleatorio = mensajes[Math.floor(Math.random() * mensajes.length)];
-    const tipAleatorio = tips[Math.floor(Math.random() * tips.length)];
-    
-    const loadingMessage = document.getElementById('loadingMessage');
-    const loadingTip = document.getElementById('loadingTip');
-    
-    if (loadingMessage) loadingMessage.textContent = mensajeAleatorio;
-    if (loadingTip) loadingTip.textContent = tipAleatorio;
-  }
-}
+    function mostrarSpinner() {
+        const overlay = document.getElementById("loadingOverlay");
+        if (overlay) {
+            overlay.classList.add("active");
 
-function ocultarSpinner() {
-  const overlay = document.getElementById('loadingOverlay');
-  if (overlay) {
-    overlay.classList.remove('active');
-  }
-}
+            // Mensajes aleatorios de carga
+            const mensajes = [
+                "Preparando tu arsenal de testing...",
+                "Cargando casos de prueba...",
+                "Sincronizando con el servidor...",
+                "Configurando workspace...",
+                "Casi listo...",
+                "Verificando permisos...",
+                "Conectando con Google Sheets...",
+            ];
 
-// ─────────────────────────────────────────────────────────────────────────── 
-// FUNCIONES DE NOTIFICACIONES
-// ─────────────────────────────────────────────────────────────────────────── 
+            const tips = [
+                "💡 Tip: Organiza tus casos por módulos",
+                "💡 Tip: Usa etiquetas descriptivas en tus bugs",
+                "💡 Tip: Los casos críticos van primero",
+                "💡 Tip: Documenta los pasos claramente",
+                "💡 Tip: Adjunta evidencias a tus ejecuciones",
+            ];
 
-function mostrarToast(mensaje, tipo = 'success', duracion = 3000) {
-  const notification = document.getElementById('notification');
-  const icon = document.getElementById('notificationIcon');
-  const messageEl = document.getElementById('notificationMessage');
-  
-  if (!notification) return;
-  
-  // Configurar icono según tipo
-  const iconos = {
-    'success': '✓',
-    'error': '✕',
-    'warning': '⚠️',
-    'info': 'ℹ️'
-  };
-  
-  // Aplicar estilos según tipo
-  notification.className = 'notification show ' + tipo;
-  icon.textContent = iconos[tipo] || '✓';
-  messageEl.textContent = mensaje;
-  
-  // Mostrar notificación
-  setTimeout(() => {
-    notification.classList.add('show');
-  }, 100);
-  
-  // Ocultar después de la duración
-  setTimeout(() => {
-    notification.classList.remove('show');
-  }, duracion);
-}
+            const mensajeAleatorio =
+                mensajes[Math.floor(Math.random() * mensajes.length)];
+            const tipAleatorio = tips[Math.floor(Math.random() * tips.length)];
 
-// ─────────────────────────────────────────────────────────────────────────── 
-// FUNCIONES DE MODALES
-// ─────────────────────────────────────────────────────────────────────────── 
+            const loadingMessage = document.getElementById("loadingMessage");
+            const loadingTip = document.getElementById("loadingTip");
 
-function abrirModal(modalId) {
-  const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-  }
-}
-
-function cerrarModal(modalId) {
-  const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.classList.remove('active');
-    document.body.style.overflow = 'auto';
-  }
-}
-
-
-// ─────────────────────────────────────────────────────────────────────────── 
-// FUNCIONES DE UTILIDAD
-// ─────────────────────────────────────────────────────────────────────────── 
-
-function getBadgePrioridad(prioridad) {
-  const badges = {
-    'Critica': 'badge-danger',
-    'Alta': 'badge-warning', 
-    'Media': 'badge-info',
-    'Baja': 'badge-success'
-  };
-  return badges[prioridad] || 'badge-primary';
-}
-
-function getBadgeEstado(estado) {
-  const badges = {
-    'OK': 'badge-success',
-    'No_OK': 'badge-danger',
-    'Pendiente': 'badge-warning',
-    'En diseño': 'badge-info',
-    'En diseno': 'badge-info',
-    'Ejecutando': 'badge-primary'
-  };
-  return badges[estado] || 'badge-primary';
-}
-
-function formatearFecha(fecha) {
-  if (!fecha) return '-';
-  const date = typeof fecha === 'string' ? new Date(fecha) : fecha;
-  return date.toLocaleDateString('es-ES');
-}
-
-// ─────────────────────────────────────────────────────────────────────────── 
-// MANEJO DE ERRORES GLOBAL
-// ─────────────────────────────────────────────────────────────────────────── 
-
-window.onerror = function(msg, url, lineNo, columnNo, error) {
-  console.error('Error global:', msg, 'en línea:', lineNo);
-  return false;
-};
-
-// ───────────────────────────────────────────────────────────────────────────
-// SEGURIDAD: SANITIZACIÓN DE HTML (Prevención XSS)
-// ───────────────────────────────────────────────────────────────────────────
-
-/**
- * Escapa caracteres HTML para prevenir XSS
- * @param {string} text - Texto a sanitizar
- * @returns {string} - Texto seguro sin HTML
- */
-function escapeHtml(text) {
-  if (!text) return '';
-
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;',
-    '/': '&#x2F;'
-  };
-
-  return String(text).replace(/[&<>"'\/]/g, function(m) {
-    return map[m];
-  });
-}
-
-/**
- * Sanitiza HTML permitiendo solo tags seguros específicos
- * @param {string} html - HTML a sanitizar
- * @param {Array} allowedTags - Tags permitidos (por defecto: br, strong, em, p)
- * @returns {string} - HTML sanitizado
- */
-function sanitizeHtml(html, allowedTags) {
-  if (!html) return '';
-
-  allowedTags = allowedTags || ['br', 'strong', 'em', 'p', 'b', 'i', 'u'];
-
-  // Primero escapar todo
-  let safe = escapeHtml(html);
-
-  // Luego permitir solo tags específicos
-  allowedTags.forEach(function(tag) {
-    const openRegex = new RegExp('&lt;' + tag + '&gt;', 'gi');
-    const closeRegex = new RegExp('&lt;\\/' + tag + '&gt;', 'gi');
-    safe = safe.replace(openRegex, '<' + tag + '>');
-    safe = safe.replace(closeRegex, '</' + tag + '>');
-  });
-
-  return safe;
-}
-
-// ───────────────────────────────────────────────────────────────────────────
-// VALIDACIÓN EN TIEMPO REAL
-// ───────────────────────────────────────────────────────────────────────────
-
-/**
- * Valida un campo de formulario en tiempo real
- * @param {HTMLElement} input - El elemento input/textarea a validar
- * @param {Object} options - Opciones de validación
- */
-function validarCampoEnTiempoReal(input, options) {
-  if (!input) return;
-
-  options = options || {};
-  const minLength = options.minLength || input.getAttribute('minlength') || 0;
-  const maxLength = options.maxLength || input.getAttribute('maxlength') || Infinity;
-  const required = options.required !== undefined ? options.required : input.hasAttribute('required');
-  const pattern = options.pattern || input.getAttribute('pattern');
-  const customValidator = options.validator; // Función personalizada
-
-  const value = input.value || '';
-  const currentLength = value.length;
-
-  // Encontrar o crear elementos de feedback
-  let errorDiv = input.nextElementSibling;
-  if (!errorDiv || !errorDiv.classList.contains('form-error')) {
-    errorDiv = document.createElement('div');
-    errorDiv.className = 'form-error hidden';
-    input.parentNode.insertBefore(errorDiv, input.nextSibling);
-  }
-
-  let counterSpan = input.parentNode.querySelector('.char-counter');
-
-  // Array de errores
-  const errors = [];
-
-  // Validar requerido
-  if (required && currentLength === 0) {
-    errors.push('Este campo es obligatorio');
-  }
-
-  // Validar longitud mínima (solo si hay contenido)
-  if (currentLength > 0 && currentLength < minLength) {
-    errors.push(`Mínimo ${minLength} caracteres (tienes ${currentLength})`);
-  }
-
-  // Validar longitud máxima
-  if (currentLength > maxLength) {
-    errors.push(`Máximo ${maxLength} caracteres (tienes ${currentLength})`);
-  }
-
-  // Validar patrón
-  if (pattern && currentLength > 0) {
-    const regex = new RegExp(pattern);
-    if (!regex.test(value)) {
-      errors.push(options.patternMessage || 'Formato inválido');
+            if (loadingMessage) loadingMessage.textContent = mensajeAleatorio;
+            if (loadingTip) loadingTip.textContent = tipAleatorio;
+        }
     }
-  }
 
-  // Validación personalizada
-  if (customValidator && typeof customValidator === 'function') {
-    const customError = customValidator(value);
-    if (customError) {
-      errors.push(customError);
+    function ocultarSpinner() {
+        const overlay = document.getElementById("loadingOverlay");
+        if (overlay) {
+            overlay.classList.remove("active");
+        }
     }
-  }
 
-  // Mostrar/ocultar errores
-  if (errors.length > 0) {
-    errorDiv.textContent = errors[0]; // Mostrar primer error
-    errorDiv.classList.remove('hidden');
-    input.classList.add('error');
-    input.setCustomValidity(errors[0]); // HTML5 validation API
-  } else {
-    errorDiv.classList.add('hidden');
-    input.classList.remove('error');
-    input.setCustomValidity(''); // Limpiar error HTML5
-  }
+    // ───────────────────────────────────────────────────────────────────────────
+    // FUNCIONES DE NOTIFICACIONES
+    // ───────────────────────────────────────────────────────────────────────────
 
-  // Actualizar contador si existe
-  if (counterSpan) {
-    const currentSpan = counterSpan.querySelector('.current');
-    if (currentSpan) {
-      currentSpan.textContent = currentLength;
+    function mostrarToast(mensaje, tipo = "success", duracion = 3000) {
+        const notification = document.getElementById("notification");
+        const icon = document.getElementById("notificationIcon");
+        const messageEl = document.getElementById("notificationMessage");
 
-      // Color del contador
-      if (currentLength >= minLength) {
-        currentSpan.classList.add('valid');
-      } else {
-        currentSpan.classList.remove('valid');
-      }
+        if (!notification) return;
+
+        // Configurar icono según tipo
+        const iconos = {
+            success: "✓",
+            error: "✕",
+            warning: "⚠️",
+            info: "ℹ️",
+        };
+
+        // Aplicar estilos según tipo
+        notification.className = "notification show " + tipo;
+        icon.textContent = iconos[tipo] || "✓";
+        messageEl.textContent = mensaje;
+
+        // Mostrar notificación
+        setTimeout(() => {
+            notification.classList.add("show");
+        }, 100);
+
+        // Ocultar después de la duración
+        setTimeout(() => {
+            notification.classList.remove("show");
+        }, duracion);
     }
-  }
 
-  return errors.length === 0;
-}
+    // ───────────────────────────────────────────────────────────────────────────
+    // FUNCIONES DE MODALES CON NAVEGACIÓN POR TECLADO
+    // ───────────────────────────────────────────────────────────────────────────
 
-/**
- * Configura validación en tiempo real para un formulario completo
- * @param {string|HTMLElement} formIdOrElement - ID del formulario o elemento
- * @param {Object} fieldsConfig - Configuración de cada campo
- */
-function configurarValidacionFormulario(formIdOrElement, fieldsConfig) {
-  const form = typeof formIdOrElement === 'string'
-    ? document.getElementById(formIdOrElement)
-    : formIdOrElement;
+    let modalStack = []; // Stack de modales abiertos
+    let focusBeforeModal = null; // Elemento con foco antes de abrir modal
 
-  if (!form) return;
+    /**
+     * Abre un modal con trap de foco y soporte para teclado
+     * @param {string} modalId - ID del modal a abrir
+     */
+    function abrirModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
 
-  // Para cada campo configurado
-  Object.keys(fieldsConfig).forEach(function(fieldId) {
-    const input = document.getElementById(fieldId);
-    if (!input) return;
+        // Guardar el foco actual
+        focusBeforeModal = document.activeElement;
 
-    const config = fieldsConfig[fieldId];
+        // Agregar al stack
+        modalStack.push(modalId);
 
-    // Agregar evento input para validación en tiempo real
-    input.addEventListener('input', function() {
-      validarCampoEnTiempoReal(input, config);
+        // Mostrar modal
+        modal.classList.add("active");
+        document.body.style.overflow = "hidden";
+
+        // Aplicar trap de foco
+        aplicarTrapDeFoco(modal);
+
+        // Focus en primer elemento focusable
+        setTimeout(() => {
+            const primerFocusable = obtenerElementosFocusables(modal)[0];
+            if (primerFocusable) {
+                primerFocusable.focus();
+            }
+        }, 100);
+
+        // Listener para ESC
+        modal.addEventListener("keydown", manejarEscapeModal);
+    }
+
+    /**
+     * Cierra un modal y restaura el foco
+     * @param {string} modalId - ID del modal a cerrar
+     */
+    function cerrarModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+
+        // Remover del stack
+        const index = modalStack.indexOf(modalId);
+        if (index > -1) {
+            modalStack.splice(index, 1);
+        }
+
+        // Ocultar modal
+        modal.classList.remove("active");
+
+        // Remover trap de foco
+        removerTrapDeFoco(modal);
+
+        // Remover listener de ESC
+        modal.removeEventListener("keydown", manejarEscapeModal);
+
+        // Restaurar overflow solo si no hay más modales
+        if (modalStack.length === 0) {
+            document.body.style.overflow = "auto";
+
+            // Restaurar foco
+            if (focusBeforeModal && focusBeforeModal.focus) {
+                focusBeforeModal.focus();
+            }
+        }
+    }
+
+    /**
+     * Obtiene todos los elementos focusables dentro de un contenedor
+     * @param {HTMLElement} container - Contenedor
+     * @returns {Array} - Array de elementos focusables
+     */
+    function obtenerElementosFocusables(container) {
+        const selector =
+            'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+        return Array.from(container.querySelectorAll(selector)).filter((el) => {
+            return el.offsetParent !== null; // Solo elementos visibles
+        });
+    }
+
+    /**
+     * Aplica trap de foco a un modal
+     * @param {HTMLElement} modal - Modal
+     */
+    function aplicarTrapDeFoco(modal) {
+        modal.addEventListener("keydown", function (e) {
+            if (e.key !== "Tab") return;
+
+            const focusables = obtenerElementosFocusables(modal);
+            if (focusables.length === 0) return;
+
+            const primerFocusable = focusables[0];
+            const ultimoFocusable = focusables[focusables.length - 1];
+
+            // Shift + Tab en el primer elemento -> ir al último
+            if (e.shiftKey && document.activeElement === primerFocusable) {
+                e.preventDefault();
+                ultimoFocusable.focus();
+            }
+            // Tab en el último elemento -> ir al primero
+            else if (
+                !e.shiftKey &&
+                document.activeElement === ultimoFocusable
+            ) {
+                e.preventDefault();
+                primerFocusable.focus();
+            }
+        });
+    }
+
+    /**
+     * Remueve trap de foco de un modal
+     * @param {HTMLElement} modal - Modal
+     */
+    function removerTrapDeFoco(modal) {
+        // Los listeners se limpian automáticamente al cerrar
+        // pero podríamos usar removeEventListener si guardáramos la referencia
+    }
+
+    /**
+     * Maneja la tecla ESC para cerrar modales
+     * @param {KeyboardEvent} e - Evento de teclado
+     */
+    function manejarEscapeModal(e) {
+        if (e.key === "Escape") {
+            // Cerrar el último modal del stack
+            if (modalStack.length > 0) {
+                const ultimoModal = modalStack[modalStack.length - 1];
+                cerrarModal(ultimoModal);
+            }
+        }
+    }
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // FUNCIONES DE UTILIDAD
+    // ───────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Retorna la clase de badge según la prioridad del caso
+     * @param {string} prioridad - Prioridad del caso (Critica, Alta, Media, Baja)
+     * @returns {string} - Clase CSS del badge
+     * @example getBadgePrioridad('Critica') // 'badge-danger'
+     */
+    function getBadgePrioridad(prioridad) {
+        const badges = {
+            Critica: "badge-danger",
+            Alta: "badge-warning",
+            Media: "badge-info",
+            Baja: "badge-success",
+        };
+        return badges[prioridad] || "badge-primary";
+    }
+
+    /**
+     * Retorna la clase de badge según el estado del caso
+     * @param {string} estado - Estado del caso (OK, No_OK, Pendiente, etc.)
+     * @returns {string} - Clase CSS del badge
+     * @example getBadgeEstado('OK') // 'badge-success'
+     */
+    function getBadgeEstado(estado) {
+        const badges = {
+            OK: "badge-success",
+            No_OK: "badge-danger",
+            Pendiente: "badge-warning",
+            "En diseño": "badge-info",
+            "En diseno": "badge-info",
+            Ejecutando: "badge-primary",
+        };
+        return badges[estado] || "badge-primary";
+    }
+
+    /**
+     * Formatea una fecha al formato español (dd/mm/yyyy)
+     * @param {string|Date} fecha - Fecha a formatear
+     * @returns {string} - Fecha formateada o '-' si es inválida
+     * @example formatearFecha('2025-01-15') // '15/1/2025'
+     */
+    function formatearFecha(fecha) {
+        if (!fecha) return "-";
+        const date = typeof fecha === "string" ? new Date(fecha) : fecha;
+        return date.toLocaleDateString("es-ES");
+    }
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // MANEJO DE ERRORES GLOBAL
+    // ───────────────────────────────────────────────────────────────────────────
+
+    window.onerror = function (msg, url, lineNo, columnNo, error) {
+        console.error("Error global:", msg, "en línea:", lineNo);
+        return false;
+    };
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // SEGURIDAD: SANITIZACIÓN DE HTML (Prevención XSS)
+    // ───────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Escapa caracteres HTML para prevenir XSS
+     * @param {string} text - Texto a sanitizar
+     * @returns {string} - Texto seguro sin HTML
+     */
+    function escapeHtml(text) {
+        if (!text) return "";
+
+        const map = {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;",
+            "/": "&#x2F;",
+        };
+
+        return String(text).replace(/[&<>"'\/]/g, function (m) {
+            return map[m];
+        });
+    }
+
+    /**
+     * Sanitiza HTML permitiendo solo tags seguros específicos
+     * @param {string} html - HTML a sanitizar
+     * @param {Array} allowedTags - Tags permitidos (por defecto: br, strong, em, p)
+     * @returns {string} - HTML sanitizado
+     */
+    function sanitizeHtml(html, allowedTags) {
+        if (!html) return "";
+
+        allowedTags = allowedTags || ["br", "strong", "em", "p", "b", "i", "u"];
+
+        // Primero escapar todo
+        let safe = escapeHtml(html);
+
+        // Luego permitir solo tags específicos
+        allowedTags.forEach(function (tag) {
+            const openRegex = new RegExp("&lt;" + tag + "&gt;", "gi");
+            const closeRegex = new RegExp("&lt;\\/" + tag + "&gt;", "gi");
+            safe = safe.replace(openRegex, "<" + tag + ">");
+            safe = safe.replace(closeRegex, "</" + tag + ">");
+        });
+
+        return safe;
+    }
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // VALIDACIÓN EN TIEMPO REAL
+    // ───────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Valida un campo de formulario en tiempo real
+     * @param {HTMLElement} input - El elemento input/textarea a validar
+     * @param {Object} options - Opciones de validación
+     */
+    function validarCampoEnTiempoReal(input, options) {
+        if (!input) return;
+
+        options = options || {};
+        const minLength =
+            options.minLength || input.getAttribute("minlength") || 0;
+        const maxLength =
+            options.maxLength || input.getAttribute("maxlength") || Infinity;
+        const required =
+            options.required !== undefined
+                ? options.required
+                : input.hasAttribute("required");
+        const pattern = options.pattern || input.getAttribute("pattern");
+        const customValidator = options.validator; // Función personalizada
+
+        const value = input.value || "";
+        const currentLength = value.length;
+
+        // Encontrar o crear elementos de feedback
+        let errorDiv = input.nextElementSibling;
+        if (!errorDiv || !errorDiv.classList.contains("form-error")) {
+            errorDiv = document.createElement("div");
+            errorDiv.className = "form-error hidden";
+            input.parentNode.insertBefore(errorDiv, input.nextSibling);
+        }
+
+        let counterSpan = input.parentNode.querySelector(".char-counter");
+
+        // Array de errores
+        const errors = [];
+
+        // Validar requerido
+        if (required && currentLength === 0) {
+            errors.push("Este campo es obligatorio");
+        }
+
+        // Validar longitud mínima (solo si hay contenido)
+        if (currentLength > 0 && currentLength < minLength) {
+            errors.push(
+                `Mínimo ${minLength} caracteres (tienes ${currentLength})`
+            );
+        }
+
+        // Validar longitud máxima
+        if (currentLength > maxLength) {
+            errors.push(
+                `Máximo ${maxLength} caracteres (tienes ${currentLength})`
+            );
+        }
+
+        // Validar patrón
+        if (pattern && currentLength > 0) {
+            const regex = new RegExp(pattern);
+            if (!regex.test(value)) {
+                errors.push(options.patternMessage || "Formato inválido");
+            }
+        }
+
+        // Validación personalizada
+        if (customValidator && typeof customValidator === "function") {
+            const customError = customValidator(value);
+            if (customError) {
+                errors.push(customError);
+            }
+        }
+
+        // Mostrar/ocultar errores
+        if (errors.length > 0) {
+            errorDiv.textContent = errors[0]; // Mostrar primer error
+            errorDiv.classList.remove("hidden");
+            input.classList.add("error");
+            input.setCustomValidity(errors[0]); // HTML5 validation API
+        } else {
+            errorDiv.classList.add("hidden");
+            input.classList.remove("error");
+            input.setCustomValidity(""); // Limpiar error HTML5
+        }
+
+        // Actualizar contador si existe
+        if (counterSpan) {
+            const currentSpan = counterSpan.querySelector(".current");
+            if (currentSpan) {
+                currentSpan.textContent = currentLength;
+
+                // Color del contador
+                if (currentLength >= minLength) {
+                    currentSpan.classList.add("valid");
+                } else {
+                    currentSpan.classList.remove("valid");
+                }
+            }
+        }
+
+        return errors.length === 0;
+    }
+
+    /**
+     * Configura validación en tiempo real para un formulario completo
+     * @param {string|HTMLElement} formIdOrElement - ID del formulario o elemento
+     * @param {Object} fieldsConfig - Configuración de cada campo
+     */
+    function configurarValidacionFormulario(formIdOrElement, fieldsConfig) {
+        const form =
+            typeof formIdOrElement === "string"
+                ? document.getElementById(formIdOrElement)
+                : formIdOrElement;
+
+        if (!form) return;
+
+        // Para cada campo configurado
+        Object.keys(fieldsConfig).forEach(function (fieldId) {
+            const input = document.getElementById(fieldId);
+            if (!input) return;
+
+            const config = fieldsConfig[fieldId];
+
+            // Agregar evento input para validación en tiempo real
+            input.addEventListener("input", function () {
+                validarCampoEnTiempoReal(input, config);
+            });
+
+            // Agregar evento blur para validar al salir del campo
+            input.addEventListener("blur", function () {
+                validarCampoEnTiempoReal(input, config);
+            });
+        });
+
+        // Prevenir submit si hay errores
+        form.addEventListener("submit", function (e) {
+            let hasErrors = false;
+
+            Object.keys(fieldsConfig).forEach(function (fieldId) {
+                const input = document.getElementById(fieldId);
+                if (!input) return;
+
+                const isValid = validarCampoEnTiempoReal(
+                    input,
+                    fieldsConfig[fieldId]
+                );
+                if (!isValid) {
+                    hasErrors = true;
+                }
+            });
+
+            if (hasErrors) {
+                e.preventDefault();
+                mostrarToast(
+                    "Por favor corrige los errores antes de continuar",
+                    "warning"
+                );
+            }
+        });
+    }
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // SISTEMA DE MANEJO DE ERRORES TIPIFICADOS
+    // ───────────────────────────────────────────────────────────────────────────
+
+    const ErrorTypes = {
+        NETWORK: "network",
+        PERMISSION: "permission",
+        TIMEOUT: "timeout",
+        VALIDATION: "validation",
+        NOT_FOUND: "not_found",
+        SERVER_ERROR: "server_error",
+        UNKNOWN: "unknown",
+    };
+
+    const ErrorMessages = {
+        [ErrorTypes.NETWORK]: {
+            title: "Sin conexión",
+            message: "Verificá tu conexión a internet e intentá de nuevo",
+            action: "Reintentar",
+            icon: "📡",
+            color: "#f59e0b",
+        },
+        [ErrorTypes.PERMISSION]: {
+            title: "Sin permisos",
+            message:
+                "No tenés acceso a este recurso. Solicitá permisos al propietario del Google Sheet.",
+            action: "Contactar",
+            icon: "🔒",
+            color: "#ef4444",
+        },
+        [ErrorTypes.TIMEOUT]: {
+            title: "Tiempo agotado",
+            message:
+                "La operación tardó demasiado. Intentá nuevamente o contactá soporte si persiste.",
+            action: "Reintentar",
+            icon: "⏱️",
+            color: "#f59e0b",
+        },
+        [ErrorTypes.VALIDATION]: {
+            title: "Datos inválidos",
+            message:
+                "Algunos campos tienen errores. Verificá los datos ingresados y volvé a intentar.",
+            action: "Revisar",
+            icon: "⚠️",
+            color: "#f59e0b",
+        },
+        [ErrorTypes.NOT_FOUND]: {
+            title: "No encontrado",
+            message: "El recurso solicitado no existe o fue eliminado.",
+            action: "Volver",
+            icon: "🔍",
+            color: "#64748b",
+        },
+        [ErrorTypes.SERVER_ERROR]: {
+            title: "Error del servidor",
+            message:
+                "Ocurrió un error en el servidor. El equipo técnico fue notificado.",
+            action: "Cerrar",
+            icon: "⚙️",
+            color: "#ef4444",
+        },
+        [ErrorTypes.UNKNOWN]: {
+            title: "Error inesperado",
+            message:
+                "Algo salió mal. Si el problema persiste, contactá soporte técnico.",
+            action: "Cerrar",
+            icon: "❌",
+            color: "#991b1b",
+        },
+    };
+
+    /**
+     * Detecta el tipo de error basado en el mensaje o error object
+     * @param {Error|string} error - El error a clasificar
+     * @returns {string} - Tipo de error
+     */
+    function detectarTipoError(error) {
+        const errorMsg = (
+            typeof error === "string" ? error : error.message || ""
+        ).toLowerCase();
+
+        if (
+            errorMsg.includes("network") ||
+            errorMsg.includes("conexión") ||
+            errorMsg.includes("offline")
+        ) {
+            return ErrorTypes.NETWORK;
+        }
+        if (
+            errorMsg.includes("permission") ||
+            errorMsg.includes("permiso") ||
+            errorMsg.includes("access denied")
+        ) {
+            return ErrorTypes.PERMISSION;
+        }
+        if (errorMsg.includes("timeout") || errorMsg.includes("timed out")) {
+            return ErrorTypes.TIMEOUT;
+        }
+        if (
+            errorMsg.includes("validation") ||
+            errorMsg.includes("invalid") ||
+            errorMsg.includes("inválido")
+        ) {
+            return ErrorTypes.VALIDATION;
+        }
+        if (errorMsg.includes("not found") || errorMsg.includes("404")) {
+            return ErrorTypes.NOT_FOUND;
+        }
+        if (
+            errorMsg.includes("server error") ||
+            errorMsg.includes("500") ||
+            errorMsg.includes("503")
+        ) {
+            return ErrorTypes.SERVER_ERROR;
+        }
+
+        return ErrorTypes.UNKNOWN;
+    }
+
+    /**
+     * Muestra un error tipificado con UI mejorada
+     * @param {Error|string} error - El error a mostrar
+     * @param {string} tipoManual - Tipo de error manual (opcional)
+     * @param {Object} opciones - Opciones adicionales
+     */
+    function mostrarErrorTipificado(error, tipoManual, opciones) {
+        opciones = opciones || {};
+
+        const tipo = tipoManual || detectarTipoError(error);
+        const errorInfo =
+            ErrorMessages[tipo] || ErrorMessages[ErrorTypes.UNKNOWN];
+
+        // Si solo queremos un toast simple
+        if (opciones.simple) {
+            mostrarToast(errorInfo.message, "error");
+            return;
+        }
+
+        // Modal de error completo
+        const errorModal = document.createElement("div");
+        errorModal.className = "modal-overlay active";
+        errorModal.style.zIndex = "var(--z-confirmation)";
+        errorModal.id = "errorModal";
+
+        const detalles =
+            typeof error === "object" && error.message ? error.message : error;
+
+        errorModal.innerHTML = `
+    <div class="modal" style="max-width: 500px;">
+      <div class="modal-header" style="background: ${
+          errorInfo.color
+      }; color: white;">
+        <h3 class="modal-title" style="color: white;">
+          <span style="font-size: 1.5rem; margin-right: 0.5rem;">${
+              errorInfo.icon
+          }</span>
+          ${errorInfo.title}
+        </h3>
+        <button class="modal-close" style="color: white;" onclick="cerrarErrorModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <p style="font-size: 1rem; line-height: 1.6; margin-bottom: 1rem;">
+          ${errorInfo.message}
+        </p>
+
+        ${
+            detalles
+                ? `
+          <details style="background: #f8fafc; padding: 0.75rem; border-radius: 6px; margin-top: 1rem;">
+            <summary style="cursor: pointer; font-weight: 600; color: var(--text-secondary);">
+              Detalles técnicos
+            </summary>
+            <pre style="margin-top: 0.75rem; font-size: 0.85rem; white-space: pre-wrap; word-break: break-word; color: var(--text-tertiary);">${escapeHtml(
+                detalles
+            )}</pre>
+          </details>
+        `
+                : ""
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="cerrarErrorModal(); ${
+            opciones.onAction || ""
+        }">
+          ${errorInfo.action}
+        </button>
+      </div>
+    </div>
+  `;
+
+        document.body.appendChild(errorModal);
+    }
+
+    /**
+     * Cierra el modal de error
+     */
+    function cerrarErrorModal() {
+        const errorModal = document.getElementById("errorModal");
+        if (errorModal) {
+            errorModal.remove();
+        }
+    }
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // FUNCIONES DE DEPURACIÓN
+    // ───────────────────────────────────────────────────────────────────────────
+
+    function debugLog(mensaje, datos) {
+        console.log(`[DEBUG] ${mensaje}`, datos || "");
+    }
+
+    // Verificar que las funciones críticas estén disponibles
+    window.addEventListener("DOMContentLoaded", function () {
+        debugLog("DOM cargado completamente");
+
+        // Verificar funciones críticas
+        const funcionesCriticas = [
+            "mostrarSpinner",
+            "ocultarSpinner",
+            "mostrarToast",
+            "abrirModal",
+            "cerrarModal",
+        ];
+
+        funcionesCriticas.forEach((func) => {
+            if (typeof window[func] === "function") {
+                debugLog(`✅ Función ${func} disponible`);
+            } else {
+                console.error(`❌ Función ${func} NO disponible`);
+            }
+        });
     });
 
-    // Agregar evento blur para validar al salir del campo
-    input.addEventListener('blur', function() {
-      validarCampoEnTiempoReal(input, config);
-    });
-  });
+    // ───────────────────────────────────────────────────────────────────────────
+    // INICIALIZACIÓN SEGURA
+    // ───────────────────────────────────────────────────────────────────────────
 
-  // Prevenir submit si hay errores
-  form.addEventListener('submit', function(e) {
-    let hasErrors = false;
+    // Asegurar que las funciones estén disponibles globalmente
+    window.mostrarSpinner = mostrarSpinner;
+    window.ocultarSpinner = ocultarSpinner;
+    window.mostrarToast = mostrarToast;
+    window.abrirModal = abrirModal;
+    window.cerrarModal = cerrarModal;
+    window.getBadgePrioridad = getBadgePrioridad;
+    window.getBadgeEstado = getBadgeEstado;
+    window.formatearFecha = formatearFecha;
+    window.escapeHtml = escapeHtml;
+    window.sanitizeHtml = sanitizeHtml;
+    window.validarCampoEnTiempoReal = validarCampoEnTiempoReal;
+    window.configurarValidacionFormulario = configurarValidacionFormulario;
+    window.ErrorTypes = ErrorTypes;
+    window.mostrarErrorTipificado = mostrarErrorTipificado;
+    window.detectarTipoError = detectarTipoError;
+    window.cerrarErrorModal = cerrarErrorModal;
 
-    Object.keys(fieldsConfig).forEach(function(fieldId) {
-      const input = document.getElementById(fieldId);
-      if (!input) return;
-
-      const isValid = validarCampoEnTiempoReal(input, fieldsConfig[fieldId]);
-      if (!isValid) {
-        hasErrors = true;
-      }
-    });
-
-    if (hasErrors) {
-      e.preventDefault();
-      mostrarToast('Por favor corrige los errores antes de continuar', 'warning');
-    }
-  });
-}
-
-// ───────────────────────────────────────────────────────────────────────────
-// FUNCIONES DE DEPURACIÓN
-// ───────────────────────────────────────────────────────────────────────────
-
-function debugLog(mensaje, datos) {
-  console.log(`[DEBUG] ${mensaje}`, datos || '');
-}
-
-// Verificar que las funciones críticas estén disponibles
-window.addEventListener('DOMContentLoaded', function() {
-  debugLog('DOM cargado completamente');
-  
-  // Verificar funciones críticas
-  const funcionesCriticas = [
-    'mostrarSpinner',
-    'ocultarSpinner',
-    'mostrarToast',
-    'abrirModal',
-    'cerrarModal'
-  ];
-  
-  funcionesCriticas.forEach(func => {
-    if (typeof window[func] === 'function') {
-      debugLog(`✅ Función ${func} disponible`);
-    } else {
-      console.error(`❌ Función ${func} NO disponible`);
-    }
-  });
-});
-
-// ─────────────────────────────────────────────────────────────────────────── 
-// INICIALIZACIÓN SEGURA
-// ─────────────────────────────────────────────────────────────────────────── 
-
-// Asegurar que las funciones estén disponibles globalmente
-window.mostrarSpinner = mostrarSpinner;
-window.ocultarSpinner = ocultarSpinner;
-window.mostrarToast = mostrarToast;
-window.abrirModal = abrirModal;
-window.cerrarModal = cerrarModal;
-window.getBadgePrioridad = getBadgePrioridad;
-window.getBadgeEstado = getBadgeEstado;
-window.formatearFecha = formatearFecha;
-window.escapeHtml = escapeHtml;
-window.sanitizeHtml = sanitizeHtml;
-window.validarCampoEnTiempoReal = validarCampoEnTiempoReal;
-window.configurarValidacionFormulario = configurarValidacionFormulario;
-
-console.log('✅ Frontend Scripts Main cargado correctamente');
+    console.log("✅ Frontend Scripts Main cargado correctamente");
 </script>

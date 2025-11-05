@@ -1,7 +1,6 @@
 <!-- ═══════════════════════════════════════════════════════════════════════════
      FRONTEND_COMPONENTS_BUGS.HTML
      Componente para gestión de bugs
-     Actualizado: feature/bugs-trello
      ═══════════════════════════════════════════════════════════════════════════ -->
 
 <style>
@@ -52,31 +51,6 @@
         border: 2px solid #6ee7b7;
     }
 </style>
-
-<script>
-    // Top-level guard: atrapar excepciones no manejadas que puedan detener la carga del componente
-    try {
-        // Stub para exponer la función inmediatamente y evitar fallos en proxies
-        // Será sobrescrita por la implementación real más abajo en este fichero.
-        if (
-            typeof window !== "undefined" &&
-            typeof window.abrirModalCrearBug !== "function"
-        ) {
-            // Cola para llamadas tempranas que lleguen antes de la implementación real
-            window._abrirModalCrearBugQueue = window._abrirModalCrearBugQueue || [];
-
-            window.abrirModalCrearBug = function (casoId) {
-                console.warn(
-                    "[Bugs] Stub abrirModalCrearBug llamada antes de inicialización - encolando llamada",
-                    casoId
-                );
-                // Encolar la llamada para que la implemantación real la procese cuando esté lista
-                window._abrirModalCrearBugQueue.push(casoId);
-            };
-            // Marcar como stub para que proxies sepan esperar la implementación real
-            window.abrirModalCrearBug.__isStub = true;
-        }
-</script>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 <!-- MODAL CREAR/EDITAR BUG                                                      -->
@@ -191,26 +165,24 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label required">📋 Precondiciones</label>
+                    <label class="form-label"
+                        >⚙️ Precondiciones (Opcional)</label
+                    >
                     <textarea
                         id="bugPrecondiciones"
                         class="form-textarea"
-                        required
-                        minlength="10"
                         rows="2"
                         placeholder="Ej: Usuario debe estar logueado como administrador"
                     ></textarea>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label required"
-                        >🔢 Datos de Prueba</label
+                    <label class="form-label"
+                        >🧪 Datos de Prueba (Opcional)</label
                     >
                     <textarea
                         id="bugDatosPrueba"
                         class="form-textarea"
-                        required
-                        minlength="10"
                         rows="2"
                         placeholder="Ej: Email: test@test.com, Password: Test123!"
                     ></textarea>
@@ -258,6 +230,24 @@
                     ></textarea>
                 </div>
 
+                <div class="form-group">
+                    <label class="form-label required"
+                        >🖥️ Ambiente/Versión</label
+                    >
+                    <input
+                        type="text"
+                        id="bugAmbiente"
+                        class="form-input"
+                        required
+                        minlength="3"
+                        placeholder="Ej: Producción v2.1.3, QA - Build 456, Dev - Sprint 10"
+                    />
+                    <p class="form-help">
+                        Especifica el ambiente y/o versión donde ocurre el
+                        defecto
+                    </p>
+                </div>
+
                 <!-- CAMPOS OPCIONALES -->
                 <div
                     style="
@@ -277,35 +267,16 @@
                         📌 Información Adicional (Opcional)
                     </h4>
 
-                    <div
-                        style="
-                            display: grid;
-                            grid-template-columns: 1fr 1fr;
-                            gap: 1rem;
-                        "
-                    >
-                        <div class="form-group">
-                            <label class="form-label">🌐 Ambiente</label>
-                            <select id="bugAmbiente" class="form-select">
-                                <option value="">Seleccionar...</option>
-                                <option value="Producción">Producción</option>
-                                <option value="Staging">Staging</option>
-                                <option value="QA">QA</option>
-                                <option value="Dev">Dev</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">🌐 Navegador</label>
-                            <select id="bugNavegador" class="form-select">
-                                <option value="">Seleccionar...</option>
-                                <option value="Chrome">Chrome</option>
-                                <option value="Firefox">Firefox</option>
-                                <option value="Safari">Safari</option>
-                                <option value="Edge">Edge</option>
-                                <option value="Otro">Otro</option>
-                            </select>
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label">🌐 Navegador</label>
+                        <select id="bugNavegador" class="form-select">
+                            <option value="">Seleccionar...</option>
+                            <option value="Chrome">Chrome</option>
+                            <option value="Firefox">Firefox</option>
+                            <option value="Safari">Safari</option>
+                            <option value="Edge">Edge</option>
+                            <option value="Otro">Otro</option>
+                        </select>
                     </div>
 
                     <div class="form-group">
@@ -387,16 +358,8 @@
                                 >
                                     Arrastra archivos aquí o haz click
                                 </div>
-                                <div
-                                    style="
-                                        font-size: 0.85rem;
-                                        color: #64748b;
-                                        line-height: 1.6;
-                                    "
-                                >
-                                    🖼️ Imágenes: máx 10MB<br />
-                                    🎥 Videos: máx 100MB<br />
-                                    📄 PDFs: máx 20MB
+                                <div style="font-size: 0.85rem; color: #64748b">
+                                    PNG, JPG, MP4, PDF (máx 50MB)
                                 </div>
                             </div>
                         </div>
@@ -421,346 +384,157 @@
                         <div id="contenidoListaEvidenciasBug"></div>
                     </div>
                 </div>
-            </form>
-        </div>
 
-        <!-- ───────────────────────────────────────────────────────────────── -->
-        <!-- OPCIONES TRELLO DENTRO DEL MODAL (compacto)                       -->
-        <!-- ───────────────────────────────────────────────────────────────── -->
-        <div
-            id="trelloBugOptions"
-            style="
-                margin-top: 2rem;
-                background-color: #f0f9ff;
-                border: 2px solid #0ea5e9;
-                border-radius: 8px;
-                padding: 1rem;
-            "
-        >
-            <!-- Encabezado con logo -->
-            <div
-                style="
-                    display: flex;
-                    align-items: center;
-                    gap: 1rem;
-                    margin-bottom: 1rem;
-                "
-            >
-                <span style="font-size: 2rem">🎫</span>
-                <div>
-                    <h4
-                        style="
-                            font-size: 1.1rem;
-                            font-weight: 600;
-                            color: #0369a1;
-                            margin: 0;
-                        "
-                    >
-                        Integración con Trello
-                    </h4>
-                    <p
-                        style="
-                            font-size: 0.9rem;
-                            color: #0369a1;
-                            margin: 0.25rem 0 0 0;
-                        "
-                    >
-                        Enviar este bug a una tarjeta de Trello automáticamente
-                    </p>
-                </div>
-            </div>
-
-            <!-- Toggle principal -->
-            <label
-                style="
-                    display: flex;
-                    align-items: center;
-                    gap: 0.75rem;
-                    font-weight: 600;
-                    color: #0c4a6e;
-                    margin-bottom: 1rem;
-                    padding: 0.5rem;
-                    background: rgba(255, 255, 255, 0.5);
-                    border-radius: 6px;
-                    cursor: pointer;
-                "
-            >
-                <input
-                    type="checkbox"
-                    id="bugEnviarATrello"
-                    checked
-                    style="width: 1.2rem; height: 1.2rem"
-                />
-                <span style="font-size: 1.05rem">
-                    <span class="hide-mobile">🎯 </span>
-                    Crear tarjeta en Trello
-                </span>
-            </label>
-
-            <div
-                id="trelloBugConfigured"
-                class="hidden"
-                style="margin-top: 0.75rem"
-            >
-                <div class="form-group" style="margin-bottom: 0.75rem">
-                    <label class="form-label required" style="color: #0c4a6e">
-                        <span class="hide-mobile">📋 </span>Tablero de Trello
-                    </label>
-                    <select
-                        id="bugBoardSelect"
-                        class="form-select"
-                        onchange="cargarListasModalPorBoard()"
-                        style="border-color: #0ea5e9"
-                    >
-                        <option value="">Cargando tableros...</option>
-                    </select>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 1rem">
-                    <label class="form-label" style="color: #0c4a6e">
-                        <span class="hide-mobile">📑 </span>Lista destino
-                        (override)
-                    </label>
-                    <select
-                        id="bugListSelect"
-                        class="form-select"
-                        style="border-color: #0ea5e9"
-                    >
-                        <option value="">Selecciona un tablero primero</option>
-                    </select>
-                </div>
-
-                <div style="font-size: 0.9rem; display: flex; gap: 1rem">
-                    <a
-                        href="#"
-                        onclick="abrirConfiguracionTrelloInline(); return false;"
-                        style="
-                            color: #0369a1;
-                            display: flex;
-                            align-items: center;
-                            gap: 0.5rem;
-                        "
-                    >
-                        <span>⚙️</span>
-                        <span>Cambiar configuración</span>
-                    </a>
-                    <a
-                        href="https://trello.com/app-key"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style="
-                            color: #0369a1;
-                            display: flex;
-                            align-items: center;
-                            gap: 0.5rem;
-                        "
-                    >
-                        <span>🔑</span>
-                        <span>Obtener API Key</span>
-                    </a>
-                    <a
-                        href="https://trello.com/1/authorize?expiration=never&name=QA-Tool&scope=read,write&response_type=token"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style="
-                            color: #0369a1;
-                            display: flex;
-                            align-items: center;
-                            gap: 0.5rem;
-                        "
-                    >
-                        <span>🔐</span>
-                        <span>Generar Token</span>
-                    </a>
-                </div>
-            </div>
-
-            <div
-                id="trelloBugNotConfigured"
-                style="margin-top: 0.75rem; display: none"
-            >
+                <!-- INTEGRACIÓN CON TRELLO -->
                 <div
                     style="
-                        color: #0369a1;
-                        margin-bottom: 1rem;
-                        font-size: 0.95rem;
-                    "
-                >
-                    <p style="margin: 0 0 0.5rem 0">
-                        ⚡ Para empezar a enviar bugs a Trello necesitas:
-                    </p>
-                    <ol style="margin: 0 0 0 1.5rem; padding: 0">
-                        <li style="margin-bottom: 0.25rem">
-                            <a
-                                href="https://trello.com/app-key"
-                                target="_blank"
-                                style="color: #0369a1; font-weight: 500"
-                                >Obtener API Key</a
-                            >
-                        </li>
-                        <li style="margin-bottom: 0.25rem">
-                            <a
-                                href="https://trello.com/1/authorize?expiration=never&name=QA-Tool&scope=read,write&response_type=token"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style="color: #0369a1; font-weight: 500"
-                                >Generar Token</a
-                            >
-                        </li>
-                        <li>Configurar las credenciales en la herramienta</li>
-                    </ol>
-                </div>
-
-                <button
-                    type="button"
-                    class="btn btn-primary"
-                    onclick="abrirConfiguracionTrelloInline()"
-                    style="
-                        background: #0ea5e9;
-                        border-color: #0ea5e9;
-                        font-weight: 600;
-                        display: flex;
-                        align-items: center;
-                        gap: 0.5rem;
-                    "
-                >
-                    <span>⚙️</span>
-                    <span>Configurar Integración</span>
-                </button>
-            </div>
-
-            <!-- Inline config dentro del modal (oculto por defecto) -->
-            <div
-                id="trelloInlineConfig"
-                style="display: none; margin-top: 1rem"
-            >
-                <div
-                    style="
-                        background: white;
-                        border: 1px solid #cfeefe;
-                        padding: 0.75rem;
-                        border-radius: 6px;
+                        border-top: 2px solid #0079bf;
+                        margin: 1.5rem 0;
+                        padding-top: 1.5rem;
+                        background: linear-gradient(
+                            135deg,
+                            #f0f9ff 0%,
+                            #e0f2fe 100%
+                        );
+                        padding: 1.5rem;
+                        border-radius: 8px;
                     "
                 >
                     <div
                         style="
                             display: flex;
-                            gap: 0.5rem;
                             align-items: center;
-                            margin-bottom: 0.5rem;
+                            justify-content: space-between;
+                            margin-bottom: 1rem;
                         "
                     >
-                        <strong style="color: #0c4a6e"
-                            >⚙️ Configurar Trello (rápido)</strong
-                        >
-                        <div
+                        <h4
                             style="
-                                font-size: 0.85rem;
-                                color: #64748b;
-                                margin-left: auto;
+                                font-size: 1.1rem;
+                                font-weight: 700;
+                                color: #0079bf;
+                                margin: 0;
                             "
                         >
-                            Coloca tu API Key y Token
-                        </div>
+                            🔗 Integración con Trello
+                        </h4>
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            onclick="abrirModalConfigTrello()"
+                            style="font-size: 0.85rem; padding: 0.4rem 0.8rem"
+                        >
+                            <span>⚙️</span>
+                            <span>Configurar</span>
+                        </button>
                     </div>
 
                     <div
+                        id="trelloConfigStatus"
                         style="
-                            display: grid;
-                            grid-template-columns: 1fr 1fr;
-                            gap: 0.5rem;
-                            margin-bottom: 0.5rem;
+                            background: #fef3c7;
+                            border-left: 4px solid #f59e0b;
+                            padding: 0.75rem;
+                            border-radius: 6px;
+                            margin-bottom: 1rem;
                         "
                     >
-                        <div>
-                            <label class="form-label">API Key</label>
-                            <input
-                                id="trelloApiKeyInline"
-                                class="form-input"
-                                placeholder="32 chars"
-                            />
+                        <p style="margin: 0; color: #92400e; font-size: 0.9rem">
+                            <strong>⚠️ Configuración requerida:</strong>
+                            Configura tu integración con Trello para crear cards
+                            automáticamente.
+                        </p>
+                    </div>
+
+                    <div id="trelloSelectionSection" class="hidden">
+                        <div class="form-group">
+                            <label class="form-label required"
+                                >📋 Tablero de Trello</label
+                            >
+                            <div
+                                style="
+                                    display: flex;
+                                    gap: 0.5rem;
+                                    align-items: center;
+                                "
+                            >
+                                <select
+                                    id="bugTrelloBoard"
+                                    class="form-select"
+                                    onchange="cargarListasTrello()"
+                                    style="flex: 1"
+                                >
+                                    <option value="">
+                                        Selecciona un tablero...
+                                    </option>
+                                </select>
+                                <button
+                                    type="button"
+                                    class="btn btn-secondary"
+                                    onclick="cargarTablerosTrello()"
+                                    style="
+                                        padding: 0.6rem 1rem;
+                                        white-space: nowrap;
+                                    "
+                                >
+                                    <span>🔄</span>
+                                </button>
+                            </div>
+                            <p class="form-help">
+                                Selecciona el tablero donde se creará la card
+                            </p>
                         </div>
-                        <div>
-                            <label class="form-label">Token</label>
-                            <input
-                                id="trelloTokenInline"
-                                class="form-input"
-                                placeholder="64 chars"
-                            />
-                            <div style="margin-top: 0.25rem">
-                                <a
-                                    href="#"
-                                    id="trelloTokenLink"
-                                    target="_blank"
-                                    rel="noopener"
-                                    style="font-size: 0.85rem; color: #2563eb"
+
+                        <div class="form-group">
+                            <label class="form-label required"
+                                >📝 Lista (Columna) de Trello</label
+                            >
+                            <select id="bugTrelloList" class="form-select">
+                                <option value="">
+                                    Primero selecciona un tablero
+                                </option>
+                            </select>
+                            <p class="form-help">
+                                Selecciona la columna donde aparecerá el bug
+                            </p>
+                        </div>
+
+                        <div id="trelloEtiquetasSection" class="hidden">
+                            <div class="form-group">
+                                <label class="form-label"
+                                    >🏷️ Etiquetas de Trello</label
                                 >
-                                    Generar token
-                                </a>
-                                <span
-                                    style="font-size: 0.85rem; color: #64748b"
+                                <div
+                                    id="trelloLabelsContainer"
+                                    style="
+                                        display: flex;
+                                        flex-wrap: wrap;
+                                        gap: 0.5rem;
+                                        padding: 0.75rem;
+                                        background: white;
+                                        border: 1px solid #e2e8f0;
+                                        border-radius: 6px;
+                                        min-height: 50px;
+                                    "
                                 >
-                                    • Pega el token aquí</span
-                                >
+                                    <span
+                                        style="
+                                            color: #94a3b8;
+                                            font-size: 0.9rem;
+                                        "
+                                        >Selecciona un tablero para ver
+                                        etiquetas disponibles</span
+                                    >
+                                </div>
+                                <p class="form-help">
+                                    Selecciona las etiquetas que se aplicarán a
+                                    la card (opcional)
+                                </p>
                             </div>
                         </div>
                     </div>
-
-                    <div
-                        id="trelloBoardListStepInline"
-                        style="display: none; margin-bottom: 0.5rem"
-                    >
-                        <label class="form-label">Tablero</label>
-                        <select
-                            id="trelloBoardSelectInline"
-                            class="form-select"
-                            onchange="cargarListasTrelloInline()"
-                        >
-                            <option value="">Selecciona un tablero</option>
-                        </select>
-
-                        <label class="form-label" style="margin-top: 0.5rem"
-                            >Lista</label
-                        >
-                        <select id="trelloListSelectInline" class="form-select">
-                            <option value="">Selecciona una lista</option>
-                        </select>
-                    </div>
-
-                    <div
-                        style="
-                            display: flex;
-                            gap: 0.5rem;
-                            justify-content: flex-end;
-                        "
-                    >
-                        <button
-                            type="button"
-                            class="btn btn-secondary"
-                            onclick="cerrarConfiguracionTrelloInline()"
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            id="btnValidarCredencialesInline"
-                            type="button"
-                            class="btn btn-secondary"
-                            onclick="validarCredencialesTrelloInline()"
-                        >
-                            🔐 Validar
-                        </button>
-                        <button
-                            id="btnGuardarConfigTrelloInline"
-                            type="button"
-                            class="btn btn-primary"
-                            onclick="guardarConfiguracionTrelloInline()"
-                            style="display: none"
-                        >
-                            💾 Guardar
-                        </button>
-                    </div>
                 </div>
-            </div>
+            </form>
         </div>
 
         <div class="modal-footer">
@@ -782,1821 +556,981 @@
     </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════════════════════ -->
-<!-- MODAL CAMBIAR ESTADO BUG (MEJORA 5)                                         -->
-<!-- ═══════════════════════════════════════════════════════════════════════════ -->
-
-<div id="modalCambiarEstadoBug" class="modal-overlay">
-    <div class="modal" style="max-width: 600px">
-        <div class="modal-header">
-            <h3 class="modal-title">
-                <span>🔄</span>
-                <span>Cambiar Estado del Bug</span>
-            </h3>
-            <button class="modal-close" onclick="cerrarModalCambiarEstado()">
-                ✕
-            </button>
-        </div>
-
-        <div class="modal-body">
-            <input type="hidden" id="bugIdCambiarEstado" value="" />
-            <input type="hidden" id="nuevoEstadoBug" value="" />
-
-            <!-- Advertencia de casos asociados -->
-            <div
-                id="advertenciaCasosNoOK"
-                class="hidden"
-                style="
-                    background: #fef3c7;
-                    border: 2px solid #f59e0b;
-                    border-radius: 8px;
-                    padding: 1rem;
-                    margin-bottom: 1.5rem;
-                "
-            >
-                <div style="display: flex; align-items: start; gap: 0.75rem">
-                    <span style="font-size: 2rem">⚠️</span>
-                    <div style="flex: 1">
-                        <strong
-                            style="
-                                color: #92400e;
-                                display: block;
-                                margin-bottom: 0.5rem;
-                            "
-                        >
-                            Casos de prueba relacionados en estado No_OK
-                        </strong>
-                        <p style="color: #92400e; margin: 0.5rem 0">
-                            Este bug tiene casos de prueba asociados que están
-                            en estado <strong>No_OK</strong>:
-                        </p>
-                        <ul
-                            id="listaCasosNoOK"
-                            style="
-                                color: #92400e;
-                                margin: 0.5rem 0 0 1.5rem;
-                                line-height: 1.6;
-                            "
-                        ></ul>
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label"
-                    >¿Deseas actualizar automáticamente estos casos a
-                    <strong>OK</strong>?</label
-                >
-                <p
-                    style="
-                        color: var(--text-secondary);
-                        font-size: 0.9rem;
-                        margin: 0.5rem 0;
-                    "
-                >
-                    Si el bug está resuelto, los casos relacionados pueden pasar
-                    a estado OK automáticamente.
-                </p>
-            </div>
-
-            <div class="form-group">
-                <label
-                    style="
-                        display: flex;
-                        align-items: center;
-                        gap: 0.5rem;
-                        cursor: pointer;
-                    "
-                >
-                    <input type="checkbox" id="actualizarCasosCheck" checked />
-                    <span>Sí, actualizar casos de No_OK a OK</span>
-                </label>
-            </div>
-        </div>
-
-        <div class="modal-footer">
-            <button
-                type="button"
-                class="btn btn-primary"
-                onclick="confirmarCambioEstadoBug()"
-            >
-                ✅ Confirmar Cambio
-            </button>
-            <button
-                type="button"
-                class="btn btn-secondary"
-                onclick="cerrarModalCambiarEstado()"
-            >
-                Cancelar
-            </button>
-        </div>
-    </div>
-</div>
-
 <script>
-        // ===================================================================
-        // VARIABLES GLOBALES DE BUGS
-        // ===================================================================
+    // ===================================================================
+    // VARIABLES GLOBALES DE BUGS
+    // ===================================================================
 
-        (function () {
-            console.log("🔵 Iniciando carga de Frontend_Components_Bugs.html");
+    (function () {
+        console.log("🔵 Iniciando carga de Frontend_Components_Bugs.html");
 
-            if (!window.evidenciasBugTemporales)
-                window.evidenciasBugTemporales = [];
-            if (!window.bugEnEdicion) window.bugEnEdicion = null;
-            console.log("✅ Variables globales de Bugs inicializadas");
-        })();
+        if (!window.evidenciasBugTemporales)
+            window.evidenciasBugTemporales = [];
+        if (!window.bugEnEdicion) window.bugEnEdicion = null;
+        console.log("✅ Variables globales de Bugs inicializadas");
+    })();
 
-        // ===================================================================
-        // ABRIR MODAL CREAR BUG
-        // ===================================================================
+    // ===================================================================
+    // ABRIR MODAL CREAR BUG
+    // ===================================================================
 
-        window.abrirModalCrearBug = function abrirModalCrearBug(casoId) {
-            console.log("🐛 Abriendo modal crear bug...");
-            console.log("   Caso relacionado:", casoId || "Ninguno (bug manual)");
+    function abrirModalCrearBug(casoId) {
+        console.log("🐛 Abriendo modal crear bug...");
+        console.log("   Caso relacionado:", casoId || "Ninguno (bug manual)");
 
-            console.log("🔍 Verificando elementos del DOM para el modal...");
+        const modal = document.getElementById("modalCrearBug");
+        const titulo = document.getElementById("tituloModalBug");
+        const infoCaso = document.getElementById("infoCasoRelacionado");
 
-            // Validar elementos críticos
-            const elementosRequeridos = {
-                modal: document.getElementById("modalCrearBug"),
-                titulo: document.getElementById("tituloModalBug"),
-                infoCaso: document.getElementById("infoCasoRelacionado"),
-            };
+        if (!modal) {
+            console.error("❌ Modal modalCrearBug no encontrado");
+            mostrarToast("Error: Modal de bugs no disponible", "error");
+            return;
+        }
 
-            // Verificar elementos faltantes
-            const elementosFaltantes = Object.entries(elementosRequeridos)
-                .filter(([_, element]) => !element)
-                .map(([name, _]) => name);
+        // Limpiar campos manualmente (sin usar form.reset)
+        document.getElementById("bugTitulo").value = "";
+        document.getElementById("bugDescripcion").value = "";
+        document.getElementById("bugSeveridad").value = "Media";
+        document.getElementById("bugPrioridad").value = "Media";
+        document.getElementById("bugPrecondiciones").value = "";
+        document.getElementById("bugDatosPrueba").value = "";
+        document.getElementById("bugPasosReproducir").value = "";
+        document.getElementById("bugResultadoEsperado").value = "";
+        document.getElementById("bugResultadoObtenido").value = "";
+        document.getElementById("bugAmbiente").value = "";
+        document.getElementById("bugNavegador").value = "";
+        document.getElementById("bugEtiquetas").value = "";
+        document.getElementById("bugNotas").value = "";
 
-            if (elementosFaltantes.length > 0) {
-                console.error(
-                    "❌ Elementos no encontrados:",
-                    elementosFaltantes.join(", ")
+        const modoEdicion = document.getElementById("bugModoEdicion");
+        const idEdicion = document.getElementById("bugIdEdicion");
+        const casoRelacionadoInput =
+            document.getElementById("bugCasoRelacionado");
+
+        if (modoEdicion) modoEdicion.value = "false";
+        if (idEdicion) idEdicion.value = "";
+
+        window.evidenciasBugTemporales = [];
+        const listaEvidencias = document.getElementById("listaEvidenciasBug");
+        const contenidoLista = document.getElementById(
+            "contenidoListaEvidenciasBug"
+        );
+
+        if (listaEvidencias) listaEvidencias.classList.add("hidden");
+        if (contenidoLista) contenidoLista.innerHTML = "";
+
+        if (titulo) {
+            titulo.textContent = casoId
+                ? "Reportar Bug desde Caso"
+                : "Reportar Bug";
+        }
+
+        if (casoId) {
+            const caso = window.casosActuales
+                ? window.casosActuales.find((c) => c.ID === casoId)
+                : null;
+
+            if (caso) {
+                if (casoRelacionadoInput) casoRelacionadoInput.value = casoId;
+
+                const casoIdSpan = document.getElementById("casoRelacionadoId");
+                const casoTituloSpan = document.getElementById(
+                    "casoRelacionadoTitulo"
                 );
-                mostrarToast(
-                    "Error: Modal de bugs no disponible - Faltan elementos",
-                    "error"
-                );
-                return;
+
+                if (casoIdSpan) casoIdSpan.textContent = casoId;
+                if (casoTituloSpan)
+                    casoTituloSpan.textContent = caso.Titulo || "";
+                if (infoCaso) infoCaso.classList.remove("hidden");
+
+                preLlenarDesdeCaso(caso);
+            } else {
+                console.warn("⚠️ Caso no encontrado en casosActuales:", casoId);
             }
+        } else {
+            if (casoRelacionadoInput) casoRelacionadoInput.value = "";
+            if (infoCaso) infoCaso.classList.add("hidden");
+        }
 
-            const { modal, titulo, infoCaso } = elementosRequeridos;
+        // Verificar estado de Trello
+        verificarEstadoTrelloEnModal();
 
-            // Limpiar campos manualmente (sin usar form.reset)
-            document.getElementById("bugTitulo").value = "";
-            document.getElementById("bugDescripcion").value = "";
+        if (typeof abrirModal === "function") {
+            abrirModal("modalCrearBug");
+        } else {
+            console.error("❌ Función abrirModal no disponible");
+            modal.classList.add("active");
+            document.body.style.overflow = "hidden";
+        }
+    }
+
+    function preLlenarDesdeCaso(caso) {
+        console.log("📝 Pre-llenando formulario desde caso...");
+
+        const tituloSugerido =
+            "Error en: " + (caso.Titulo || "").substring(0, 80);
+        document.getElementById("bugTitulo").value = tituloSugerido;
+
+        let descripcionBase =
+            "Bug detectado durante la ejecución del caso de prueba.\n\n";
+        descripcionBase += "Caso: " + caso.ID + " - " + caso.Titulo;
+        document.getElementById("bugDescripcion").value = descripcionBase;
+
+        if (caso.Prioridad === "Critica" || caso.FlujoCritico === "Si") {
+            document.getElementById("bugSeveridad").value = "Crítica";
+            document.getElementById("bugPrioridad").value = "Alta";
+        } else if (caso.Prioridad === "Alta") {
+            document.getElementById("bugSeveridad").value = "Alta";
+            document.getElementById("bugPrioridad").value = "Alta";
+        } else {
             document.getElementById("bugSeveridad").value = "Media";
             document.getElementById("bugPrioridad").value = "Media";
-            document.getElementById("bugPrecondiciones").value = "";
-            document.getElementById("bugDatosPrueba").value = "";
-            document.getElementById("bugPasosReproducir").value = "";
-            document.getElementById("bugResultadoEsperado").value = "";
-            document.getElementById("bugResultadoObtenido").value = "";
-            document.getElementById("bugAmbiente").value = "";
-            document.getElementById("bugNavegador").value = "";
-            document.getElementById("bugEtiquetas").value = "";
-            document.getElementById("bugNotas").value = "";
+        }
 
-            const modoEdicion = document.getElementById("bugModoEdicion");
-            const idEdicion = document.getElementById("bugIdEdicion");
-            const casoRelacionadoInput =
-                document.getElementById("bugCasoRelacionado");
+        if (caso.Precondiciones && caso.Precondiciones !== "") {
+            document.getElementById("bugPrecondiciones").value =
+                caso.Precondiciones;
+        } else {
+            document.getElementById("bugPrecondiciones").value =
+                "Condiciones previas necesarias...";
+        }
 
-            if (modoEdicion) modoEdicion.value = "false";
-            if (idEdicion) idEdicion.value = "";
-
-            window.evidenciasBugTemporales = [];
-            const listaEvidencias = document.getElementById("listaEvidenciasBug");
-            const contenidoLista = document.getElementById(
-                "contenidoListaEvidenciasBug"
-            );
-
-            if (listaEvidencias) listaEvidencias.classList.add("hidden");
-            if (contenidoLista) contenidoLista.innerHTML = "";
-
-            if (titulo) {
-                titulo.textContent = casoId
-                    ? "Reportar Bug desde Caso"
-                    : "Reportar Bug";
-            }
-
-            if (casoId) {
-                const caso = window.casosActuales
-                    ? window.casosActuales.find((c) => c.ID === casoId)
-                    : null;
-
-                if (caso) {
-                    if (casoRelacionadoInput) casoRelacionadoInput.value = casoId;
-
-                    const casoIdSpan = document.getElementById("casoRelacionadoId");
-                    const casoTituloSpan = document.getElementById(
-                        "casoRelacionadoTitulo"
-                    );
-
-                    if (casoIdSpan) casoIdSpan.textContent = casoId;
-                    if (casoTituloSpan)
-                        casoTituloSpan.textContent = caso.Titulo || "";
-                    if (infoCaso) infoCaso.classList.remove("hidden");
-
-                    preLlenarDesdeCaso(caso);
-                } else {
-                    console.warn("⚠️ Caso no encontrado en casosActuales:", casoId);
-                }
-            } else {
-                if (casoRelacionadoInput) casoRelacionadoInput.value = "";
-                if (infoCaso) infoCaso.classList.add("hidden");
-            }
-
-            // Cargar opciones relacionadas con Trello (si existe configuración)
-            try {
-                // Verificar que existe la función y los elementos necesarios
-                if (typeof cargarTrelloModal === "function") {
-                    if (
-                        !document.getElementById("bugBoardSelect") ||
-                        !document.getElementById("bugListSelect")
-                    ) {
-                        console.warn(
-                            "⚠️ Elementos de Trello no encontrados en el DOM"
-                        );
-                        return;
-                    }
-                    cargarTrelloModal();
-                }
-            } catch (e) {
-                console.warn("No se pudo cargar Trello en modal:", e);
-                // Ocultar sección de Trello si hay error
-                const configured = document.getElementById("trelloBugConfigured");
-                const notConfigured = document.getElementById(
-                    "trelloBugNotConfigured"
-                );
-                if (configured) configured.classList.add("hidden");
-                if (notConfigured) notConfigured.style.display = "none";
-            }
-
-            // Si abrirModal no está disponible, usar una implementación local
-            const abrirModalFn =
-                typeof abrirModal === "function"
-                    ? abrirModal
-                    : function (id) {
-                          const modalElement = document.getElementById(id);
-                          if (modalElement) {
-                              modalElement.classList.add("active");
-                              document.body.style.overflow = "hidden";
-                          }
-                      };
-
-            try {
-                abrirModalFn("modalCrearBug");
-            } catch (e) {
-                console.error("❌ Error al abrir modal:", e);
-                // Último intento de abrir el modal
-                if (modal) {
-                    modal.classList.add("active");
-                    document.body.style.overflow = "hidden";
-                }
-            }
-        };
-
-        function preLlenarDesdeCaso(caso) {
-            console.log("📝 Pre-llenando formulario desde caso...");
-
-            const tituloSugerido =
-                "Error en: " + (caso.Titulo || "").substring(0, 80);
-            document.getElementById("bugTitulo").value = tituloSugerido;
-
-            let descripcionBase =
-                "Bug detectado durante la ejecución del caso de prueba.\n\n";
-            descripcionBase += "Caso: " + caso.ID + " - " + caso.Titulo;
-            document.getElementById("bugDescripcion").value = descripcionBase;
-
-            if (caso.Prioridad === "Critica" || caso.FlujoCritico === "Si") {
-                document.getElementById("bugSeveridad").value = "Crítica";
-                document.getElementById("bugPrioridad").value = "Alta";
-            } else if (caso.Prioridad === "Alta") {
-                document.getElementById("bugSeveridad").value = "Alta";
-                document.getElementById("bugPrioridad").value = "Alta";
-            } else {
-                document.getElementById("bugSeveridad").value = "Media";
-                document.getElementById("bugPrioridad").value = "Media";
-            }
-
-            if (caso.Precondiciones && caso.Precondiciones !== "") {
-                document.getElementById("bugPrecondiciones").value =
-                    caso.Precondiciones;
-            } else {
-                document.getElementById("bugPrecondiciones").value =
-                    "Condiciones previas necesarias...";
-            }
-
-            if (caso.Formato === "Gherkin") {
-                let pasos = "";
-                if (caso.ScenarioGiven)
-                    pasos += "Dado: " + caso.ScenarioGiven + "\n";
-                if (caso.ScenarioWhen)
-                    pasos += "Cuando: " + caso.ScenarioWhen + "\n";
-                if (caso.ScenarioThen) pasos += "Entonces: " + caso.ScenarioThen;
+        if (caso.Formato === "Gherkin") {
+            let pasos = "";
+            if (caso.ScenarioGiven)
+                pasos += "Dado: " + caso.ScenarioGiven + "\n";
+            if (caso.ScenarioWhen)
+                pasos += "Cuando: " + caso.ScenarioWhen + "\n";
+            if (caso.ScenarioThen) pasos += "Entonces: " + caso.ScenarioThen;
+            document.getElementById("bugPasosReproducir").value =
+                pasos || "1. Paso uno\n2. Paso dos\n3. Paso tres";
+        } else {
+            if (caso.Pasos && caso.Pasos !== "") {
                 document.getElementById("bugPasosReproducir").value =
-                    pasos || "1. Paso uno\n2. Paso dos\n3. Paso tres";
+                    caso.Pasos;
             } else {
-                if (caso.Pasos && caso.Pasos !== "") {
-                    document.getElementById("bugPasosReproducir").value =
-                        caso.Pasos;
-                } else {
-                    document.getElementById("bugPasosReproducir").value =
-                        "1. Paso uno\n2. Paso dos\n3. Paso tres";
-                }
+                document.getElementById("bugPasosReproducir").value =
+                    "1. Paso uno\n2. Paso dos\n3. Paso tres";
             }
-
-            if (caso.ResultadoEsperado && caso.ResultadoEsperado !== "") {
-                document.getElementById("bugResultadoEsperado").value =
-                    caso.ResultadoEsperado;
-            } else {
-                document.getElementById("bugResultadoEsperado").value =
-                    "Describe el resultado esperado...";
-            }
-
-            document.getElementById("bugResultadoObtenido").value =
-                "Describe aquí el comportamiento erróneo observado...";
-            document.getElementById("bugDatosPrueba").value =
-                "Indica los datos usados en la prueba que causó el error";
-
-            console.log("✅ Formulario pre-llenado");
         }
 
-        function cerrarModalBug() {
-            cerrarModal("modalCrearBug");
+        if (caso.ResultadoEsperado && caso.ResultadoEsperado !== "") {
+            document.getElementById("bugResultadoEsperado").value =
+                caso.ResultadoEsperado;
+        } else {
+            document.getElementById("bugResultadoEsperado").value =
+                "Describe el resultado esperado...";
         }
 
-        // ===================================================================
-        // MANEJO DE EVIDENCIAS
-        // ===================================================================
+        document.getElementById("bugResultadoObtenido").value =
+            "Describe aquí el comportamiento erróneo observado...";
+        document.getElementById("bugDatosPrueba").value =
+            "Indica los datos usados en la prueba que causó el error";
 
-        function handleDragOverBug(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            document.getElementById("dropzoneBug").classList.add("drag-over");
-        }
+        console.log("✅ Formulario pre-llenado");
+    }
 
-        function handleDragLeaveBug(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            document.getElementById("dropzoneBug").classList.remove("drag-over");
-        }
+    function cerrarModalBug() {
+        cerrarModal("modalCrearBug");
+    }
 
-        function handleDropBug(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            document.getElementById("dropzoneBug").classList.remove("drag-over");
+    // ===================================================================
+    // INTEGRACIÓN CON TRELLO
+    // ===================================================================
 
-            const files = event.dataTransfer.files;
-            procesarArchivosBug(files);
-        }
+    // Variables globales para Trello
+    if (!window.trelloBoardsData) window.trelloBoardsData = [];
+    if (!window.trelloListsData) window.trelloListsData = [];
+    if (!window.trelloLabelsData) window.trelloLabelsData = [];
+    if (!window.trelloSelectedLabels) window.trelloSelectedLabels = [];
 
-        function handleFileSelectBug(event) {
-            const files = event.target.files;
-            procesarArchivosBug(files);
-            event.target.value = "";
-        }
+    /**
+     * Verifica el estado de Trello al abrir el modal
+     */
+    function verificarEstadoTrelloEnModal() {
+        console.log("🔍 Verificando estado de Trello...");
 
-        // Click en dropzone
-        document.addEventListener("DOMContentLoaded", function () {
-            const dropzone = document.getElementById("dropzoneBug");
-            if (dropzone) {
-                dropzone.addEventListener("click", function () {
-                    document.getElementById("inputArchivosBug").click();
-                });
-            }
-        });
+        google.script.run
+            .withSuccessHandler(function (response) {
+                if (response.success && response.configurado) {
+                    console.log("✅ Trello configurado");
 
-        function procesarArchivosBug(files) {
-            let archivosValidos = 0;
-
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-
-                // MEJORA: Límites diferenciados por tipo
-                const maxSizeImagen = 10 * 1024 * 1024; // 10 MB
-                const maxSizeVideo = 100 * 1024 * 1024; // 100 MB
-                const maxSizePDF = 20 * 1024 * 1024; // 20 MB
-
-                let maxSize = 50 * 1024 * 1024; // Default
-                let tipoArchivo = "archivo";
-
-                if (file.type.startsWith("image/")) {
-                    maxSize = maxSizeImagen;
-                    tipoArchivo = "imagen";
-                } else if (file.type.startsWith("video/")) {
-                    maxSize = maxSizeVideo;
-                    tipoArchivo = "video";
-                } else if (file.type === "application/pdf") {
-                    maxSize = maxSizePDF;
-                    tipoArchivo = "PDF";
-                }
-
-                if (file.size > maxSize) {
-                    const maxMB = (maxSize / (1024 * 1024)).toFixed(0);
-                    mostrarToast(
-                        '❌ "' +
-                            file.name +
-                            '" excede el límite de ' +
-                            maxMB +
-                            " MB para " +
-                            tipoArchivo +
-                            "s",
-                        "error",
-                        5000
-                    );
-                    continue;
-                }
-
-                // Validar formatos de video
-                if (file.type.startsWith("video/")) {
-                    const formatosPermitidos = [
-                        "video/mp4",
-                        "video/webm",
-                        "video/quicktime",
-                        "video/x-msvideo",
-                        "video/x-matroska",
-                    ];
-
-                    if (!formatosPermitidos.includes(file.type)) {
-                        mostrarToast(
-                            '⚠️ Formato "' +
-                                file.type +
-                                '" no recomendado. Usa MP4, WebM o MOV',
-                            "warning",
-                            4000
-                        );
+                    // Ocultar mensaje de configuración requerida
+                    const statusDiv =
+                        document.getElementById("trelloConfigStatus");
+                    if (statusDiv) {
+                        statusDiv.innerHTML = `
+              <p style="margin: 0; color: #065f46; font-size: 0.9rem;">
+                <strong>✅ Conectado:</strong> ${response.usuario || "Trello"}
+              </p>
+            `;
+                        statusDiv.style.background = "#d1fae5";
+                        statusDiv.style.borderColor = "#10b981";
                     }
-                }
 
-                // Feedback para archivos grandes
-                if (file.size > 20 * 1024 * 1024) {
-                    const nombreCorto =
-                        file.name.length > 30
-                            ? file.name.substring(0, 27) + "..."
-                            : file.name;
-                    mostrarToast(
-                        '📤 Procesando "' +
-                            nombreCorto +
-                            '"... Puede tardar unos segundos',
-                        "info",
-                        3000
+                    // Mostrar sección de selección
+                    const selectionSection = document.getElementById(
+                        "trelloSelectionSection"
                     );
-                }
+                    if (selectionSection) {
+                        selectionSection.classList.remove("hidden");
+                    }
 
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    window.evidenciasBugTemporales.push({
-                        tipo: "archivo",
-                        nombre: file.name,
-                        tamaño: file.size,
-                        mimeType: file.type,
-                        contenidoBase64: e.target.result.split(",")[1],
+                    // Cargar tableros automáticamente
+                    cargarTablerosTrello();
+                } else {
+                    console.log("⚠️ Trello no configurado");
+                    // Mantener mensaje de configuración requerida visible
+                }
+            })
+            .withFailureHandler(function (error) {
+                console.error("Error verificando Trello:", error);
+            })
+            .verificarCredencialesTrello();
+    }
+
+    /**
+     * Carga los tableros de Trello
+     */
+    function cargarTablerosTrello() {
+        console.log("📋 Cargando tableros de Trello...");
+
+        const selectBoard = document.getElementById("bugTrelloBoard");
+        if (!selectBoard) {
+            console.error("Select de tableros no encontrado");
+            return;
+        }
+
+        // Mostrar loading
+        selectBoard.innerHTML =
+            '<option value="">Cargando tableros...</option>';
+        selectBoard.disabled = true;
+
+        google.script.run
+            .withSuccessHandler(function (response) {
+                selectBoard.disabled = false;
+
+                if (response.success && response.data) {
+                    window.trelloBoardsData = response.data;
+
+                    selectBoard.innerHTML =
+                        '<option value="">Selecciona un tablero...</option>';
+
+                    response.data.forEach(function (board) {
+                        const option = document.createElement("option");
+                        option.value = board.id;
+                        option.textContent = board.name;
+                        selectBoard.appendChild(option);
                     });
 
-                    renderizarListaEvidenciasBug();
-
-                    const tamañoMB = (file.size / (1024 * 1024)).toFixed(2);
-
-                    // Emoji según tipo
-                    let emoji = "✅";
-                    if (file.type.startsWith("video/")) emoji = "🎥";
-                    else if (file.type.startsWith("image/")) emoji = "🖼️";
-                    else if (file.type === "application/pdf") emoji = "📄";
-
+                    console.log("✅ Tableros cargados:", response.data.length);
                     mostrarToast(
-                        emoji + ' "' + file.name + '" listo (' + tamañoMB + " MB)",
-                        "success",
-                        2000
+                        "Tableros cargados: " + response.data.length,
+                        "success"
                     );
-                };
-
-                reader.onerror = function () {
-                    mostrarToast('❌ Error leyendo "' + file.name + '"', "error");
-                };
-
-                reader.readAsDataURL(file);
-                archivosValidos++;
-            }
-
-            if (files.length > 1) {
-                setTimeout(() => {
-                    if (archivosValidos > 0) {
-                        mostrarToast(
-                            "📎 " + archivosValidos + " archivo(s) agregado(s)",
-                            "info",
-                            2000
-                        );
-                    }
-                }, 500);
-            }
-        }
-
-        function renderizarListaEvidenciasBug() {
-            const lista = document.getElementById("listaEvidenciasBug");
-            const contenido = document.getElementById(
-                "contenidoListaEvidenciasBug"
-            );
-
-            if (window.evidenciasBugTemporales.length === 0) {
-                lista.classList.add("hidden");
-                return;
-            }
-
-            lista.classList.remove("hidden");
-
-            let html = "";
-            window.evidenciasBugTemporales.forEach((evidencia, index) => {
-                const tamañoMB = (evidencia.tamaño / (1024 * 1024)).toFixed(2);
-
-                html += '<div class="evidencia-item">';
-                html +=
-                    '  <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">';
-                // Icono según tipo de archivo
-                let icono = "📎";
-                if (evidencia.mimeType.startsWith("image/")) {
-                    icono = "🖼️";
-                } else if (evidencia.mimeType.startsWith("video/")) {
-                    icono = "🎥";
-                } else if (evidencia.mimeType === "application/pdf") {
-                    icono = "📄";
-                }
-
-                html += '    <span style="font-size: 1.5rem;">' + icono + "</span>";
-                html += '    <div style="flex: 1;">';
-                html +=
-                    '      <div style="font-weight: 500; word-break: break-word;">' +
-                    evidencia.nombre +
-                    "</div>";
-                html +=
-                    '      <div style="font-size: 0.85rem; color: #64748b;">' +
-                    tamañoMB +
-                    " MB</div>";
-                html += "    </div>";
-                html += "  </div>";
-                html +=
-                    '  <button type="button" class="btn-eliminar-evidencia" onclick="eliminarEvidenciaBug(' +
-                    index +
-                    ')" title="Eliminar">🗑️</button>';
-                html += "</div>";
-            });
-
-            contenido.innerHTML = html;
-        }
-
-        // ===================================================================
-        // FUNCIONES TRELLO PARA EL MODAL DE BUG
-        // ===================================================================
-
-        /**
-         * Carga la configuración de Trello para este workspace y prepara la UI del modal
-         */
-        function cargarTrelloModal() {
-            // Asegurar que la función esté disponible globalmente
-            window.cargarTrelloModal = cargarTrelloModal;
-
-            try {
-                const elements = {
-                    enviarCheck: document.getElementById("bugEnviarATrello"),
-                    configured: document.getElementById("trelloBugConfigured"),
-                    notConfigured: document.getElementById(
-                        "trelloBugNotConfigured"
-                    ),
-                    boardSelect: document.getElementById("bugBoardSelect"),
-                    listSelect: document.getElementById("bugListSelect"),
-                };
-
-                // Verificar elementos requeridos
-                if (!elements.boardSelect || !elements.listSelect) {
-                    console.error("❌ Elementos requeridos de Trello no encontrados");
-                    // Evitar lanzar excepción que pueda detener la ejecución del script.
-                    // Devolvemos false para indicar que no se pudo inicializar la UI de Trello.
-                    return false;
-                }
-
-                // Reset
-                elements.enviarCheck && (elements.enviarCheck.checked = true);
-                elements.configured && elements.configured.classList.add("hidden");
-                elements.notConfigured &&
-                    (elements.notConfigured.style.display = "none");
-                elements.boardSelect.innerHTML =
-                    '<option value="">Cargando tableros...</option>';
-                elements.boardSelect.disabled = true;
-                elements.listSelect.innerHTML =
-                    '<option value="">Selecciona un tablero primero</option>';
-                elements.listSelect.disabled = true;
-
-                if (!window.currentSheetUrl) {
-                    if (notConfigured) notConfigured.style.display = "block";
-                    return;
-                }
-
-                // Primero obtener configuración para saber si hay Trello configurado
-                google.script.run
-                    .withSuccessHandler(function (config) {
-                        if (config && config.configurado) {
-                            // Mostrar UI configurada
-                            if (configured) configured.classList.remove("hidden");
-                            if (notConfigured) notConfigured.style.display = "none";
-
-                            // Cargar boards usando credenciales guardadas
-                            google.script.run
-                                .withSuccessHandler(function (respBoards) {
-                                    if (!boardSelect) return;
-                                    boardSelect.disabled = false;
-                                    boardSelect.innerHTML =
-                                        '<option value="">Selecciona un tablero</option>';
-
-                                    if (
-                                        respBoards &&
-                                        respBoards.success &&
-                                        respBoards.data.length > 0
-                                    ) {
-                                        respBoards.data.forEach(function (b) {
-                                            const opt =
-                                                document.createElement("option");
-                                            opt.value = b.id;
-                                            opt.textContent = b.name;
-                                            opt.dataset.url = b.shortUrl || "";
-                                            boardSelect.appendChild(opt);
-                                        });
-
-                                        // Preselect configured board if present
-                                        if (config.boardId) {
-                                            boardSelect.value = config.boardId;
-                                            // cargar listas del board seleccionado
-                                            cargarListasModalPorBoard(
-                                                config.boardId,
-                                                config.listId
-                                            );
-                                        }
-                                    } else {
-                                        boardSelect.innerHTML =
-                                            '<option value="">No se encontraron tableros</option>';
-                                    }
-                                })
-                                .withFailureHandler(function (err) {
-                                    if (boardSelect)
-                                        boardSelect.innerHTML =
-                                            '<option value="">Error cargando tableros</option>';
-                                    console.error(
-                                        "Error cargando boards para modal:",
-                                        err
-                                    );
-                                })
-                                .obtenerBoardsTrelloGuardados(
-                                    window.currentSheetUrl
-                                );
-                        } else {
-                            if (notConfigured)
-                                notConfigured.style.display = "block";
-                        }
-                    })
-                    .withFailureHandler(function (error) {
-                        console.error(
-                            "Error obteniendo config Trello para modal:",
-                            error
-                        );
-                        if (document.getElementById("trelloBugNotConfigured"))
-                            document.getElementById(
-                                "trelloBugNotConfigured"
-                            ).style.display = "block";
-                    })
-                    .obtenerConfigTrello(window.currentSheetUrl);
-            } catch (e) {
-                console.error("Error en cargarTrelloModal:", e);
-            }
-        }
-
-        /**
-         * Carga las listas para el board seleccionado en el modal. Si se pasa listToSelect intenta preseleccionarlo.
-         * @param {string} boardIdOverride - opcional boardId para forzar carga
-         * @param {string} listToSelect - opcional listId para preseleccionar
-         */
-        function cargarListasModalPorBoard(boardIdOverride, listToSelect) {
-            try {
-                const boardSelect = document.getElementById("bugBoardSelect");
-                const selectList = document.getElementById("bugListSelect");
-                const boardId =
-                    boardIdOverride || (boardSelect ? boardSelect.value : "");
-
-                if (!boardId) {
-                    if (selectList)
-                        selectList.innerHTML =
-                            '<option value="">Selecciona primero un tablero</option>';
-                    return;
-                }
-
-                if (selectList) {
-                    selectList.innerHTML =
-                        '<option value="">Cargando listas...</option>';
-                    selectList.disabled = true;
-                }
-
-                google.script.run
-                    .withSuccessHandler(function (resp) {
-                        if (!selectList) return;
-                        selectList.disabled = false;
-
-                        if (resp && resp.success && resp.data.length > 0) {
-                            selectList.innerHTML =
-                                '<option value="">Selecciona una lista</option>';
-                            resp.data.forEach(function (l) {
-                                const opt = document.createElement("option");
-                                opt.value = l.id;
-                                opt.textContent = l.name;
-                                selectList.appendChild(opt);
-                            });
-
-                            if (listToSelect) selectList.value = listToSelect;
-                        } else {
-                            selectList.innerHTML =
-                                '<option value="">No se encontraron listas</option>';
-                        }
-                    })
-                    .withFailureHandler(function (err) {
-                        if (selectList)
-                            selectList.innerHTML =
-                                '<option value="">Error cargando listas</option>';
-                        console.error(
-                            "Error cargando listas para modal (by board):",
-                            err
-                        );
-                    })
-                    .obtenerListasTrelloGuardadas(window.currentSheetUrl, boardId);
-            } catch (e) {
-                console.error("Error en cargarListasModalPorBoard:", e);
-            }
-            // Asegurar que la función esté disponible globalmente
-            window.cargarListasModalPorBoard = cargarListasModalPorBoard;
-        }
-
-        // ===================================================================
-        // CONFIGURACIÓN TRELLO INLINE DENTRO DEL MODAL
-        // ===================================================================
-
-        function actualizarTrelloTokenUrl() {
-            const apiKey = document
-                .getElementById("trelloApiKeyInline")
-                .value.trim();
-            const tokenLink = document.getElementById("trelloTokenLink");
-            if (apiKey) {
-                tokenLink.href = `https://trello.com/1/authorize?expiration=never&name=AppQATool&scope=read,write&response_type=token&key=${apiKey}`;
-            } else {
-                tokenLink.href = "#";
-            }
-        }
-
-        function abrirConfiguracionTrelloInline() {
-            try {
-                // Mostrar el inline config y ocultar mensajes previos
-                document.getElementById("trelloInlineConfig").style.display =
-                    "block";
-                // Cargar config actual para prellenar
-                if (typeof window.currentSheetUrl === "undefined")
-                    window.currentSheetUrl = null;
-
-                google.script.run
-                    .withSuccessHandler(function (config) {
-                        if (!config) config = {};
-                        const apiKeyInput =
-                            document.getElementById("trelloApiKeyInline");
-                        apiKeyInput.value = config.apiKey || "";
-                        apiKeyInput.addEventListener(
-                            "input",
-                            actualizarTrelloTokenUrl
-                        );
-                        document.getElementById("trelloTokenInline").value =
-                            config.token || "";
-                        actualizarTrelloTokenUrl();
-
-                        // Si ya hay credentials, mostrar paso de boards
-                        if (config.apiKey && config.token) {
-                            document.getElementById(
-                                "trelloBoardListStepInline"
-                            ).style.display = "block";
-                            cargarBoardsTrelloInline(config.apiKey, config.token);
-                        } else {
-                            document.getElementById(
-                                "trelloBoardListStepInline"
-                            ).style.display = "none";
-                            document.getElementById(
-                                "btnGuardarConfigTrelloInline"
-                            ).style.display = "none";
-                        }
-                    })
-                    .withFailureHandler(function (err) {
-                        console.error("Error cargando config Trello inline:", err);
-                    })
-                    .obtenerConfigTrello(window.currentSheetUrl);
-            } catch (e) {
-                console.error("abrirConfiguracionTrelloInline error:", e);
-            }
-        }
-
-        function cerrarConfiguracionTrelloInline() {
-            const el = document.getElementById("trelloInlineConfig");
-            if (el) el.style.display = "none";
-        }
-
-        function validarCredencialesTrelloInline() {
-            const apiKey = document
-                .getElementById("trelloApiKeyInline")
-                .value.trim();
-            const token = document.getElementById("trelloTokenInline").value.trim();
-
-            if (!apiKey || apiKey.length < 10) {
-                mostrarToast("La API Key es requerida", "warning");
-                return;
-            }
-            if (!token || token.length < 10) {
-                mostrarToast("El Token es requerido", "warning");
-                return;
-            }
-
-            const btn = document.getElementById("btnValidarCredencialesInline");
-            btn.disabled = true;
-            btn.textContent = "Validando...";
-
-            mostrarSpinner();
-
-            google.script.run
-                .withSuccessHandler(function (resp) {
-                    ocultarSpinner();
-                    btn.disabled = false;
-                    btn.innerHTML = "🔐 Validar";
-
-                    if (resp && resp.success) {
-                        mostrarToast(
-                            "✅ Credenciales válidas: " +
-                                (resp.data ? resp.data.usuario : ""),
-                            "success"
-                        );
-                        document.getElementById(
-                            "trelloBoardListStepInline"
-                        ).style.display = "block";
-                        document.getElementById(
-                            "btnGuardarConfigTrelloInline"
-                        ).style.display = "inline-flex";
-                        cargarBoardsTrelloInline(apiKey, token);
-                    } else {
-                        mostrarToast(
-                            "❌ " +
-                                (resp
-                                    ? resp.mensaje
-                                    : "Error validando credenciales"),
-                            "error"
-                        );
-                    }
-                })
-                .withFailureHandler(function (err) {
-                    ocultarSpinner();
-                    btn.disabled = false;
-                    btn.innerHTML = "🔐 Validar";
-                    mostrarToast(
-                        "Error validando credenciales: " + err.message,
-                        "error"
-                    );
-                })
-                .validarCredencialesTrello(apiKey, token);
-        }
-
-        function cargarBoardsTrelloInline(apiKey, token) {
-            const selectBoard = document.getElementById("trelloBoardSelectInline");
-            selectBoard.innerHTML =
-                '<option value="">Cargando tableros...</option>';
-            selectBoard.disabled = true;
-
-            google.script.run
-                .withSuccessHandler(function (response) {
-                    selectBoard.disabled = false;
-                    if (response && response.success && response.data.length > 0) {
-                        selectBoard.innerHTML =
-                            '<option value="">Selecciona un tablero</option>';
-                        response.data.forEach(function (board) {
-                            const option = document.createElement("option");
-                            option.value = board.id;
-                            option.textContent = board.name;
-                            option.dataset.url = board.shortUrl || "";
-                            selectBoard.appendChild(option);
-                        });
-                        mostrarToast(
-                            "✅ " + response.data.length + " tableros cargados",
-                            "success"
-                        );
-                    } else {
-                        selectBoard.innerHTML =
-                            '<option value="">No se encontraron tableros</option>';
-                        mostrarToast("No tienes tableros en Trello", "warning");
-                    }
-                })
-                .withFailureHandler(function (err) {
-                    selectBoard.disabled = false;
+                } else {
                     selectBoard.innerHTML =
-                        '<option value="">Error cargando tableros</option>';
+                        '<option value="">Error al cargar tableros</option>';
                     mostrarToast(
-                        "Error cargando tableros: " + err.message,
+                        "❌ " +
+                            (response.mensaje || "Error al cargar tableros"),
                         "error"
                     );
-                })
-                .obtenerBoardsTrello(apiKey, token);
-        }
-
-        function cargarListasTrelloInline() {
-            const selectBoard = document.getElementById("trelloBoardSelectInline");
-            const selectList = document.getElementById("trelloListSelectInline");
-            const apiKey = document
-                .getElementById("trelloApiKeyInline")
-                .value.trim();
-            const token = document.getElementById("trelloTokenInline").value.trim();
-            const boardId = selectBoard.value;
-
-            if (!boardId) {
-                selectList.innerHTML =
-                    '<option value="">Selecciona primero un tablero</option>';
-                return;
-            }
-
-            selectList.innerHTML = '<option value="">Cargando listas...</option>';
-            selectList.disabled = true;
-
-            google.script.run
-                .withSuccessHandler(function (response) {
-                    selectList.disabled = false;
-                    if (response && response.success && response.data.length > 0) {
-                        selectList.innerHTML =
-                            '<option value="">Selecciona una lista</option>';
-                        response.data.forEach(function (lista) {
-                            const option = document.createElement("option");
-                            option.value = lista.id;
-                            option.textContent = lista.name;
-                            selectList.appendChild(option);
-                        });
-                        mostrarToast(
-                            "✅ " + response.data.length + " listas cargadas",
-                            "success"
-                        );
-                    } else {
-                        selectList.innerHTML =
-                            '<option value="">No se encontraron listas</option>';
-                        mostrarToast("El tablero no tiene listas", "warning");
-                    }
-                })
-                .withFailureHandler(function (err) {
-                    selectList.disabled = false;
-                    selectList.innerHTML =
-                        '<option value="">Error cargando listas</option>';
-                    mostrarToast("Error cargando listas: " + err.message, "error");
-                })
-                .obtenerListasTrello(apiKey, token, boardId);
-        }
-
-        function guardarConfiguracionTrelloInline() {
-            const apiKey = document
-                .getElementById("trelloApiKeyInline")
-                .value.trim();
-            const token = document.getElementById("trelloTokenInline").value.trim();
-            const selectBoard = document.getElementById("trelloBoardSelectInline");
-            const selectList = document.getElementById("trelloListSelectInline");
-
-            const boardId = selectBoard ? selectBoard.value : "";
-            const listId = selectList ? selectList.value : "";
-
-            if (!apiKey || apiKey.length < 10) {
-                mostrarToast("La API Key es requerida", "warning");
-                return;
-            }
-            if (!token || token.length < 10) {
-                mostrarToast("El Token es requerido", "warning");
-                return;
-            }
-            if (!boardId || !listId) {
-                mostrarToast("Selecciona un tablero y una lista", "warning");
-                return;
-            }
-
-            const boardName =
-                selectBoard.options[selectBoard.selectedIndex].text || "";
-            const listName =
-                selectList.options[selectList.selectedIndex].text || "";
-            const boardUrl =
-                selectBoard.options[selectBoard.selectedIndex].dataset.url || "";
-
-            const configTrello = {
-                apiKey: apiKey,
-                token: token,
-                boardId: boardId,
-                listId: listId,
-                boardUrl: boardUrl,
-                boardName: boardName,
-                listName: listName,
-            };
-
-            const btn = document.getElementById("btnGuardarConfigTrelloInline");
-            btn.disabled = true;
-            btn.textContent = "Guardando...";
-
-            mostrarSpinner();
-
-            google.script.run
-                .withSuccessHandler(function (guardado) {
-                    ocultarSpinner();
-                    btn.disabled = false;
-                    btn.innerHTML = "💾 Guardar";
-
-                    if (guardado) {
-                        mostrarToast(
-                            "✅ Configuración de Trello guardada",
-                            "success"
-                        );
-                        // Cerrar inline y recargar options del modal
-                        cerrarConfiguracionTrelloInline();
-                        setTimeout(function () {
-                            if (typeof cargarTrelloModal === "function")
-                                cargarTrelloModal();
-                        }, 600);
-                    } else {
-                        mostrarToast("Error al guardar configuración", "error");
-                    }
-                })
-                .withFailureHandler(function (err) {
-                    ocultarSpinner();
-                    btn.disabled = false;
-                    btn.innerHTML = "💾 Guardar";
-                    mostrarToast(
-                        "Error guardando configuración: " + err.message,
-                        "error"
-                    );
-                })
-                .guardarConfigTrello(configTrello, window.currentSheetUrl);
-        }
-
-        function eliminarEvidenciaBug(index) {
-            window.evidenciasBugTemporales.splice(index, 1);
-            renderizarListaEvidenciasBug();
-            mostrarToast("✅ Evidencia eliminada", "success");
-        }
-
-        // ===================================================================
-        // GUARDAR BUG (feature/bugs-trello)
-        // ===================================================================
-
-        async function guardarBug() {
-            console.log("💾 Guardando bug...");
-
-            // ═══════════════════════════════════════════════════════════════════════
-            // VALIDACIONES DE CAMPOS OBLIGATORIOS
-            // ═══════════════════════════════════════════════════════════════════════
-
-            const titulo = document.getElementById("bugTitulo").value.trim();
-            const descripcion = document
-                .getElementById("bugDescripcion")
-                .value.trim();
-            const precondiciones = document
-                .getElementById("bugPrecondiciones")
-                .value.trim();
-            const datosPrueba = document
-                .getElementById("bugDatosPrueba")
-                .value.trim();
-            const pasosReproducir = document
-                .getElementById("bugPasosReproducir")
-                .value.trim();
-            const resultadoEsperado = document
-                .getElementById("bugResultadoEsperado")
-                .value.trim();
-            const resultadoObtenido = document
-                .getElementById("bugResultadoObtenido")
-                .value.trim();
-
-            if (!titulo || titulo.length < 10) {
+                }
+            })
+            .withFailureHandler(function (error) {
+                selectBoard.disabled = false;
+                selectBoard.innerHTML =
+                    '<option value="">Error al cargar</option>';
+                console.error("Error cargando tableros:", error);
                 mostrarToast(
-                    "El título debe tener al menos 10 caracteres",
-                    "warning"
-                );
-                return;
-            }
-
-            if (!descripcion || descripcion.length < 10) {
-                mostrarToast(
-                    "La descripción debe tener al menos 10 caracteres",
-                    "warning"
-                );
-                return;
-            }
-
-            if (!precondiciones || precondiciones.length < 10) {
-                mostrarToast(
-                    "Las precondiciones son obligatorias (mín. 10 caracteres)",
-                    "warning"
-                );
-                return;
-            }
-
-            if (!datosPrueba || datosPrueba.length < 10) {
-                mostrarToast(
-                    "Los datos de prueba son obligatorios (mín. 10 caracteres)",
-                    "warning"
-                );
-                return;
-            }
-
-            if (!pasosReproducir || pasosReproducir.length < 10) {
-                mostrarToast(
-                    "Los pasos para reproducir son obligatorios (mín. 10 caracteres)",
-                    "warning"
-                );
-                return;
-            }
-
-            if (!resultadoEsperado || resultadoEsperado.length < 10) {
-                mostrarToast(
-                    "El resultado esperado es obligatorio (mín. 10 caracteres)",
-                    "warning"
-                );
-                return;
-            }
-
-            if (!resultadoObtenido || resultadoObtenido.length < 10) {
-                mostrarToast(
-                    "El resultado obtenido es obligatorio (mín. 10 caracteres)",
-                    "warning"
-                );
-                return;
-            }
-
-            // ═══════════════════════════════════════════════════════════════════════
-            // PREPARAR DATOS DEL BUG
-            // ═══════════════════════════════════════════════════════════════════════
-
-            const sheetUrl = window.currentSheetUrl;
-
-            if (!sheetUrl) {
-                console.error("❌ No hay currentSheetUrl disponible");
-                console.log("window.currentSheetUrl:", window.currentSheetUrl);
-                mostrarToast(
-                    "❌ Error: No hay Sheet conectado. Recarga la página e intenta de nuevo.",
+                    "Error al cargar tableros: " + error.message,
                     "error"
                 );
-                return;
-            }
+            })
+            .listarTablerosTrello();
+    }
 
-            console.log("✅ Sheet URL obtenida:", sheetUrl);
+    /**
+     * Carga las listas del tablero seleccionado
+     */
+    function cargarListasTrello() {
+        const selectBoard = document.getElementById("bugTrelloBoard");
+        const selectList = document.getElementById("bugTrelloList");
 
-            const casoRelacionado = document
-                .getElementById("bugCasoRelacionado")
-                .value.trim();
-
-            const datosBug = {
-                sheetUrl: sheetUrl,
-                titulo: titulo,
-                descripcion: descripcion,
-                severidad: document.getElementById("bugSeveridad").value,
-                prioridad: document.getElementById("bugPrioridad").value,
-                precondiciones: precondiciones,
-                datosPrueba: datosPrueba,
-                pasosReproducir: pasosReproducir,
-                resultadoEsperado: resultadoEsperado,
-                resultadoObtenido: resultadoObtenido,
-                ambiente: document.getElementById("bugAmbiente").value,
-                navegador: document.getElementById("bugNavegador").value,
-                etiquetas: document.getElementById("bugEtiquetas").value,
-                notas: document.getElementById("bugNotas").value,
-                tieneCasoDiseñado: casoRelacionado ? true : false,
-                casosRelacionados: casoRelacionado || "",
-                origenSinCaso: casoRelacionado ? "" : "Manual",
-                evidencias: [], // Solo nombres para referencia
-                evidenciasBase64: [], // ← NUEVO: Contenido completo para subir
-                // Opciones Trello (compacto en modal)
-                enviarATrello: document.getElementById("bugEnviarATrello")
-                    ? document.getElementById("bugEnviarATrello").checked
-                    : true,
-                trelloListOverride: document.getElementById("bugListSelect")
-                    ? document.getElementById("bugListSelect").value
-                    : "",
-            };
-
-            // MEJORA 4: Agregar evidencias con contenido Base64 completo
-            if (
-                window.evidenciasBugTemporales &&
-                window.evidenciasBugTemporales.length > 0
-            ) {
-                // Nombres para referencia rápida
-                datosBug.evidencias = window.evidenciasBugTemporales.map(
-                    (e) => e.nombre
-                );
-
-                // Contenido completo Base64 para subir a Drive
-                datosBug.evidenciasBase64 = window.evidenciasBugTemporales.map(
-                    function (e) {
-                        return {
-                            nombre: e.nombre,
-                            mimeType: e.mimeType,
-                            contenidoBase64: e.contenidoBase64,
-                            tamaño: e.tamaño,
-                        };
-                    }
-                );
-
-                console.log(
-                    "📎 " +
-                        datosBug.evidenciasBase64.length +
-                        " evidencias preparadas para subir"
-                );
-            }
-
-            console.log("📦 Datos del bug:", datosBug);
-
-            // ═══════════════════════════════════════════════════════════════════════
-            // LLAMAR AL BACKEND
-            // ═══════════════════════════════════════════════════════════════════════
-
-            mostrarSpinner();
-
-            google.script.run
-                .withSuccessHandler(function (response) {
-                    ocultarSpinner();
-
-                    console.log("📨 Respuesta del backend:", response);
-
-                    if (response.success) {
-                        const bugId = response.data.bugId;
-                        const trelloCreado = response.data.trelloCreado || false;
-                        const trelloIntentado =
-                            response.data.trelloIntentado || false;
-                        const trelloUrl = response.data.trelloUrl || "";
-                        const trelloError = response.data.trelloError || "";
-
-                        // ═══════════════════════════════════════════════════════════════════════
-                        // MENSAJES DIFERENCIADOS SEGÚN ESCENARIOS (feature/bugs-trello)
-                        // ═══════════════════════════════════════════════════════════════════════
-
-                        if (trelloCreado) {
-                            // ✅ ESCENARIO 1: Éxito con Trello
-                            mostrarToast(
-                                "✅ Bug " +
-                                    bugId +
-                                    " creado y enviado a Trello exitosamente",
-                                "success",
-                                4000
-                            );
-
-                            // Mostrar notificación adicional con link a Trello
-                            setTimeout(function () {
-                                if (trelloUrl) {
-                                    mostrarNotificacionTrello(bugId, trelloUrl);
-                                }
-                            }, 1000);
-                        }
-                        if (window.evidenciasBugTemporales.length > 0) {
-                            const cantEvidencias =
-                                window.evidenciasBugTemporales.length;
-                            setTimeout(function () {
-                                mostrarToast(
-                                    "📎 " +
-                                        cantEvidencias +
-                                        " evidencia(s) subida(s) a Drive",
-                                    "info",
-                                    3000
-                                );
-                            }, 2000);
-                        } else if (trelloIntentado && trelloError) {
-                            // ⚠️ ESCENARIO 3: Error en Trello pero bug guardado
-                            mostrarToast(
-                                "⚠️ Bug " +
-                                    bugId +
-                                    " guardado. Error al sincronizar con Trello: " +
-                                    trelloError,
-                                "warning",
-                                5000
-                            );
-
-                            console.warn("Trello sync error:", trelloError);
-                        } else if (!trelloIntentado) {
-                            // ℹ️ ESCENARIO 2: Sin Trello configurado
-                            mostrarToast(
-                                "✅ Bug " +
-                                    bugId +
-                                    " guardado. Trello no configurado",
-                                "info",
-                                4000
-                            );
-
-                            // Ofrecer configurar Trello
-                            setTimeout(function () {
-                                mostrarSugerenciaConfigurarTrello();
-                            }, 1500);
-                        } else {
-                            // Fallback genérico
-                            mostrarToast(
-                                "✅ Bug " + bugId + " creado exitosamente",
-                                "success"
-                            );
-                        }
-
-                        // ═══════════════════════════════════════════════════════════════════════
-                        // LIMPIAR FORMULARIO
-                        // ═══════════════════════════════════════════════════════════════════════
-
-                        // Limpiar campos obligatorios
-                        document.getElementById("bugTitulo").value = "";
-                        document.getElementById("bugDescripcion").value = "";
-                        document.getElementById("bugPrecondiciones").value = "";
-                        document.getElementById("bugDatosPrueba").value = "";
-                        document.getElementById("bugPasosReproducir").value = "";
-                        document.getElementById("bugResultadoEsperado").value = "";
-                        document.getElementById("bugResultadoObtenido").value = "";
-
-                        // Limpiar campos opcionales
-                        document.getElementById("bugAmbiente").value = "";
-                        document.getElementById("bugNavegador").value = "";
-                        document.getElementById("bugEtiquetas").value = "";
-                        document.getElementById("bugNotas").value = "";
-
-                        // Resetear severidad y prioridad a valores por defecto
-                        document.getElementById("bugSeveridad").value = "Media";
-                        document.getElementById("bugPrioridad").value = "Media";
-
-                        // Limpiar evidencias
-                        window.evidenciasBugTemporales = [];
-                        const listaEvidencias =
-                            document.getElementById("listaEvidenciasBug");
-                        if (listaEvidencias)
-                            listaEvidencias.classList.add("hidden");
-
-                        // Cerrar modal de bugs
-                        cerrarModalBug();
-
-                        // ═══════════════════════════════════════════════════════════════════════
-                        // SINCRONIZACIÓN CON MODAL DE EJECUCIÓN
-                        // ═══════════════════════════════════════════════════════════════════════
-
-                        // Marcar bug creado recientemente para el caso
-                        try {
-                            window.__ultimoBugCreado = {
-                                bugId: bugId,
-                                casoId: casoRelacionado || null,
-                                at: Date.now(),
-                            };
-                        } catch (e) {
-                            console.warn("No se pudo marcar último bug creado:", e);
-                        }
-
-                        // Si el modal de ejecución está abierto para este caso, preparar No_OK
-                        try {
-                            if (
-                                window.casoEnEjecucion &&
-                                casoRelacionado &&
-                                window.casoEnEjecucion.ID === casoRelacionado
-                            ) {
-                                // Setear resultado en UI
-                                const resInput =
-                                    document.getElementById("resultadoEjecucion");
-                                if (resInput) resInput.value = "No_OK";
-                                if (typeof seleccionarResultado === "function") {
-                                    seleccionarResultado("No_OK");
-                                }
-
-                                // Agregar referencia al bug en observaciones
-                                const obs = document.getElementById(
-                                    "ejecucionComentarios"
-                                );
-                                if (obs && obs.value.indexOf(bugId) === -1) {
-                                    obs.value =
-                                        (obs.value ? obs.value + "\n" : "") +
-                                        "Bug reportado: " +
-                                        bugId;
-                                }
-
-                                // Guardar ejecución automáticamente
-                                if (typeof guardarEjecucion === "function") {
-                                    setTimeout(function () {
-                                        guardarEjecucion();
-                                    }, 400);
-                                }
-                            }
-                        } catch (e) {
-                            console.warn(
-                                "No se pudo sincronizar con modal de ejecución:",
-                                e
-                            );
-                        }
-
-                        // ═══════════════════════════════════════════════════════════════════════
-                        // ACTUALIZAR TABLA DE CASOS
-                        // ═══════════════════════════════════════════════════════════════════════
-
-                        if (casoRelacionado) {
-                            console.log(
-                                "Bug " +
-                                    bugId +
-                                    " vinculado al caso " +
-                                    casoRelacionado
-                            );
-                        }
-
-                        // Recargar tabla de casos si está visible
-                        if (typeof cargarTodosLosCasos === "function") {
-                            setTimeout(function () {
-                                cargarTodosLosCasos();
-                            }, 500);
-                        }
-                    } else {
-                        // Error general
-                        mostrarToast("Error: " + response.mensaje, "error");
-                    }
-                })
-                .withFailureHandler(function (error) {
-                    ocultarSpinner();
-                    console.error("💥 Error llamando al backend:", error);
-                    mostrarToast("Error al crear bug: " + error.message, "error");
-                })
-                .crearBug(datosBug);
+        if (!selectBoard || !selectList) {
+            console.error("Selects no encontrados");
+            return;
         }
 
-        // ===================================================================
-        // NOTIFICACIONES ESPECIALES DE TRELLO (feature/bugs-trello)
-        // ===================================================================
+        const boardId = selectBoard.value;
 
-        /**
-         * Muestra una notificación especial con link a la tarjeta de Trello
-         */
-        function mostrarNotificacionTrello(bugId, trelloUrl) {
-            const notification = document.getElementById("notification");
-            const icon = document.getElementById("notificationIcon");
-            const messageEl = document.getElementById("notificationMessage");
+        if (!boardId) {
+            selectList.innerHTML =
+                '<option value="">Primero selecciona un tablero</option>';
+            selectList.disabled = true;
 
-            if (!notification) return;
+            // Ocultar etiquetas
+            const etiquetasSection = document.getElementById(
+                "trelloEtiquetasSection"
+            );
+            if (etiquetasSection) etiquetasSection.classList.add("hidden");
 
-            // Configurar notificación especial
-            notification.className = "notification show success";
-            icon.textContent = "🎫";
-
-            // Crear mensaje con link
-            messageEl.innerHTML =
-                '🎫 Tarjeta creada en Trello: <a href="' +
-                trelloUrl +
-                '" target="_blank" style="color: white; text-decoration: underline; font-weight: bold;">' +
-                bugId +
-                "</a>";
-
-            // Mostrar
-            setTimeout(function () {
-                notification.classList.add("show");
-            }, 100);
-
-            // Ocultar después de 6 segundos
-            setTimeout(function () {
-                notification.classList.remove("show");
-            }, 6000);
+            return;
         }
 
-        /**
-         * Muestra sugerencia para configurar Trello
-         */
-        function mostrarSugerenciaConfigurarTrello() {
-            // Solo mostrar si no se ha mostrado antes en esta sesión
-            if (window.__trelloSugerenciaMostrada) {
-                return;
-            }
+        console.log("📝 Cargando listas del tablero:", boardId);
 
-            window.__trelloSugerenciaMostrada = true;
+        selectList.innerHTML = '<option value="">Cargando listas...</option>';
+        selectList.disabled = true;
 
-            const notification = document.getElementById("notification");
-            const icon = document.getElementById("notificationIcon");
-            const messageEl = document.getElementById("notificationMessage");
+        // Cargar listas
+        google.script.run
+            .withSuccessHandler(function (response) {
+                selectList.disabled = false;
 
-            if (!notification) return;
+                if (response.success && response.data) {
+                    window.trelloListsData = response.data;
 
-            notification.className = "notification show info";
-            icon.textContent = "ℹ️";
+                    selectList.innerHTML =
+                        '<option value="">Selecciona una lista...</option>';
 
-            messageEl.innerHTML =
-                "💡 Tip: Configura Trello para sincronizar bugs automáticamente. " +
-                '<span style="cursor: pointer; text-decoration: underline; font-weight: bold;" ' +
-                'onclick="abrirConfiguracionTrelloInline()">Configurar ahora</span>';
+                    response.data.forEach(function (list) {
+                        const option = document.createElement("option");
+                        option.value = list.id;
+                        option.textContent = list.name;
+                        selectList.appendChild(option);
+                    });
 
-            setTimeout(function () {
-                notification.classList.add("show");
-            }, 100);
+                    console.log("✅ Listas cargadas:", response.data.length);
+                } else {
+                    selectList.innerHTML =
+                        '<option value="">Error al cargar listas</option>';
+                    mostrarToast(
+                        "❌ " + (response.mensaje || "Error al cargar listas"),
+                        "error"
+                    );
+                }
+            })
+            .withFailureHandler(function (error) {
+                selectList.disabled = false;
+                selectList.innerHTML =
+                    '<option value="">Error al cargar</option>';
+                console.error("Error cargando listas:", error);
+                mostrarToast(
+                    "Error al cargar listas: " + error.message,
+                    "error"
+                );
+            })
+            .listarListasTrello(boardId);
 
-            setTimeout(function () {
-                notification.classList.remove("show");
-            }, 8000);
-        }
+        // Cargar etiquetas del tablero
+        cargarEtiquetasTrello(boardId);
+    }
 
-        // ===================================================================
-        // CAMBIAR ESTADO DE BUG (MEJORA 5)
-        // ===================================================================
+    /**
+     * Carga las etiquetas del tablero
+     */
+    function cargarEtiquetasTrello(boardId) {
+        console.log("🏷️ Cargando etiquetas del tablero:", boardId);
 
-        /**
-         * Inicia el proceso de cambiar estado de un bug
-         * @param {string} bugId - ID del bug
-         * @param {string} nuevoEstado - Nuevo estado (Cerrado, Resuelto, etc.)
-         */
-        function iniciarCambioEstadoBug(bugId, nuevoEstado) {
-            console.log("🔄 Iniciando cambio de estado:", bugId, "a", nuevoEstado);
+        google.script.run
+            .withSuccessHandler(function (response) {
+                if (response.success && response.data) {
+                    window.trelloLabelsData = response.data;
+                    window.trelloSelectedLabels = [];
 
-            mostrarSpinner();
+                    const container = document.getElementById(
+                        "trelloLabelsContainer"
+                    );
+                    const section = document.getElementById(
+                        "trelloEtiquetasSection"
+                    );
 
-            google.script.run
-                .withSuccessHandler(function (validacion) {
-                    ocultarSpinner();
+                    if (!container || !section) return;
 
-                    if (!validacion.success) {
-                        mostrarToast("Error: " + validacion.mensaje, "error");
+                    // Mostrar sección
+                    section.classList.remove("hidden");
+
+                    // Renderizar etiquetas
+                    container.innerHTML = "";
+
+                    if (response.data.length === 0) {
+                        container.innerHTML =
+                            '<span style="color: #94a3b8; font-size: 0.9rem;">No hay etiquetas en este tablero</span>';
                         return;
                     }
 
-                    // Si requiere confirmación (tiene casos en No_OK)
-                    if (
-                        validacion.requiereConfirmacion &&
-                        validacion.casosEnNoOK &&
-                        validacion.casosEnNoOK.length > 0
-                    ) {
-                        mostrarModalConfirmacionCambioEstado(
-                            bugId,
-                            nuevoEstado,
-                            validacion.casosEnNoOK
+                    response.data.forEach(function (label) {
+                        const labelDiv = document.createElement("div");
+                        labelDiv.style.cssText =
+                            "display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.4rem 0.8rem; border-radius: 16px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; font-size: 0.9rem; font-weight: 500;";
+                        labelDiv.style.backgroundColor = getTrelloColorHex(
+                            label.color
                         );
-                    } else {
-                        // No requiere confirmación, cambiar directamente
-                        ejecutarCambioEstadoBug(bugId, nuevoEstado, []);
-                    }
-                })
-                .withFailureHandler(function (error) {
-                    ocultarSpinner();
-                    mostrarToast("Error: " + error.message, "error");
-                })
-                .validarCambioEstadoBug(window.currentSheetUrl, bugId, nuevoEstado);
+                        labelDiv.style.color = "#fff";
+                        labelDiv.textContent =
+                            label.name || label.color || "Sin nombre";
+                        labelDiv.dataset.labelId = label.id;
+
+                        labelDiv.onclick = function () {
+                            toggleTrelloLabel(label.id, labelDiv);
+                        };
+
+                        container.appendChild(labelDiv);
+                    });
+
+                    console.log("✅ Etiquetas cargadas:", response.data.length);
+                } else {
+                    console.error(
+                        "Error cargando etiquetas:",
+                        response.mensaje
+                    );
+                }
+            })
+            .withFailureHandler(function (error) {
+                console.error("Error cargando etiquetas:", error);
+            })
+            .listarEtiquetasTrello(boardId);
+    }
+
+    /**
+     * Toggle selección de etiqueta
+     */
+    function toggleTrelloLabel(labelId, element) {
+        const index = window.trelloSelectedLabels.indexOf(labelId);
+
+        if (index > -1) {
+            // Deseleccionar
+            window.trelloSelectedLabels.splice(index, 1);
+            element.style.border = "2px solid transparent";
+            element.style.transform = "scale(1)";
+        } else {
+            // Seleccionar
+            window.trelloSelectedLabels.push(labelId);
+            element.style.border = "2px solid #1e293b";
+            element.style.transform = "scale(1.05)";
         }
 
-        /**
-         * Muestra el modal de confirmación con los casos afectados
-         */
-        function mostrarModalConfirmacionCambioEstado(
-            bugId,
-            nuevoEstado,
-            casosEnNoOK
-        ) {
-            document.getElementById("bugIdCambiarEstado").value = bugId;
-            document.getElementById("nuevoEstadoBug").value = nuevoEstado;
+        console.log("Etiquetas seleccionadas:", window.trelloSelectedLabels);
+    }
 
-            // Mostrar advertencia y lista de casos
-            const advertencia = document.getElementById("advertenciaCasosNoOK");
-            const listaCasos = document.getElementById("listaCasosNoOK");
+    /**
+     * Convierte colores de Trello a HEX
+     */
+    function getTrelloColorHex(color) {
+        const colors = {
+            green: "#61bd4f",
+            yellow: "#f2d600",
+            orange: "#ff9f1a",
+            red: "#eb5a46",
+            purple: "#c377e0",
+            blue: "#0079bf",
+            sky: "#00c2e0",
+            lime: "#51e898",
+            pink: "#ff78cb",
+            black: "#344563",
+            green_dark: "#519839",
+            yellow_dark: "#d9b51c",
+            orange_dark: "#cd8313",
+            red_dark: "#b04632",
+            purple_dark: "#89609e",
+            blue_dark: "#055a8c",
+            sky_dark: "#0098b7",
+            lime_dark: "#4ed583",
+            pink_dark: "#e568af",
+            black_dark: "#091e42",
+        };
 
-            advertencia.classList.remove("hidden");
+        return colors[color] || "#94a3b8";
+    }
 
-            let html = "";
-            casosEnNoOK.forEach(function (caso) {
-                html +=
-                    "<li><strong>" +
-                    caso.id +
-                    "</strong> - " +
-                    caso.titulo +
-                    " <em>(" +
-                    caso.hoja +
-                    ")</em></li>";
+    // ===================================================================
+    // MANEJO DE EVIDENCIAS
+    // ===================================================================
+
+    function handleDragOverBug(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        document.getElementById("dropzoneBug").classList.add("drag-over");
+    }
+
+    function handleDragLeaveBug(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        document.getElementById("dropzoneBug").classList.remove("drag-over");
+    }
+
+    function handleDropBug(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        document.getElementById("dropzoneBug").classList.remove("drag-over");
+
+        const files = event.dataTransfer.files;
+        procesarArchivosBug(files);
+    }
+
+    function handleFileSelectBug(event) {
+        const files = event.target.files;
+        procesarArchivosBug(files);
+        event.target.value = "";
+    }
+
+    // Click en dropzone
+    document.addEventListener("DOMContentLoaded", function () {
+        const dropzone = document.getElementById("dropzoneBug");
+        if (dropzone) {
+            dropzone.addEventListener("click", function () {
+                document.getElementById("inputArchivosBug").click();
             });
-            listaCasos.innerHTML = html;
-
-            // Marcar checkbox por defecto
-            document.getElementById("actualizarCasosCheck").checked = true;
-
-            abrirModal("modalCambiarEstadoBug");
         }
+    });
 
-        /**
-         * Confirma el cambio de estado y ejecuta la actualización
-         */
-        function confirmarCambioEstadoBug() {
-            const bugId = document.getElementById("bugIdCambiarEstado").value;
-            const nuevoEstado = document.getElementById("nuevoEstadoBug").value;
-            const actualizarCasos = document.getElementById(
-                "actualizarCasosCheck"
-            ).checked;
+    function procesarArchivosBug(files) {
+        let archivosValidos = 0;
 
-            cerrarModalCambiarEstado();
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
 
-            if (actualizarCasos) {
-                ejecutarCambioEstadoConActualizacion(bugId, nuevoEstado);
-            } else {
-                ejecutarCambioEstadoBug(bugId, nuevoEstado, []);
+            if (file.size > 50 * 1024 * 1024) {
+                mostrarToast(
+                    '❌ "' + file.name + '" excede los 50 MB',
+                    "error",
+                    4000
+                );
+                continue;
             }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                window.evidenciasBugTemporales.push({
+                    tipo: "archivo",
+                    nombre: file.name,
+                    tamaño: file.size,
+                    mimeType: file.type,
+                    contenidoBase64: e.target.result.split(",")[1],
+                });
+
+                renderizarListaEvidenciasBug();
+
+                const tamañoMB = (file.size / (1024 * 1024)).toFixed(2);
+                mostrarToast(
+                    '✅ "' + file.name + '" listo (' + tamañoMB + " MB)",
+                    "success",
+                    2000
+                );
+            };
+
+            reader.onerror = function () {
+                mostrarToast('❌ Error leyendo "' + file.name + '"', "error");
+            };
+
+            reader.readAsDataURL(file);
+            archivosValidos++;
         }
 
-        /**
-         * Ejecuta el cambio de estado sin actualizar casos
-         */
-        function ejecutarCambioEstadoBug(bugId, nuevoEstado, casosIds) {
-            mostrarSpinner();
+        if (files.length > 1) {
+            setTimeout(() => {
+                if (archivosValidos > 0) {
+                    mostrarToast(
+                        "📎 " + archivosValidos + " archivo(s) agregado(s)",
+                        "info",
+                        2000
+                    );
+                }
+            }, 500);
+        }
+    }
 
-            google.script.run
-                .withSuccessHandler(function (response) {
-                    ocultarSpinner();
+    function renderizarListaEvidenciasBug() {
+        const lista = document.getElementById("listaEvidenciasBug");
+        const contenido = document.getElementById(
+            "contenidoListaEvidenciasBug"
+        );
 
-                    if (response.success) {
-                        mostrarToast(
-                            "✅ Estado del bug actualizado a: " + nuevoEstado,
-                            "success"
-                        );
-
-                        // Recargar lista de bugs si existe
-                        if (typeof cargarBugs === "function") {
-                            setTimeout(function () {
-                                cargarBugs();
-                            }, 500);
-                        }
-                    } else {
-                        mostrarToast("Error: " + response.mensaje, "error");
-                    }
-                })
-                .withFailureHandler(function (error) {
-                    ocultarSpinner();
-                    mostrarToast("Error: " + error.message, "error");
-                })
-                .cambiarEstadoBug(window.currentSheetUrl, bugId, nuevoEstado);
+        if (window.evidenciasBugTemporales.length === 0) {
+            lista.classList.add("hidden");
+            return;
         }
 
-        /**
-         * Ejecuta el cambio de estado Y actualiza los casos a OK
-         */
-        function ejecutarCambioEstadoConActualizacion(bugId, nuevoEstado) {
-            mostrarSpinner();
+        lista.classList.remove("hidden");
 
-            // Primero cambiar estado del bug
-            google.script.run
-                .withSuccessHandler(function (response) {
-                    if (response.success) {
-                        // Ahora obtener los casos y actualizarlos
+        let html = "";
+        window.evidenciasBugTemporales.forEach((evidencia, index) => {
+            const tamañoMB = (evidencia.tamaño / (1024 * 1024)).toFixed(2);
+
+            html += '<div class="evidencia-item">';
+            html +=
+                '  <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">';
+            html += '    <span style="font-size: 1.5rem;">📎</span>';
+            html += '    <div style="flex: 1;">';
+            html +=
+                '      <div style="font-weight: 500; word-break: break-word;">' +
+                evidencia.nombre +
+                "</div>";
+            html +=
+                '      <div style="font-size: 0.85rem; color: #64748b;">' +
+                tamañoMB +
+                " MB</div>";
+            html += "    </div>";
+            html += "  </div>";
+            html +=
+                '  <button type="button" class="btn-eliminar-evidencia" onclick="eliminarEvidenciaBug(' +
+                index +
+                ')" title="Eliminar">🗑️</button>';
+            html += "</div>";
+        });
+
+        contenido.innerHTML = html;
+    }
+
+    function eliminarEvidenciaBug(index) {
+        window.evidenciasBugTemporales.splice(index, 1);
+        renderizarListaEvidenciasBug();
+        mostrarToast("✅ Evidencia eliminada", "success");
+    }
+
+    // ===================================================================
+    // GUARDAR BUG
+    // ===================================================================
+
+    async function guardarBug() {
+        console.log("💾 Guardando bug...");
+
+        // ===================================================================
+        // VALIDACIONES DE CAMPOS OBLIGATORIOS
+        // ===================================================================
+
+        const titulo = document.getElementById("bugTitulo").value.trim();
+        const descripcion = document
+            .getElementById("bugDescripcion")
+            .value.trim();
+        const precondiciones = document
+            .getElementById("bugPrecondiciones")
+            .value.trim();
+        const datosPrueba = document
+            .getElementById("bugDatosPrueba")
+            .value.trim();
+        const pasosReproducir = document
+            .getElementById("bugPasosReproducir")
+            .value.trim();
+        const resultadoEsperado = document
+            .getElementById("bugResultadoEsperado")
+            .value.trim();
+        const resultadoObtenido = document
+            .getElementById("bugResultadoObtenido")
+            .value.trim();
+        const ambiente = document.getElementById("bugAmbiente").value.trim();
+
+        // Campos mandatorios
+        if (!titulo || titulo.length < 10) {
+            mostrarToast(
+                "⚠️ El título debe tener al menos 10 caracteres",
+                "warning"
+            );
+            document.getElementById("bugTitulo").focus();
+            return;
+        }
+
+        if (!descripcion || descripcion.length < 10) {
+            mostrarToast(
+                "⚠️ La descripción (Resumen del defecto) debe tener al menos 10 caracteres",
+                "warning"
+            );
+            document.getElementById("bugDescripcion").focus();
+            return;
+        }
+
+        if (!pasosReproducir || pasosReproducir.length < 10) {
+            mostrarToast(
+                "⚠️ Los pasos para reproducir son obligatorios (mín. 10 caracteres)",
+                "warning"
+            );
+            document.getElementById("bugPasosReproducir").focus();
+            return;
+        }
+
+        if (!resultadoEsperado || resultadoEsperado.length < 10) {
+            mostrarToast(
+                "⚠️ El resultado esperado es obligatorio (mín. 10 caracteres)",
+                "warning"
+            );
+            document.getElementById("bugResultadoEsperado").focus();
+            return;
+        }
+
+        if (!resultadoObtenido || resultadoObtenido.length < 10) {
+            mostrarToast(
+                "⚠️ El resultado obtenido es obligatorio (mín. 10 caracteres)",
+                "warning"
+            );
+            document.getElementById("bugResultadoObtenido").focus();
+            return;
+        }
+
+        if (!ambiente || ambiente.length < 3) {
+            mostrarToast(
+                "⚠️ El ambiente/versión es obligatorio (mín. 3 caracteres)",
+                "warning"
+            );
+            document.getElementById("bugAmbiente").focus();
+            return;
+        }
+
+        console.log("✅ Validaciones básicas OK");
+
+        // ===================================================================
+        // PREPARAR DATOS DEL BUG
+        // ===================================================================
+
+        const sheetUrl = window.currentSheetUrl;
+
+        if (!sheetUrl) {
+            console.error("❌ No hay currentSheetUrl disponible");
+            console.log("window.currentSheetUrl:", window.currentSheetUrl);
+            mostrarToast(
+                "❌ Error: No hay Sheet conectado. Recarga la página e intenta de nuevo.",
+                "error"
+            );
+            return;
+        }
+
+        console.log("✅ Sheet URL obtenida:", sheetUrl);
+
+        const casoRelacionado = document
+            .getElementById("bugCasoRelacionado")
+            .value.trim();
+
+        const datosBug = {
+            sheetUrl: sheetUrl,
+            titulo: titulo,
+            descripcion: descripcion,
+            severidad: document.getElementById("bugSeveridad").value,
+            prioridad: document.getElementById("bugPrioridad").value,
+            precondiciones: precondiciones,
+            datosPrueba: datosPrueba,
+            pasosReproducir: pasosReproducir,
+            resultadoEsperado: resultadoEsperado,
+            resultadoObtenido: resultadoObtenido,
+            ambiente: document.getElementById("bugAmbiente").value,
+            navegador: document.getElementById("bugNavegador").value,
+            etiquetas: document.getElementById("bugEtiquetas").value,
+            notas: document.getElementById("bugNotas").value,
+            tieneCasoDiseñado: casoRelacionado ? true : false,
+            casosRelacionados: casoRelacionado || "",
+            origenSinCaso: casoRelacionado ? "" : "Manual",
+            evidencias: [],
+        };
+
+        // Agregar evidencias si hay
+        if (
+            window.evidenciasBugTemporales &&
+            window.evidenciasBugTemporales.length > 0
+        ) {
+            // Por ahora solo guardamos los nombres (la subida a Drive es para después)
+            datosBug.evidencias = window.evidenciasBugTemporales.map(
+                (e) => e.nombre
+            );
+        }
+
+        console.log("📦 Datos del bug:", datosBug);
+
+        // ===================================================================
+        // LLAMAR AL BACKEND
+        // ===================================================================
+
+        mostrarSpinner();
+
+        google.script.run
+            .withSuccessHandler(function (response) {
+                console.log("📨 Respuesta del backend:", response);
+
+                if (response.success) {
+                    const bugId = response.data.bugId;
+
+                    console.log("✅ Bug " + bugId + " creado en Sheets");
+
+                    // Intentar crear card en Trello si está configurado
+                    const trelloListId =
+                        document.getElementById("bugTrelloList").value;
+
+                    if (trelloListId) {
+                        console.log("🔗 Creando card en Trello...");
+                        mostrarSpinner("Creando card en Trello...");
+
+                        // Preparar datos para Trello con el bugId generado
+                        const datosBugConId = Object.assign({}, datosBug, {
+                            id: bugId,
+                        });
+
                         google.script.run
-                            .withSuccessHandler(function (resultadoCasos) {
+                            .withSuccessHandler(function (trelloResponse) {
                                 ocultarSpinner();
 
-                                if (resultadoCasos.success) {
-                                    const casosIds =
-                                        resultadoCasos.data.casos || [];
+                                if (trelloResponse.success) {
+                                    console.log(
+                                        "✅ Card de Trello creada:",
+                                        trelloResponse.data.cardUrl
+                                    );
+                                    mostrarToast(
+                                        "✅ Bug " +
+                                            bugId +
+                                            " creado y enviado a Trello!",
+                                        "success"
+                                    );
 
-                                    if (casosIds.length > 0) {
-                                        // Actualizar casos
-                                        actualizarCasosTrasCerrarBug(
-                                            bugId,
-                                            casosIds
-                                        );
-                                    } else {
-                                        mostrarToast(
-                                            "✅ Estado del bug actualizado",
-                                            "success"
-                                        );
-                                    }
+                                    // TODO: Actualizar el bug en Sheets con la URL de Trello
+                                    // (esto requeriría otra función en el backend)
+                                } else {
+                                    console.error(
+                                        "❌ Error creando card en Trello:",
+                                        trelloResponse.mensaje
+                                    );
+                                    mostrarToast(
+                                        "⚠️ Bug " +
+                                            bugId +
+                                            " creado, pero falló Trello: " +
+                                            trelloResponse.mensaje,
+                                        "warning"
+                                    );
                                 }
+
+                                // Continuar con el flujo normal
+                                finalizarCreacionBug(bugId, casoRelacionado);
                             })
                             .withFailureHandler(function (error) {
                                 ocultarSpinner();
+                                console.error(
+                                    "💥 Error en integración Trello:",
+                                    error
+                                );
                                 mostrarToast(
-                                    "Bug actualizado pero error obteniendo casos: " +
+                                    "⚠️ Bug " +
+                                        bugId +
+                                        " creado, pero falló Trello: " +
                                         error.message,
                                     "warning"
                                 );
+
+                                // Continuar con el flujo normal
+                                finalizarCreacionBug(bugId, casoRelacionado);
                             })
-                            .obtenerCasosPorBug(window.currentSheetUrl, bugId);
+                            .crearCardTrello(
+                                datosBugConId,
+                                trelloListId,
+                                window.trelloSelectedLabels || []
+                            );
                     } else {
+                        // No hay Trello configurado, continuar normalmente
                         ocultarSpinner();
-                        mostrarToast("Error: " + response.mensaje, "error");
-                    }
-                })
-                .withFailureHandler(function (error) {
-                    ocultarSpinner();
-                    mostrarToast("Error: " + error.message, "error");
-                })
-                .cambiarEstadoBug(window.currentSheetUrl, bugId, nuevoEstado);
-        }
-
-        /**
-         * Actualiza los casos asociados a OK
-         */
-        function actualizarCasosTrasCerrarBug(bugId, casosIds) {
-            mostrarSpinner();
-
-            google.script.run
-                .withSuccessHandler(function (resultado) {
-                    ocultarSpinner();
-
-                    if (resultado.success) {
-                        const cant = resultado.casosActualizados.length;
                         mostrarToast(
-                            "✅ Bug actualizado. " +
-                                cant +
-                                " caso(s) cambiado(s) a OK",
-                            "success",
-                            4000
+                            "✅ Bug " + bugId + " creado exitosamente",
+                            "success"
                         );
-
-                        // Recargar listas
-                        if (typeof cargarBugs === "function") {
-                            setTimeout(function () {
-                                cargarBugs();
-                            }, 500);
-                        }
-                        if (typeof cargarTodosLosCasos === "function") {
-                            setTimeout(function () {
-                                cargarTodosLosCasos();
-                            }, 500);
-                        }
-                    } else {
-                        mostrarToast(
-                            "Error actualizando casos: " + resultado.mensaje,
-                            "warning"
-                        );
+                        finalizarCreacionBug(bugId, casoRelacionado);
                     }
-                })
-                .withFailureHandler(function (error) {
+                } else {
                     ocultarSpinner();
-                    mostrarToast("Error: " + error.message, "error");
-                })
-                .actualizarCasosAlCerrarBug(
-                    window.currentSheetUrl,
-                    bugId,
-                    casosIds
-                );
-        }
+                    mostrarToast("❌ Error: " + response.mensaje, "error");
+                }
+            })
+            .withFailureHandler(function (error) {
+                ocultarSpinner();
+                console.error("💥 Error llamando al backend:", error);
+                mostrarToast("Error al crear bug: " + error.message, "error");
+            })
+            .crearBug(datosBug);
+    }
 
-        /**
-         * Cierra el modal de cambio de estado
-         */
-        function cerrarModalCambiarEstado() {
-            cerrarModal("modalCambiarEstadoBug");
+    /**
+     * Finaliza el proceso de creación de bug (limpia form, cierra modal, etc.)
+     */
+    function finalizarCreacionBug(bugId, casoRelacionado) {
+        console.log("🏁 Finalizando creación de bug:", bugId);
 
-            // Limpiar campos
-            document.getElementById("bugIdCambiarEstado").value = "";
-            document.getElementById("nuevoEstadoBug").value = "";
-            document.getElementById("advertenciaCasosNoOK").classList.add("hidden");
-            document.getElementById("listaCasosNoOK").innerHTML = "";
-        }
+        // Limpiar formulario manualmente
+        document.getElementById("bugTitulo").value = "";
+        document.getElementById("bugDescripcion").value = "";
+        window.evidenciasBugTemporales = [];
 
-        // ===================================================================
-        // EXPORTAR AL SCOPE GLOBAL
-        // ===================================================================
+        // Cerrar modal de bugs
+        cerrarModalBug();
 
-        window.abrirModalCrearBug = abrirModalCrearBug;
-        window.cerrarModalBug = cerrarModalBug;
-        window.preLlenarDesdeCaso = preLlenarDesdeCaso;
-        window.handleDragOverBug = handleDragOverBug;
-        window.handleDragLeaveBug = handleDragLeaveBug;
-        window.handleDropBug = handleDropBug;
-        window.handleFileSelectBug = handleFileSelectBug;
-        window.procesarArchivosBug = procesarArchivosBug;
-        window.renderizarListaEvidenciasBug = renderizarListaEvidenciasBug;
-        window.eliminarEvidenciaBug = eliminarEvidenciaBug;
-        window.guardarBug = guardarBug;
-        // Exportar funciones de Trello (feature/bugs-trello)
-        window.mostrarNotificacionTrello = mostrarNotificacionTrello;
-        window.mostrarSugerenciaConfigurarTrello =
-            mostrarSugerenciaConfigurarTrello;
-        // Exportar funciones de cambio de estado (MEJORA 5)
-        window.iniciarCambioEstadoBug = iniciarCambioEstadoBug;
-        window.confirmarCambioEstadoBug = confirmarCambioEstadoBug;
-        window.cerrarModalCambiarEstado = cerrarModalCambiarEstado;
+        // Marcar bug creado recientemente para el caso (para permitir guardar No_OK sin revalidar)
+        try {
+            window.__ultimoBugCreado = {
+                bugId: bugId,
+                casoId: casoRelacionado || null,
+                at: Date.now(),
+            };
+        } catch (e) {}
 
-        console.log("✅ Frontend_Components_Bugs.html cargado correctamente");
-        // Si había llamadas encoladas antes de la inicialización, procesarlas ahora
+        // Si el modal de ejecución está abierto para este caso, preparar No_OK y guardar automáticamente
         try {
             if (
-                window._abrirModalCrearBugQueue &&
-                window._abrirModalCrearBugQueue.length > 0
+                window.casoEnEjecucion &&
+                casoRelacionado &&
+                window.casoEnEjecucion.ID === casoRelacionado
             ) {
-                console.log(
-                    "[Bugs] Procesando llamadas encoladas a abrirModalCrearBug:",
-                    window._abrirModalCrearBugQueue.length
-                );
-                window._abrirModalCrearBugQueue.forEach(function (casoId) {
-                    try {
-                        abrirModalCrearBug(casoId);
-                    } catch (err) {
-                        console.error(
-                            "Error procesando llamada encolada a abrirModalCrearBug:",
-                            err
-                        );
-                    }
-                });
-                window._abrirModalCrearBugQueue = [];
-            }
-            // Eliminar flag de stub si existe
-            if (window.abrirModalCrearBug && window.abrirModalCrearBug.__isStub) {
-                try {
-                    delete window.abrirModalCrearBug.__isStub;
-                } catch (e) {
-                    window.abrirModalCrearBug.__isStub = false;
+                // Setear resultado en UI
+                const resInput = document.getElementById("resultadoEjecucion");
+                if (resInput) resInput.value = "No_OK";
+                if (typeof seleccionarResultado === "function")
+                    seleccionarResultado("No_OK");
+
+                // Agregar referencia al bug en observaciones (si no está)
+                const obs = document.getElementById("ejecucionComentarios");
+                if (obs && obs.value.indexOf(bugId) === -1) {
+                    obs.value =
+                        (obs.value ? obs.value + "\n" : "") +
+                        "Bug reportado: " +
+                        bugId;
+                }
+
+                // Guardar ejecución automáticamente
+                if (typeof guardarEjecucion === "function") {
+                    setTimeout(function () {
+                        guardarEjecucion();
+                    }, 400);
                 }
             }
         } catch (e) {
-            console.error("Error al procesar cola de abrirModalCrearBug:", e);
+            console.warn("No se pudo sincronizar con modal de ejecución:", e);
         }
 
-    } catch (e) {
-        console.error('❌ Error crítico cargando Frontend_Components_Bugs.html:', e);
-        try { if (typeof mostrarToast === 'function') mostrarToast('Error cargando módulo Bugs: ' + (e && e.message ? e.message : ''), 'error'); } catch (ee) { console.error('Error mostrando toast tras fallo crítico:', ee); }
+        // Si estábamos en modal de ejecución, actualizar estado
+        if (casoRelacionado) {
+            mostrarToast(
+                "Bug " + bugId + " vinculado al caso " + casoRelacionado,
+                "info",
+                2000
+            );
+        }
+
+        // Si hay tabla de casos visible, recargarla
+        if (typeof cargarTodosLosCasos === "function") {
+            setTimeout(() => {
+                cargarTodosLosCasos();
+            }, 500);
+        }
     }
+
+    // ===================================================================
+    // EXPORTAR AL SCOPE GLOBAL
+    // ===================================================================
+
+    window.abrirModalCrearBug = abrirModalCrearBug;
+    window.cerrarModalBug = cerrarModalBug;
+    window.preLlenarDesdeCaso = preLlenarDesdeCaso;
+    window.handleDragOverBug = handleDragOverBug;
+    window.handleDragLeaveBug = handleDragLeaveBug;
+    window.handleDropBug = handleDropBug;
+    window.handleFileSelectBug = handleFileSelectBug;
+    window.procesarArchivosBug = procesarArchivosBug;
+    window.renderizarListaEvidenciasBug = renderizarListaEvidenciasBug;
+    window.eliminarEvidenciaBug = eliminarEvidenciaBug;
+    window.guardarBug = guardarBug;
+
+    console.log("✅ Frontend_Components_Bugs.html cargado correctamente");
 </script>

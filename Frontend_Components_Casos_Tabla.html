@@ -316,11 +316,9 @@
                 '<button class="btn btn-success btn-icon" title="Ejecutar" onclick="if(window.abrirModalEjecutarCaso) abrirModalEjecutarCaso(\'' +
                 id +
                 "')\">▶️ Ejecutar</button>" +
-                '<button class="btn btn-secondary btn-icon" title="Reportar bug" onclick="if(window.abrirModalCrearBugProxy) abrirModalCrearBugProxy(\'' +
+                '<button class="btn btn-secondary btn-icon" title="Reportar bug" onclick="if(window.abrirModalCrearBug) abrirModalCrearBug(\'' +
                 id +
-                "'); else if(window.abrirModalCrearBug) abrirModalCrearBug('" +
-                id +
-                "');\">🐛 Bug</button>" +
+                "')\">🐛 Bug</button>" +
                 '<button class="btn btn-danger btn-icon" title="Eliminar" onclick="confirmarEliminarCasoTabla(\'' +
                 id +
                 "')\">🗑️ Eliminar</button>" +
@@ -463,6 +461,99 @@
     // ===================================================================
     // Filtros
     // ===================================================================
+    // PERSISTENCIA DE FILTROS EN LOCALSTORAGE
+    // ===================================================================
+
+    /**
+     * Guarda los filtros actuales en localStorage
+     */
+    function guardarFiltrosEnLocalStorage() {
+        try {
+            var filtros = {
+                busqueda:
+                    document.getElementById("filtroBusqueda")?.value || "",
+                hoja: document.getElementById("filtroHoja")?.value || "Todas",
+                prioridad:
+                    document.getElementById("filtroPrioridad")?.value ||
+                    "Todas",
+                estadoDiseño:
+                    document.getElementById("filtroEstadoDiseño")?.value ||
+                    "Todos",
+                estadoEjecucion:
+                    document.getElementById("filtroEstadoEjecucion")?.value ||
+                    "Todos",
+                flujoCritico:
+                    !!document.getElementById("filtroFlujoCritico")?.checked,
+                candidatosRegresion: !!document.getElementById(
+                    "filtroCandidatosRegresion"
+                )?.checked,
+            };
+
+            localStorage.setItem("qaFiltrosCasos", JSON.stringify(filtros));
+            console.log("💾 Filtros guardados en localStorage");
+        } catch (e) {
+            console.warn("⚠️ No se pudieron guardar filtros:", e);
+        }
+    }
+
+    /**
+     * Restaura los filtros desde localStorage
+     */
+    function restaurarFiltrosDesdeLocalStorage() {
+        try {
+            var filtrosGuardados = localStorage.getItem("qaFiltrosCasos");
+            if (!filtrosGuardados) {
+                console.log("📭 No hay filtros guardados");
+                return;
+            }
+
+            var filtros = JSON.parse(filtrosGuardados);
+
+            // Restaurar valores en los controles
+            var inputBusqueda = document.getElementById("filtroBusqueda");
+            if (inputBusqueda && filtros.busqueda)
+                inputBusqueda.value = filtros.busqueda;
+
+            var selectHoja = document.getElementById("filtroHoja");
+            if (selectHoja && filtros.hoja) selectHoja.value = filtros.hoja;
+
+            var selectPrioridad = document.getElementById("filtroPrioridad");
+            if (selectPrioridad && filtros.prioridad)
+                selectPrioridad.value = filtros.prioridad;
+
+            var selectEstadoDiseño =
+                document.getElementById("filtroEstadoDiseño");
+            if (selectEstadoDiseño && filtros.estadoDiseño)
+                selectEstadoDiseño.value = filtros.estadoDiseño;
+
+            var selectEstadoEjecucion = document.getElementById(
+                "filtroEstadoEjecucion"
+            );
+            if (selectEstadoEjecucion && filtros.estadoEjecucion)
+                selectEstadoEjecucion.value = filtros.estadoEjecucion;
+
+            var checkFlujoCritico =
+                document.getElementById("filtroFlujoCritico");
+            if (checkFlujoCritico)
+                checkFlujoCritico.checked = filtros.flujoCritico || false;
+
+            var checkCandidatosRegresion = document.getElementById(
+                "filtroCandidatosRegresion"
+            );
+            if (checkCandidatosRegresion)
+                checkCandidatosRegresion.checked =
+                    filtros.candidatosRegresion || false;
+
+            console.log("📥 Filtros restaurados desde localStorage");
+
+            // Aplicar filtros restaurados
+            aplicarFiltrosEnTiempoReal();
+        } catch (e) {
+            console.warn("⚠️ No se pudieron restaurar filtros:", e);
+        }
+    }
+
+    // ===================================================================
     function aplicarFiltrosEnTiempoReal() {
         try {
             var busqueda = (
@@ -483,6 +574,9 @@
             var soloCandidatosRegresion = !!document.getElementById(
                 "filtroCandidatosRegresion"
             )?.checked;
+
+            // Guardar filtros en localStorage
+            guardarFiltrosEnLocalStorage();
 
             var base = Array.isArray(window.casosActuales)
                 ? window.casosActuales
@@ -566,6 +660,15 @@
             "filtroCandidatosRegresion"
         );
         if (checkCandidatosRegresion) checkCandidatosRegresion.checked = false;
+
+        // Limpiar localStorage
+        try {
+            localStorage.removeItem("qaFiltrosCasos");
+            console.log("🗑️ Filtros eliminados de localStorage");
+        } catch (e) {
+            console.warn("⚠️ No se pudo limpiar localStorage:", e);
+        }
+
         aplicarFiltrosEnTiempoReal();
         if (typeof mostrarToast === "function")
             mostrarToast("Filtros limpiados", "info", 2000);
@@ -654,6 +757,8 @@
     window.aplicarFiltrosEnTiempoReal = aplicarFiltrosEnTiempoReal;
     window.toggleMostrarEliminados = toggleMostrarEliminados;
     window.limpiarFiltros = limpiarFiltros;
+    window.restaurarFiltrosDesdeLocalStorage =
+        restaurarFiltrosDesdeLocalStorage;
     console.log(
         "✅ Frontend_Components_Casos_Tabla.html cargado (con soporte responsive)"
     );

@@ -5,10 +5,9 @@
 var DEBUG_TESTS = false;
 
 function __debugGuard() {
-  if (!DEBUG_TESTS) {
-    Logger.log('DEBUG_TESTS deshabilitado. Omite ejecución de pruebas.');
-    return true;
-  }
-  return false;
+    if (!DEBUG_TESTS) {
+        Logger.log("DEBUG_TESTS deshabilitado. Omite ejecución de pruebas.");
+        return true;
+    }
+    return false;
 }
-

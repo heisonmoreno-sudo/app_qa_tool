@@ -95,6 +95,88 @@
                             <span>Crear Nuevo Workspace</span>
                         </button>
 
+                        <!-- Sección de Métricas -->
+                        <div
+                            style="
+                                border-top: 1px solid #e2e8f0;
+                                margin: 1.5rem 0;
+                                padding-top: 1.5rem;
+                            "
+                        >
+                            <p
+                                style="
+                                    font-weight: 600;
+                                    color: var(--text-primary);
+                                    margin-bottom: 0.75rem;
+                                    text-align: center;
+                                "
+                            >
+                                📊 Métricas y Análisis
+                            </p>
+
+                            <div
+                                style="
+                                    display: grid;
+                                    grid-template-columns: 1fr 1fr;
+                                    gap: 0.75rem;
+                                "
+                            >
+                                <button
+                                    class="btn btn-secondary"
+                                    onclick="mostrarMetricasProyecto()"
+                                    style="font-size: 0.9rem"
+                                >
+                                    <span>📊</span>
+                                    <span>Métricas del Proyecto</span>
+                                </button>
+
+                                <button
+                                    class="btn btn-secondary"
+                                    onclick="mostrarMetricasQA()"
+                                    style="font-size: 0.9rem"
+                                >
+                                    <span>👩‍💻</span>
+                                    <span>Métricas por QA</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div
+                            style="
+                                border-top: 1px solid #e2e8f0;
+                                margin: 1.5rem 0;
+                                padding-top: 1.5rem;
+                            "
+                        >
+                            <p
+                                style="
+                                    font-weight: 600;
+                                    color: var(--text-primary);
+                                    margin-bottom: 0.75rem;
+                                    text-align: center;
+                                "
+                            >
+                                🔗 Integraciones
+                            </p>
+
+                            <button
+                                class="btn btn-secondary btn-block"
+                                onclick="abrirModalConfigTrello()"
+                                style="
+                                    background: linear-gradient(
+                                        135deg,
+                                        #0079bf 0%,
+                                        #026aa7 100%
+                                    );
+                                    color: white;
+                                    border: none;
+                                "
+                            >
+                                <span>🔗</span>
+                                <span>Configurar Integración con Trello</span>
+                            </button>
+                        </div>
+
                         <div
                             style="
                                 border-top: 1px solid #e2e8f0;
@@ -158,6 +240,375 @@
         </div>
 
         <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- MODAL: GUÍA DE INICIO / ONBOARDING                                   -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <div id="modalGuiaInicio" class="modal-overlay">
+            <div
+                class="modal"
+                style="max-width: 900px; max-height: 85vh; overflow-y: auto"
+            >
+                <div class="modal-header">
+                    <h3 class="modal-title">
+                        <span>📚</span>
+                        <span>Guía de Inicio - QA Management System</span>
+                    </h3>
+                    <button
+                        class="modal-close"
+                        onclick="cerrarModal('modalGuiaInicio')"
+                    >
+                        ✕
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Introducción -->
+                    <div
+                        style="
+                            background: linear-gradient(
+                                135deg,
+                                #eff6ff 0%,
+                                #dbeafe 100%
+                            );
+                            padding: 1.5rem;
+                            border-radius: 8px;
+                            border-left: 4px solid #3b82f6;
+                            margin-bottom: 2rem;
+                        "
+                    >
+                        <h4
+                            style="
+                                margin: 0 0 0.75rem 0;
+                                color: #1e40af;
+                                font-size: 1.1rem;
+                            "
+                        >
+                            👋 Bienvenido a tu Sistema de Gestión QA
+                        </h4>
+                        <p style="margin: 0; color: #1e40af; line-height: 1.6">
+                            Esta plataforma te permite gestionar casos de
+                            prueba, ejecutar tests, reportar bugs y analizar
+                            métricas del proyecto. Todo respaldado por Google
+                            Sheets como base de datos.
+                        </p>
+                    </div>
+
+                    <!-- Paso 1 -->
+                    <div style="margin-bottom: 2rem">
+                        <h4
+                            style="
+                                font-size: 1.1rem;
+                                font-weight: 700;
+                                color: #1e293b;
+                                margin-bottom: 1rem;
+                                display: flex;
+                                align-items: center;
+                                gap: 0.5rem;
+                            "
+                        >
+                            <span
+                                style="
+                                    background: #3b82f6;
+                                    color: white;
+                                    width: 28px;
+                                    height: 28px;
+                                    border-radius: 50%;
+                                    display: inline-flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    font-size: 0.9rem;
+                                "
+                                >1</span
+                            >
+                            Conectar o Crear tu Workspace
+                        </h4>
+                        <div
+                            style="
+                                background: #f8fafc;
+                                padding: 1.25rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                            "
+                        >
+                            <p style="margin: 0 0 1rem 0; color: #475569">
+                                <strong>Opción A:</strong> Conectar a un Sheet
+                                existente
+                            </p>
+                            <ul
+                                style="
+                                    margin: 0 0 1rem 1.5rem;
+                                    color: #64748b;
+                                    line-height: 1.8;
+                                "
+                            >
+                                <li>Pega la URL completa de tu Google Sheet</li>
+                                <li>Click en "📋 Conectar a mi Sheet"</li>
+                                <li>
+                                    El sistema auto-detectará si necesita
+                                    configuración
+                                </li>
+                            </ul>
+                            <p style="margin: 1rem 0 0.5rem 0; color: #475569">
+                                <strong>Opción B:</strong> Crear un nuevo
+                                Workspace
+                            </p>
+                            <ul
+                                style="
+                                    margin: 0 0 0 1.5rem;
+                                    color: #64748b;
+                                    line-height: 1.8;
+                                "
+                            >
+                                <li>Click en "✨ Crear Nuevo Workspace"</li>
+                                <li>
+                                    El sistema creará automáticamente un Google
+                                    Sheet completo
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Paso 2 -->
+                    <div style="margin-bottom: 2rem">
+                        <h4
+                            style="
+                                font-size: 1.1rem;
+                                font-weight: 700;
+                                color: #1e293b;
+                                margin-bottom: 1rem;
+                                display: flex;
+                                align-items: center;
+                                gap: 0.5rem;
+                            "
+                        >
+                            <span
+                                style="
+                                    background: #10b981;
+                                    color: white;
+                                    width: 28px;
+                                    height: 28px;
+                                    border-radius: 50%;
+                                    display: inline-flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    font-size: 0.9rem;
+                                "
+                                >2</span
+                            >
+                            Crear y Gestionar Casos
+                        </h4>
+                        <div
+                            style="
+                                background: #f8fafc;
+                                padding: 1.25rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                            "
+                        >
+                            <ul
+                                style="
+                                    margin: 0 0 0 1.5rem;
+                                    color: #64748b;
+                                    line-height: 1.8;
+                                "
+                            >
+                                <li>Click en "➕ Crear Caso"</li>
+                                <li>
+                                    Elige formato: <strong>Clásico</strong> o
+                                    <strong>Gherkin</strong>
+                                </li>
+                                <li>
+                                    Organiza por módulos creando hojas
+                                    personalizadas
+                                </li>
+                                <li>
+                                    Marca flujos críticos y candidatos a
+                                    regresión
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Paso 3 -->
+                    <div style="margin-bottom: 2rem">
+                        <h4
+                            style="
+                                font-size: 1.1rem;
+                                font-weight: 700;
+                                color: #1e293b;
+                                margin-bottom: 1rem;
+                                display: flex;
+                                align-items: center;
+                                gap: 0.5rem;
+                            "
+                        >
+                            <span
+                                style="
+                                    background: #f59e0b;
+                                    color: white;
+                                    width: 28px;
+                                    height: 28px;
+                                    border-radius: 50%;
+                                    display: inline-flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    font-size: 0.9rem;
+                                "
+                                >3</span
+                            >
+                            Ejecutar Pruebas
+                        </h4>
+                        <div
+                            style="
+                                background: #f8fafc;
+                                padding: 1.25rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                            "
+                        >
+                            <ul
+                                style="
+                                    margin: 0 0 0 1.5rem;
+                                    color: #64748b;
+                                    line-height: 1.8;
+                                "
+                            >
+                                <li>
+                                    Click en "⚡ Ejecutar" en cualquier caso
+                                </li>
+                                <li>
+                                    Resultado: OK, No_OK, Bloqueado, Descartado
+                                </li>
+                                <li>
+                                    <strong>Importante:</strong> No_OK requiere
+                                    reportar un bug
+                                </li>
+                                <li>Adjunta evidencias (links a Drive)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Paso 4 -->
+                    <div style="margin-bottom: 2rem">
+                        <h4
+                            style="
+                                font-size: 1.1rem;
+                                font-weight: 700;
+                                color: #1e293b;
+                                margin-bottom: 1rem;
+                                display: flex;
+                                align-items: center;
+                                gap: 0.5rem;
+                            "
+                        >
+                            <span
+                                style="
+                                    background: #ef4444;
+                                    color: white;
+                                    width: 28px;
+                                    height: 28px;
+                                    border-radius: 50%;
+                                    display: inline-flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    font-size: 0.9rem;
+                                "
+                                >4</span
+                            >
+                            Reportar Bugs
+                        </h4>
+                        <div
+                            style="
+                                background: #f8fafc;
+                                padding: 1.25rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                            "
+                        >
+                            <ul
+                                style="
+                                    margin: 0 0 0 1.5rem;
+                                    color: #64748b;
+                                    line-height: 1.8;
+                                "
+                            >
+                                <li>
+                                    Desde ejecución No_OK, click "🐛 Reportar
+                                    Bug"
+                                </li>
+                                <li>
+                                    Completa título, severidad, pasos para
+                                    reproducir
+                                </li>
+                                <li>
+                                    Bug queda vinculado automáticamente al caso
+                                </li>
+                                <li>
+                                    Accede al historial con "🐛 Historial de
+                                    Bugs"
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Tips -->
+                    <div
+                        style="
+                            background: linear-gradient(
+                                135deg,
+                                #fef3c7 0%,
+                                #fde68a 100%
+                            );
+                            padding: 1.5rem;
+                            border-radius: 8px;
+                            border-left: 4px solid #f59e0b;
+                        "
+                    >
+                        <h4
+                            style="
+                                margin: 0 0 0.75rem 0;
+                                color: #92400e;
+                                font-size: 1rem;
+                            "
+                        >
+                            💡 Tips
+                        </h4>
+                        <ul
+                            style="
+                                margin: 0 0 0 1.5rem;
+                                color: #92400e;
+                                line-height: 1.8;
+                            "
+                        >
+                            <li><strong>ESC:</strong> Cierra modales</li>
+                            <li>
+                                <strong>Filtros:</strong> Se guardan
+                                automáticamente
+                            </li>
+                            <li>
+                                <strong>Responsive:</strong> Vista optimizada
+                                para móvil
+                            </li>
+                            <li>
+                                <strong>Accesibilidad:</strong> Navegación por
+                                teclado completa
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button
+                        class="btn btn-primary"
+                        onclick="cerrarModal('modalGuiaInicio')"
+                    >
+                        <span>✅</span>
+                        <span>Entendido</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
         <!-- SCRIPTS GLOBALES                                                     -->
         <!-- ═══════════════════════════════════════════════════════════════════ -->
         <?!= include('Frontend_Scripts_Main'); ?>
@@ -168,7 +619,7 @@
         <?!= include('Frontend_Components_Setup'); ?>
 
         <!-- ═══════════════════════════════════════════════════════════════════ -->
-        <!-- COMPONENTES - CASOS              -->
+        <!-- COMPONENTES - CASOS (Arquitectura Modular - 5 archivos)             -->
         <!-- ORDEN IMPORTANTE: De menos dependiente a más dependiente            -->
         <!-- ═══════════════════════════════════════════════════════════════════ -->
 
@@ -198,6 +649,16 @@
         <?!= include('Frontend_Components_Bugs'); ?>
         <?!= include('Frontend_Components_Bugs_List2'); ?>
         <?!= include('Frontend_Policies'); ?>
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- COMPONENTES - INTEGRACIÓN TRELLO                                     -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <?!= include('Frontend_Components_Trello_Config'); ?>
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- COMPONENTES - MÉTRICAS Y REGRESIONES                                 -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <?!= include('Frontend_Components_Metricas'); ?>
 
         <!-- ═══════════════════════════════════════════════════════════════════ -->
         <!-- SCRIPTS ESPECÍFICOS DEL INDEX                                       -->
@@ -256,6 +717,11 @@
 
                     // Ejecuciones
                     { nombre: "abrirModalEjecutarCaso", modulo: "Ejecuciones" },
+
+                    // Métricas y Regresiones
+                    { nombre: "mostrarMetricasProyecto", modulo: "Metricas" },
+                    { nombre: "mostrarMetricasQA", modulo: "Metricas" },
+                    { nombre: "mostrarRegresiones", modulo: "Metricas" },
                 ];
 
                 let todosCargados = true;
@@ -349,21 +815,20 @@
                     .testBackend();
             }
 
+            /**
+             * Muestra el modal de guía de inicio con instrucciones completas
+             * @description Reemplaza el antiguo alert por un modal moderno e interactivo
+             */
             function mostrarInfo() {
-                alert(
-                    "Sistema QA Management\n\n" +
-                        "Versión: 3.0 (Arquitectura Modular)\n\n" +
-                        "Funcionalidades:\n" +
-                        "✅ Gestión de casos (CRUD completo)\n" +
-                        "✅ Ejecución de pruebas\n" +
-                        "✅ Auto-configuración de workspace\n" +
-                        "✅ Creación de hojas organizacionales\n" +
-                        "✅ Arquitectura modular (5 archivos)\n\n" +
-                        "Próximamente:\n" +
-                        "- Integración con Trello\n" +
-                        "- Gestión de bugs\n" +
-                        "- Informes automáticos"
-                );
+                if (typeof abrirModal === "function") {
+                    abrirModal("modalGuiaInicio");
+                } else {
+                    // Fallback si abrirModal no está disponible
+                    var modal = document.getElementById("modalGuiaInicio");
+                    if (modal) {
+                        modal.classList.add("active");
+                    }
+                }
             }
 
             // Función para crear workspace (llama a Setup)

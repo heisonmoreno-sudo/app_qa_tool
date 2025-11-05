@@ -1,117 +1,191 @@
 <script>
-// Políticas de validación de Ejecuciones y UX adicionales
-(function(){
-  function wrapGuardarEjecucion(){
-    if (!window.guardarEjecucion || window.__guardarEjecucionWrapped) return;
-    const original = window.guardarEjecucion;
-    window.guardarEjecucion = function(){
-      try {
-        const resultado = document.getElementById('resultadoEjecucion')?.value;
-        const casoId = window.casoEnEjecucion ? window.casoEnEjecucion.ID : null;
-        const sheetUrl = window.currentSheetUrl;
-        if (!resultado || !casoId || !sheetUrl) return original();
-
-        // Si es OK: validar que no haya bugs abiertos
-        if (resultado === 'OK') {
-          if (typeof mostrarSpinner === 'function') mostrarSpinner();
-          google.script.run
-            .withSuccessHandler(function(val){
-              if (typeof ocultarSpinner === 'function') ocultarSpinner();
-              if (val && val.success && val.data && val.data.tieneBugsAbiertos){
-                const ids = (val.data.bugsAbiertos || []).map(b => b.ID).join(', ');
-                if (typeof mostrarToast === 'function') mostrarToast('No puedes marcar OK: bug(s) abierto(s): ' + ids, 'warning');
+    // Políticas de validación de Ejecuciones y UX adicionales
+    (function () {
+        function wrapGuardarEjecucion() {
+            if (!window.guardarEjecucion || window.__guardarEjecucionWrapped)
                 return;
-              }
-              original();
-            })
-            .withFailureHandler(function(err){
-              if (typeof ocultarSpinner === 'function') ocultarSpinner();
-              if (typeof mostrarToast === 'function') mostrarToast('Error validando bugs: ' + (err?.message || err), 'error');
-            })
-            .validarBugsAbiertosDeCaso(sheetUrl, casoId);
-          return;
+            const original = window.guardarEjecucion;
+            window.guardarEjecucion = function () {
+                try {
+                    const resultado =
+                        document.getElementById("resultadoEjecucion")?.value;
+                    const casoId = window.casoEnEjecucion
+                        ? window.casoEnEjecucion.ID
+                        : null;
+                    const sheetUrl = window.currentSheetUrl;
+                    if (!resultado || !casoId || !sheetUrl) return original();
+
+                    // Si es OK: validar que no haya bugs abiertos
+                    if (resultado === "OK") {
+                        if (typeof mostrarSpinner === "function")
+                            mostrarSpinner();
+                        google.script.run
+                            .withSuccessHandler(function (val) {
+                                if (typeof ocultarSpinner === "function")
+                                    ocultarSpinner();
+                                if (
+                                    val &&
+                                    val.success &&
+                                    val.data &&
+                                    val.data.tieneBugsAbiertos
+                                ) {
+                                    const ids = (val.data.bugsAbiertos || [])
+                                        .map((b) => b.ID)
+                                        .join(", ");
+                                    if (typeof mostrarToast === "function")
+                                        mostrarToast(
+                                            "No puedes marcar OK: bug(s) abierto(s): " +
+                                                ids,
+                                            "warning"
+                                        );
+                                    return;
+                                }
+                                original();
+                            })
+                            .withFailureHandler(function (err) {
+                                if (typeof ocultarSpinner === "function")
+                                    ocultarSpinner();
+                                if (typeof mostrarToast === "function")
+                                    mostrarToast(
+                                        "Error validando bugs: " +
+                                            (err?.message || err),
+                                        "error"
+                                    );
+                            })
+                            .validarBugsAbiertosDeCaso(sheetUrl, casoId);
+                        return;
+                    }
+
+                    // Si es No_OK: exigir bug vinculado (con bypass reciente)
+                    if (resultado === "No_OK") {
+                        // Si se acaba de crear un bug para este caso, permitir guardar sin esperar la lectura del Sheet
+                        try {
+                            const ub = window.__ultimoBugCreado;
+                            if (
+                                ub &&
+                                ub.casoId === casoId &&
+                                Date.now() - (ub.at || 0) < 120000
+                            ) {
+                                return original();
+                            }
+                        } catch (e) {}
+
+                        if (typeof mostrarSpinner === "function")
+                            mostrarSpinner();
+                        google.script.run
+                            .withSuccessHandler(function (res) {
+                                if (typeof ocultarSpinner === "function")
+                                    ocultarSpinner();
+                                const cnt =
+                                    res &&
+                                    res.success &&
+                                    res.data &&
+                                    res.data.bugs
+                                        ? res.data.bugs.length
+                                        : 0;
+                                if (cnt === 0) {
+                                    if (typeof mostrarToast === "function")
+                                        mostrarToast(
+                                            "Debes reportar o vincular un bug para casos No_OK",
+                                            "warning"
+                                        );
+                                    if (
+                                        typeof reportarBugDesdeCaso ===
+                                        "function"
+                                    )
+                                        try {
+                                            reportarBugDesdeCaso();
+                                        } catch (e) {}
+                                    return;
+                                }
+                                original();
+                            })
+                            .withFailureHandler(function (err) {
+                                if (typeof ocultarSpinner === "function")
+                                    ocultarSpinner();
+                                if (typeof mostrarToast === "function")
+                                    mostrarToast(
+                                        "Error verificando bugs: " +
+                                            (err?.message || err),
+                                        "error"
+                                    );
+                            })
+                            .obtenerBugsPorCaso(sheetUrl, casoId);
+                        return;
+                    }
+
+                    // Otros estados
+                    return original();
+                } catch (e) {
+                    return original();
+                }
+            };
+            window.__guardarEjecucionWrapped = true;
         }
 
-        // Si es No_OK: exigir bug vinculado (con bypass reciente)
-        if (resultado === 'No_OK') {
-          // Si se acaba de crear un bug para este caso, permitir guardar sin esperar la lectura del Sheet
-          try {
-            const ub = window.__ultimoBugCreado;
-            if (ub && ub.casoId === casoId && (Date.now() - (ub.at||0)) < 120000) {
-              return original();
+        function wrapSeleccionarResultado() {
+            if (
+                !window.seleccionarResultado ||
+                window.__seleccionarResultadoWrapped
+            )
+                return;
+            const origSel = window.seleccionarResultado;
+            window.seleccionarResultado = function (r) {
+                const ret = origSel(r);
+                try {
+                    const alerta = document.getElementById("alertBugRequerido");
+                    if (alerta)
+                        alerta.classList[r === "No_OK" ? "remove" : "add"](
+                            "hidden"
+                        );
+                    if (r === "No_OK" && typeof mostrarToast === "function") {
+                        mostrarToast(
+                            "Debes reportar o vincular un bug para este caso",
+                            "warning"
+                        );
+                    }
+                } catch (e) {}
+                return ret;
+            };
+            window.__seleccionarResultadoWrapped = true;
+        }
+
+        // Intentar envolver luego de que carguen los módulos
+        setTimeout(function () {
+            wrapGuardarEjecucion();
+            wrapSeleccionarResultado();
+
+            // Inyectar botón "Historial de Bugs" junto a "Limpiar Filtros" si aún no existe
+            try {
+                var btns = Array.from(document.querySelectorAll("button"));
+                var btnLimpiar = btns.find(function (b) {
+                    return (
+                        (b.textContent || "").indexOf("Limpiar Filtros") > -1
+                    );
+                });
+                if (
+                    btnLimpiar &&
+                    !document.getElementById("btnHistorialBugs")
+                ) {
+                    var nuevo = document.createElement("button");
+                    nuevo.className = "btn btn-secondary btn-sm";
+                    nuevo.id = "btnHistorialBugs";
+                    nuevo.type = "button";
+                    nuevo.style.marginLeft = "0.5rem";
+                    nuevo.style.background = "#fee2e2";
+                    nuevo.style.borderColor = "#fecaca";
+                    nuevo.style.color = "#991b1b";
+                    nuevo.textContent = "🐛 Historial de Bugs";
+                    nuevo.onclick = function () {
+                        if (typeof mostrarPanelBugs === "function")
+                            mostrarPanelBugs();
+                    };
+                    var cont = btnLimpiar.parentElement || document.body;
+                    cont.appendChild(nuevo);
+                }
+            } catch (e) {
+                /* silencioso */
             }
-          } catch(e) {}
-
-          if (typeof mostrarSpinner === 'function') mostrarSpinner();
-          google.script.run
-            .withSuccessHandler(function(res){
-              if (typeof ocultarSpinner === 'function') ocultarSpinner();
-              const cnt = (res && res.success && res.data && res.data.bugs) ? res.data.bugs.length : 0;
-              if (cnt === 0){
-                if (typeof mostrarToast === 'function') mostrarToast('Debes reportar o vincular un bug para casos No_OK', 'warning');
-                if (typeof reportarBugDesdeCaso === 'function') try { reportarBugDesdeCaso(); } catch(e){}
-                return;
-              }
-              original();
-            })
-            .withFailureHandler(function(err){
-              if (typeof ocultarSpinner === 'function') ocultarSpinner();
-              if (typeof mostrarToast === 'function') mostrarToast('Error verificando bugs: ' + (err?.message || err), 'error');
-            })
-            .obtenerBugsPorCaso(sheetUrl, casoId);
-          return;
-        }
-
-        // Otros estados
-        return original();
-      } catch (e) {
-        return original();
-      }
-    };
-    window.__guardarEjecucionWrapped = true;
-  }
-
-  function wrapSeleccionarResultado(){
-    if (!window.seleccionarResultado || window.__seleccionarResultadoWrapped) return;
-    const origSel = window.seleccionarResultado;
-    window.seleccionarResultado = function(r){
-      const ret = origSel(r);
-      try {
-        const alerta = document.getElementById('alertBugRequerido');
-        if (alerta) alerta.classList[r === 'No_OK' ? 'remove' : 'add']('hidden');
-        if (r === 'No_OK' && typeof mostrarToast === 'function') {
-          mostrarToast('Debes reportar o vincular un bug para este caso', 'warning');
-        }
-      } catch(e){}
-      return ret;
-    };
-    window.__seleccionarResultadoWrapped = true;
-  }
-
-  // Intentar envolver luego de que carguen los módulos
-  setTimeout(function(){
-    wrapGuardarEjecucion();
-    wrapSeleccionarResultado();
-
-    // Inyectar botón "Historial de Bugs" junto a "Limpiar Filtros" si aún no existe
-    try {
-      var btns = Array.from(document.querySelectorAll('button'));
-      var btnLimpiar = btns.find(function(b){ return (b.textContent||'').indexOf('Limpiar Filtros')>-1; });
-      if (btnLimpiar && !document.getElementById('btnHistorialBugs')){
-        var nuevo = document.createElement('button');
-        nuevo.className = 'btn btn-secondary btn-sm';
-        nuevo.id = 'btnHistorialBugs';
-        nuevo.type = 'button';
-        nuevo.style.marginLeft = '0.5rem';
-        nuevo.style.background = '#fee2e2';
-        nuevo.style.borderColor = '#fecaca';
-        nuevo.style.color = '#991b1b';
-        nuevo.textContent = '🐛 Historial de Bugs';
-        nuevo.onclick = function(){ if (typeof mostrarPanelBugs==='function') mostrarPanelBugs(); };
-        var cont = btnLimpiar.parentElement || document.body;
-        cont.appendChild(nuevo);
-      }
-    } catch(e) { /* silencioso */ }
-  }, 1000);
-})();
+        }, 1000);
+    })();
 </script>

@@ -21,13 +21,13 @@
             "
         >
             <div style="display: flex; align-items: center; gap: 0.5rem">
-                <button
-                    class="btn btn-secondary btn-sm"
-                    onclick="ocultarMetricasProyecto()"
+                <div
+                    style="
+                        font-weight: 700;
+                        color: #334155;
+                        font-size: 1.125rem;
+                    "
                 >
-                    ⬅ Volver
-                </button>
-                <div style="font-weight: 700; color: #334155">
                     📊 Métricas del Proyecto
                 </div>
             </div>
@@ -93,7 +93,7 @@
                             border-bottom: 1px solid #e2e8f0;
                         "
                     >
-                        ✅ Casos OK vs No_OK por módulo
+                        ✅ Casos OK vs No OK por módulo
                     </li>
                     <li
                         style="
@@ -147,13 +147,13 @@
             "
         >
             <div style="display: flex; align-items: center; gap: 0.5rem">
-                <button
-                    class="btn btn-secondary btn-sm"
-                    onclick="ocultarMetricasQA()"
+                <div
+                    style="
+                        font-weight: 700;
+                        color: #334155;
+                        font-size: 1.125rem;
+                    "
                 >
-                    ⬅ Volver
-                </button>
-                <div style="font-weight: 700; color: #334155">
                     👩‍💻 Métricas por QA
                 </div>
             </div>
@@ -260,123 +260,134 @@
 <!-- PANTALLA: EJECUCIÓN DE REGRESIONES                                          -->
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 
-<div id="regresionesScreen" class="hidden" style="padding: 1rem">
-    <div class="card" style="margin-top: 0.5rem">
-        <div
-            class="card-header"
-            style="
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 1rem;
-                flex-wrap: wrap;
-            "
-        >
-            <div style="display: flex; align-items: center; gap: 0.5rem">
-                <button
-                    class="btn btn-secondary btn-sm"
-                    onclick="ocultarRegresiones()"
-                >
-                    ⬅ Volver
-                </button>
-                <div style="font-weight: 700; color: #334155">
-                    🔁 Ejecución de Regresiones
+<div
+    id="regresionesScreen"
+    class="hidden"
+    style="align-self: center; width: 100%"
+>
+    <div class="container">
+        <div class="card" style="margin-top: 0.5rem">
+            <div
+                class="card-header"
+                style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 1rem;
+                    flex-wrap: wrap;
+                "
+            >
+                <div style="display: flex; align-items: center; gap: 0.5rem">
+                    <div
+                        style="
+                            font-weight: 700;
+                            color: #334155;
+                            font-size: 1.125rem;
+                        "
+                    >
+                        🔁 Ejecución de Regresiones
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="card-body">
-            <!-- Placeholder Content -->
-            <div style="text-align: center; padding: 4rem 2rem">
-                <div
-                    style="font-size: 4rem; margin-bottom: 1.5rem; opacity: 0.5"
-                >
-                    🔁
-                </div>
-                <h3
-                    style="
-                        font-size: 1.5rem;
-                        font-weight: 600;
-                        color: var(--text-primary);
-                        margin-bottom: 1rem;
-                    "
-                >
-                    Funcionalidad en desarrollo
-                </h3>
-                <p
-                    style="
-                        font-size: 1rem;
-                        color: var(--text-secondary);
-                        max-width: 600px;
-                        margin: 0 auto;
-                        line-height: 1.6;
-                    "
-                >
-                    Esta sección permitirá ejecutar suites completas de
-                    regresión:
-                </p>
-                <ul
-                    style="
-                        list-style: none;
-                        padding: 0;
-                        margin: 1.5rem auto;
-                        max-width: 500px;
-                        text-align: left;
-                        color: var(--text-secondary);
-                    "
-                >
-                    <li
+            <div class="card-body">
+                <!-- Placeholder Content -->
+                <div style="text-align: center; padding: 4rem 2rem">
+                    <div
                         style="
-                            padding: 0.5rem 0;
-                            border-bottom: 1px solid #e2e8f0;
+                            font-size: 4rem;
+                            margin-bottom: 1.5rem;
+                            opacity: 0.5;
                         "
                     >
-                        🔄 Selección de casos candidatos a regresión
-                    </li>
-                    <li
+                        🔁
+                    </div>
+                    <h3
                         style="
-                            padding: 0.5rem 0;
-                            border-bottom: 1px solid #e2e8f0;
+                            font-size: 1.5rem;
+                            font-weight: 600;
+                            color: var(--text-primary);
+                            margin-bottom: 1rem;
                         "
                     >
-                        📋 Creación de suites personalizadas
-                    </li>
-                    <li
+                        Funcionalidad en desarrollo
+                    </h3>
+                    <p
                         style="
-                            padding: 0.5rem 0;
-                            border-bottom: 1px solid #e2e8f0;
+                            font-size: 1rem;
+                            color: var(--text-secondary);
+                            max-width: 600px;
+                            margin: 0 auto;
+                            line-height: 1.6;
                         "
                     >
-                        ⚡ Ejecución masiva de casos
-                    </li>
-                    <li
-                        style="
-                            padding: 0.5rem 0;
-                            border-bottom: 1px solid #e2e8f0;
-                        "
-                    >
-                        📊 Reporte consolidado de resultados
-                    </li>
-                    <li style="padding: 0.5rem 0">
-                        📅 Programación de regresiones automáticas
-                    </li>
-                </ul>
-                <div
-                    style="
-                        margin-top: 2rem;
-                        padding: 1rem;
-                        background: linear-gradient(
-                            135deg,
-                            #ecfdf5 0%,
-                            #d1fae5 100%
-                        );
-                        border-radius: 8px;
-                        border-left: 4px solid #10b981;
-                    "
-                >
-                    <p style="color: #065f46; margin: 0; font-size: 0.9rem">
-                        💡 <strong>Próximamente:</strong> Sistema completo de
-                        regresiones con ejecución batch y reportes automáticos
+                        Esta sección permitirá ejecutar suites completas de
+                        regresión:
                     </p>
+                    <ul
+                        style="
+                            list-style: none;
+                            padding: 0;
+                            margin: 1.5rem auto;
+                            max-width: 500px;
+                            text-align: left;
+                            color: var(--text-secondary);
+                        "
+                    >
+                        <li
+                            style="
+                                padding: 0.5rem 0;
+                                border-bottom: 1px solid #e2e8f0;
+                            "
+                        >
+                            🔄 Selección de casos candidatos a regresión
+                        </li>
+                        <li
+                            style="
+                                padding: 0.5rem 0;
+                                border-bottom: 1px solid #e2e8f0;
+                            "
+                        >
+                            📋 Creación de suites personalizadas
+                        </li>
+                        <li
+                            style="
+                                padding: 0.5rem 0;
+                                border-bottom: 1px solid #e2e8f0;
+                            "
+                        >
+                            ⚡ Ejecución masiva de casos
+                        </li>
+                        <li
+                            style="
+                                padding: 0.5rem 0;
+                                border-bottom: 1px solid #e2e8f0;
+                            "
+                        >
+                            📊 Reporte consolidado de resultados
+                        </li>
+                        <li style="padding: 0.5rem 0">
+                            📅 Programación de regresiones automáticas
+                        </li>
+                    </ul>
+                    <div
+                        style="
+                            margin-top: 2rem;
+                            padding: 1rem;
+                            background: linear-gradient(
+                                135deg,
+                                #ecfdf5 0%,
+                                #d1fae5 100%
+                            );
+                            border-radius: 8px;
+                            border-left: 4px solid #10b981;
+                        "
+                    >
+                        <p style="color: #065f46; margin: 0; font-size: 0.9rem">
+                            💡 <strong>Próximamente:</strong> Sistema completo
+                            de regresiones con ejecución batch y reportes
+                            automáticos
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -400,7 +411,14 @@
         );
         if (metricasScreen) {
             metricasScreen.classList.remove("hidden");
+            try {
+                localStorage.setItem("qaLastScreen", "metricasProyecto");
+            } catch (e) {}
         }
+
+        // Mostrar botones de navegación en el header
+        const headerNavButtons = document.getElementById("headerNavButtons");
+        if (headerNavButtons) headerNavButtons.classList.remove("hidden");
     }
 
     function ocultarMetricasProyecto() {
@@ -427,7 +445,14 @@
         const metricasQAScreen = document.getElementById("metricasQAScreen");
         if (metricasQAScreen) {
             metricasQAScreen.classList.remove("hidden");
+            try {
+                localStorage.setItem("qaLastScreen", "metricasQA");
+            } catch (e) {}
         }
+
+        // Mostrar botones de navegación en el header
+        const headerNavButtons = document.getElementById("headerNavButtons");
+        if (headerNavButtons) headerNavButtons.classList.remove("hidden");
     }
 
     function ocultarMetricasQA() {
@@ -445,14 +470,35 @@
     function mostrarRegresiones() {
         console.log("🔁 [Regresiones] Mostrar ejecución de regresiones");
 
-        // Ocultar todas las pantallas
-        ocultarTodasLasPantallas();
+        // Ocultar todas las pantallas principales
+        const welcomeScreen = document.getElementById("welcomeScreen");
+        const casosScreen = document.getElementById("casosScreen");
+        const setupScreen = document.getElementById("setupScreen");
+        const bugsScreen = document.getElementById("bugsScreen");
+        const metricasScreen = document.getElementById("metricasScreen");
+        const metricasQAScreen = document.getElementById("metricasQAScreen");
+        const metricasProyectoScreen = document.getElementById(
+            "metricasProyectoScreen"
+        );
+
+        if (welcomeScreen) welcomeScreen.classList.add("hidden");
+        if (casosScreen) casosScreen.classList.add("hidden");
+        if (setupScreen) setupScreen.classList.add("hidden");
+        if (bugsScreen) bugsScreen.classList.add("hidden");
+        if (metricasScreen) metricasScreen.classList.add("hidden");
+        if (metricasQAScreen) metricasQAScreen.classList.add("hidden");
+        if (metricasProyectoScreen)
+            metricasProyectoScreen.classList.add("hidden");
 
         // Mostrar pantalla de regresiones
         const regresionesScreen = document.getElementById("regresionesScreen");
         if (regresionesScreen) {
             regresionesScreen.classList.remove("hidden");
         }
+
+        // Mostrar botones de navegación en el header
+        const headerNavButtons = document.getElementById("headerNavButtons");
+        if (headerNavButtons) headerNavButtons.classList.remove("hidden");
     }
 
     function ocultarRegresiones() {

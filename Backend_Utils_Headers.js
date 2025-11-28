@@ -18,9 +18,8 @@ var HEADER_ALIASES = {
     ScenarioWhen: ["ScenarioWhen", "Cuando"],
     ScenarioThen: ["ScenarioThen", "Entonces"],
     Precondiciones: ["Precondiciones", "Pre-condiciones"],
-    FlujoCritico: ["FlujoCritico", "FlujoCrítico"],
     CandidatoRegresion: ["CandidatoRegresion", "CandidatoRegresión"],
-    EstadoDiseno: ["EstadoDiseño", "EstadoDiseo", "Estado Diseño", "Estado"],
+    EstadoDiseno: ["EstadoDiseño", "EstadoDiseo", "Estado Diseño", "Estado"],
     FechaCreacion: [
         "FechaCreacion",
         "Fecha Creacion",
@@ -51,6 +50,14 @@ var HEADER_ALIASES = {
     LinkBugRelacionado: ["LinkBugRelacionado", "Link Bug Relacionado"],
     CasoURI: ["CasoURI", "Caso URI"],
     Notas: ["Notas"],
+    TrelloCardURL: [
+        "TrelloCardURL",
+        "LinkTrello",
+        "Link Trello",
+        "LinkTrello",
+        "Link Trello Bug",
+        "Link Trello URL",
+    ],
 };
 
 /**

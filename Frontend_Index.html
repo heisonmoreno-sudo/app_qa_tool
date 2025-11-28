@@ -4,7 +4,18 @@
         <base target="_top" />
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>QA Management System</title>
+        <title>Streambe - QA Management System</title>
+
+        <!-- Google Fonts: Nunito -->
+        <link
+            href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap"
+            rel="stylesheet"
+        />
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- BRANDING & LOGOS                                                     -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <?!= include('Frontend_Branding'); ?>
 
         <!-- ═══════════════════════════════════════════════════════════════════ -->
         <!-- ESTILOS GLOBALES                                                     -->
@@ -18,16 +29,137 @@
         <!-- ═══════════════════════════════════════════════════════════════════ -->
         <div class="header">
             <div class="header-content">
-                <div class="logo">
-                    <span>📊</span>
-                    <span>QA Management System</span>
+                <div
+                    class="logo"
+                    onclick="mostrarPantallaInicio()"
+                    style="cursor: pointer"
+                >
+                    <span class="logo-text">QA Management System</span>
                 </div>
                 <div class="user-info">
-                    <div class="user-avatar" id="userAvatar">?</div>
-                    <span id="userEmail">Cargando...</span>
+                    <div
+                        id="headerNavButtons"
+                        class="hidden"
+                        style="display: inline-flex; margin-right: 0.5rem"
+                    >
+                        <button
+                            id="btnCasosHeader"
+                            class="btn btn-secondary btn-sm"
+                            onclick="if (typeof mostrarPantallaCasos === 'function' && typeof recuperarSheetUrl === 'function') { var url = recuperarSheetUrl(); if (url) mostrarPantallaCasos(url); else mostrarToast('Por favor, primero configura o abre un workspace', 'warning'); }"
+                            style="
+                                margin-right: 0.5rem;
+                                background: #f0fdf4;
+                                border-color: #bbf7d0;
+                                color: #15803d;
+                                font-size: 0.9rem;
+                                padding: 0.5rem 1rem;
+                            "
+                        >
+                            📋 Casos
+                        </button>
+                        <button
+                            id="btnRegresionesHeader"
+                            class="btn btn-secondary btn-sm"
+                            onclick="if (typeof mostrarRegresiones === 'function') mostrarRegresiones();"
+                            style="
+                                margin-right: 0.5rem;
+                                background: #dbeafe;
+                                border-color: #bfdbfe;
+                                color: #1e40af;
+                                font-size: 0.9rem;
+                                padding: 0.5rem 1rem;
+                            "
+                        >
+                            🔁 Regresiones
+                        </button>
+                        <button
+                            id="btnHistorialBugsHeader"
+                            class="btn btn-secondary btn-sm"
+                            onclick="intentarMostrarPanelBugs();"
+                            style="
+                                margin-right: 0.5rem;
+                                background: #fee2e2;
+                                border-color: #fecaca;
+                                color: #991b1b;
+                                font-size: 0.9rem;
+                                padding: 0.5rem 1rem;
+                            "
+                        >
+                            🐛 Bugs
+                        </button>
+                    </div>
+                    <div class="user-menu-container">
+                        <div
+                            class="user-avatar"
+                            id="userAvatar"
+                            onclick="toggleUserMenu()"
+                        >
+                            ?
+                        </div>
+                        <div id="userMenu" class="user-menu hidden">
+                            <div class="user-menu-header">
+                                <div
+                                    class="user-avatar-large"
+                                    id="userAvatarLarge"
+                                >
+                                    ?
+                                </div>
+                                <span id="userEmailMenu" class="user-email"
+                                    >Cargando...</span
+                                >
+                            </div>
+                            <div
+                                class="user-menu-divider"
+                                id="userMenuDivider"
+                            ></div>
+                            <div
+                                id="userMenuWarning"
+                                class="hidden"
+                                style="
+                                    padding: 1rem;
+                                    background: #fef3c7;
+                                    border-top: 1px solid #fcd34d;
+                                "
+                            >
+                                <p
+                                    style="
+                                        margin: 0;
+                                        color: #92400e;
+                                        font-size: 0.85rem;
+                                        line-height: 1.5;
+                                    "
+                                >
+                                    <strong>⚠️ Cuenta no autorizada</strong
+                                    ><br />
+                                    Debes usar una cuenta
+                                    <strong>@streambe.com</strong> para acceder
+                                    a esta aplicación.
+                                </p>
+                            </div>
+                            <button
+                                id="btnConfiguracion"
+                                class="user-menu-item"
+                                onclick="if (typeof abrirModalConfiguracion === 'function') abrirModalConfiguracion(); toggleUserMenu();"
+                                style="border-bottom: 1px solid #e5e7eb"
+                            >
+                                <span>⚙️</span>
+                                <span id="btnConfigText">Configuración</span>
+                            </button>
+                            <button
+                                id="btnCambiarCuenta"
+                                class="user-menu-item hidden"
+                                onclick="cambiarCuenta()"
+                            >
+                                <span>🔄</span>
+                                <span>Cambiar a cuenta Streambe</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <!-- Se elimina el uso de imagen en header; solo texto -->
 
         <!-- ═══════════════════════════════════════════════════════════════════ -->
         <!-- CONTENEDOR PRINCIPAL                                                 -->
@@ -148,50 +280,6 @@
                                 padding-top: 1.5rem;
                             "
                         >
-                            <p
-                                style="
-                                    font-weight: 600;
-                                    color: var(--text-primary);
-                                    margin-bottom: 0.75rem;
-                                    text-align: center;
-                                "
-                            >
-                                🔗 Integraciones
-                            </p>
-
-                            <button
-                                class="btn btn-secondary btn-block"
-                                onclick="abrirModalConfigTrello()"
-                                style="
-                                    background: linear-gradient(
-                                        135deg,
-                                        #0079bf 0%,
-                                        #026aa7 100%
-                                    );
-                                    color: white;
-                                    border: none;
-                                "
-                            >
-                                <span>🔗</span>
-                                <span>Configurar Integración con Trello</span>
-                            </button>
-                        </div>
-
-                        <div
-                            style="
-                                border-top: 1px solid #e2e8f0;
-                                margin: 1.5rem 0;
-                                padding-top: 1.5rem;
-                            "
-                        >
-                            <button
-                                class="btn btn-secondary btn-block"
-                                onclick="testearBackend()"
-                            >
-                                <span>🚀</span>
-                                <span>Probar Conexión Backend</span>
-                            </button>
-
                             <button
                                 class="btn btn-secondary btn-block"
                                 onclick="mostrarInfo()"
@@ -282,13 +370,12 @@
                                 font-size: 1.1rem;
                             "
                         >
-                            👋 Bienvenido a tu Sistema de Gestión QA
+                            👋 Bienvenido al Sistema de Gestión QA
                         </h4>
                         <p style="margin: 0; color: #1e40af; line-height: 1.6">
-                            Esta plataforma te permite gestionar casos de
-                            prueba, ejecutar tests, reportar bugs y analizar
-                            métricas del proyecto. Todo respaldado por Google
-                            Sheets como base de datos.
+                            Gestiona casos de prueba, ejecuta tests, reporta
+                            bugs y sincroniza con Trello. Todo respaldado por
+                            Google Sheets como base de datos centralizada.
                         </p>
                     </div>
 
@@ -319,7 +406,7 @@
                                 "
                                 >1</span
                             >
-                            Conectar o Crear tu Workspace
+                            Conectar o Crear Workspace
                         </h4>
                         <div
                             style="
@@ -330,7 +417,7 @@
                             "
                         >
                             <p style="margin: 0 0 1rem 0; color: #475569">
-                                <strong>Opción A:</strong> Conectar a un Sheet
+                                <strong>Opción A:</strong> Conectar Sheet
                                 existente
                             </p>
                             <ul
@@ -343,13 +430,12 @@
                                 <li>Pega la URL completa de tu Google Sheet</li>
                                 <li>Click en "📋 Conectar a mi Sheet"</li>
                                 <li>
-                                    El sistema auto-detectará si necesita
-                                    configuración
+                                    Si el Sheet no está configurado, se te
+                                    ofrecerá auto-configurarlo
                                 </li>
                             </ul>
                             <p style="margin: 1rem 0 0.5rem 0; color: #475569">
-                                <strong>Opción B:</strong> Crear un nuevo
-                                Workspace
+                                <strong>Opción B:</strong> Crear Workspace nuevo
                             </p>
                             <ul
                                 style="
@@ -358,10 +444,14 @@
                                     line-height: 1.8;
                                 "
                             >
-                                <li>Click en "✨ Crear Nuevo Workspace"</li>
+                                <li>Click en "🆕 Crear Nuevo Workspace"</li>
                                 <li>
-                                    El sistema creará automáticamente un Google
-                                    Sheet completo
+                                    Completa: nombre del workspace, carpeta
+                                    padre de Drive y nombre de carpeta
+                                </li>
+                                <li>
+                                    El sistema creará: Google Sheet + carpeta
+                                    organizadora + subcarpetas de evidencias
                                 </li>
                             </ul>
                         </div>
@@ -394,7 +484,7 @@
                                 "
                                 >2</span
                             >
-                            Crear y Gestionar Casos
+                            Gestionar Casos de Prueba
                         </h4>
                         <div
                             style="
@@ -411,18 +501,25 @@
                                     line-height: 1.8;
                                 "
                             >
-                                <li>Click en "➕ Crear Caso"</li>
                                 <li>
-                                    Elige formato: <strong>Clásico</strong> o
-                                    <strong>Gherkin</strong>
+                                    Click en "➕ Nuevo Caso" para crear casos
                                 </li>
                                 <li>
-                                    Organiza por módulos creando hojas
-                                    personalizadas
+                                    Formatos disponibles:
+                                    <strong>Clásico</strong> (pasos numerados) o
+                                    <strong>Gherkin</strong> (Given/When/Then)
                                 </li>
                                 <li>
-                                    Marca flujos críticos y candidatos a
-                                    regresión
+                                    Organiza por módulos: crea hojas
+                                    personalizadas desde "➕ Nueva Hoja"
+                                </li>
+                                <li>
+                                    Marca casos como candidatos a regresión con
+                                    el checkbox
+                                </li>
+                                <li>
+                                    Filtra por módulo, diseñador, ejecutor,
+                                    estado
                                 </li>
                             </ul>
                         </div>
@@ -473,16 +570,28 @@
                                 "
                             >
                                 <li>
-                                    Click en "⚡ Ejecutar" en cualquier caso
+                                    Click en "⚡ Ejecutar" en cualquier caso de
+                                    la tabla
                                 </li>
                                 <li>
-                                    Resultado: OK, No_OK, Bloqueado, Descartado
+                                    Resultado: <strong>OK</strong>,
+                                    <strong>No OK</strong>,
+                                    <strong>Bloqueado</strong>,
+                                    <strong>Descartado</strong>
                                 </li>
                                 <li>
-                                    <strong>Importante:</strong> No_OK requiere
-                                    reportar un bug
+                                    <strong>Importante:</strong> Si el resultado
+                                    es No OK, debes reportar un bug
+                                    obligatoriamente
                                 </li>
-                                <li>Adjunta evidencias (links a Drive)</li>
+                                <li>
+                                    Adjunta evidencias usando links de Google
+                                    Drive
+                                </li>
+                                <li>
+                                    El historial de ejecuciones se guarda
+                                    automáticamente
+                                </li>
                             </ul>
                         </div>
                     </div>
@@ -514,7 +623,7 @@
                                 "
                                 >4</span
                             >
-                            Reportar Bugs
+                            Gestionar Bugs
                         </h4>
                         <div
                             style="
@@ -532,19 +641,20 @@
                                 "
                             >
                                 <li>
-                                    Desde ejecución No_OK, click "🐛 Reportar
+                                    Desde ejecución No OK, click "🐛 Reportar
                                     Bug"
                                 </li>
                                 <li>
-                                    Completa título, severidad, pasos para
-                                    reproducir
+                                    Completa: título, severidad, prioridad,
+                                    pasos para reproducir
                                 </li>
                                 <li>
-                                    Bug queda vinculado automáticamente al caso
+                                    El bug queda vinculado automáticamente al
+                                    caso de prueba
                                 </li>
                                 <li>
-                                    Accede al historial con "🐛 Historial de
-                                    Bugs"
+                                    Accede al historial completo con "🐛
+                                    Historial de Bugs" (botón del header)
                                 </li>
                             </ul>
                         </div>
@@ -570,7 +680,7 @@
                                 font-size: 1rem;
                             "
                         >
-                            💡 Tips
+                            💡 Tips y Atajos
                         </h4>
                         <ul
                             style="
@@ -579,18 +689,18 @@
                                 line-height: 1.8;
                             "
                         >
-                            <li><strong>ESC:</strong> Cierra modales</li>
                             <li>
                                 <strong>Filtros:</strong> Se guardan
-                                automáticamente
+                                automáticamente en tu navegador
                             </li>
                             <li>
-                                <strong>Responsive:</strong> Vista optimizada
-                                para móvil
+                                <strong>Búsqueda:</strong> Busca en ID, título,
+                                descripción o pasos
                             </li>
                             <li>
-                                <strong>Accesibilidad:</strong> Navegación por
-                                teclado completa
+                                <strong>Eliminación:</strong> Los casos/bugs
+                                eliminados se marcan como "Eliminado" pero no se
+                                borran físicamente
                             </li>
                         </ul>
                     </div>
@@ -675,7 +785,12 @@
             // ===================================================================
 
             window.onload = function () {
-                console.log("🚀 Inicializando QA Management System...");
+                console.log(
+                    "🚀 Inicializando Streambe QA Management System..."
+                );
+
+                // Header ahora usa solo texto (logo-text)
+
                 cargarUsuario();
 
                 // Validar que todos los módulos estén cargados
@@ -741,8 +856,8 @@
                 });
 
                 if (todosCargados) {
-                    console.log("✅ Todos los módulos cargados correctamente");
-                    console.log("📊 Sistema listo para usar");
+                    // Todos los módulos cargados correctamente
+                    // Sistema listo para usar
                 } else {
                     console.error("❌ Faltan módulos:", modulosFallidos);
                     mostrarToast(
@@ -758,62 +873,156 @@
 
             function cargarUsuario() {
                 try {
-                    const email = "<?= userEmail ?>" || "usuario@qa.com";
+                    // Obtener datos del usuario incluyendo foto de perfil
+                    google.script.run
+                        .withSuccessHandler(function (userData) {
+                            if (!userData || !userData.success) {
+                                console.error("Error cargando usuario");
+                                return;
+                            }
 
-                    if (email && email !== "") {
-                        currentUser = { email: email };
-                        document.getElementById("userEmail").textContent =
-                            email;
+                            const email = userData.email || "usuario@qa.com";
+                            const photoUrl = userData.photoUrl;
+                            currentUser = { email: email, photoUrl: photoUrl };
 
-                        const iniciales = email.substring(0, 2).toUpperCase();
-                        document.getElementById("userAvatar").textContent =
-                            iniciales;
+                            const iniciales = email
+                                .substring(0, 2)
+                                .toUpperCase();
+                            const userAvatar =
+                                document.getElementById("userAvatar");
+                            const userAvatarLarge =
+                                document.getElementById("userAvatarLarge");
 
-                        console.log("✅ Usuario cargado:", email);
-                    } else {
-                        document.getElementById("userEmail").textContent =
-                            "Usuario QA";
-                        document.getElementById("userAvatar").textContent =
-                            "QA";
-                    }
+                            // Si hay foto de perfil, usarla
+                            if (photoUrl) {
+                                // Avatar pequeño
+                                if (userAvatar) {
+                                    userAvatar.innerHTML =
+                                        '<img src="' +
+                                        photoUrl +
+                                        '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />';
+                                }
+                                // Avatar grande
+                                if (userAvatarLarge) {
+                                    userAvatarLarge.innerHTML =
+                                        '<img src="' +
+                                        photoUrl +
+                                        '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />';
+                                }
+                            } else {
+                                // Fallback a iniciales si no hay foto
+                                if (userAvatar) {
+                                    userAvatar.textContent = iniciales;
+                                }
+                                if (userAvatarLarge) {
+                                    userAvatarLarge.textContent = iniciales;
+                                }
+                            }
+
+                            // Actualizar email en el menú
+                            const userEmailMenu =
+                                document.getElementById("userEmailMenu");
+                            if (userEmailMenu) {
+                                userEmailMenu.textContent = email;
+                            }
+
+                            // Verificar si es cuenta @streambe.com
+                            const esStreambe = email
+                                .toLowerCase()
+                                .endsWith("@streambe.com");
+
+                            // Ocultar avatar completo si NO es Streambe
+                            const userMenuContainer = document.querySelector(
+                                ".user-menu-container"
+                            );
+                            const btnCambiarCuenta =
+                                document.getElementById("btnCambiarCuenta");
+                            const userMenuWarning =
+                                document.getElementById("userMenuWarning");
+                            const userMenuDivider =
+                                document.getElementById("userMenuDivider");
+
+                            if (!esStreambe) {
+                                // No es cuenta Streambe - ocultar avatar completamente
+                                if (userMenuContainer) {
+                                    userMenuContainer.style.display = "none";
+                                }
+
+                                // Mostrar alerta al usuario
+                                mostrarToast(
+                                    "Debes usar una cuenta @streambe.com. Por favor, cambia de cuenta.",
+                                    "warning",
+                                    8000
+                                );
+
+                                // Redirigir al cambio de cuenta después de 2 segundos
+                                setTimeout(function () {
+                                    cambiarCuenta();
+                                }, 2000);
+                            } else {
+                                // Es cuenta Streambe - ocultar botón y warning
+                                if (btnCambiarCuenta)
+                                    btnCambiarCuenta.classList.add("hidden");
+                                if (userMenuWarning)
+                                    userMenuWarning.classList.add("hidden");
+                            }
+                        })
+                        .withFailureHandler(function (error) {
+                            console.error("Error obteniendo usuario:", error);
+                            // Fallback a email del template
+                            const email =
+                                "<?= userEmail ?>" || "usuario@qa.com";
+                            const iniciales = email
+                                .substring(0, 2)
+                                .toUpperCase();
+                            const userAvatar =
+                                document.getElementById("userAvatar");
+                            if (userAvatar) {
+                                userAvatar.textContent = iniciales;
+                            }
+                            const userAvatarLarge =
+                                document.getElementById("userAvatarLarge");
+                            if (userAvatarLarge) {
+                                userAvatarLarge.textContent = iniciales;
+                            }
+
+                            // Actualizar userEmailMenu con el email del template también
+                            const userEmailMenu =
+                                document.getElementById("userEmailMenu");
+                            if (userEmailMenu && !userEmailMenu.textContent) {
+                                userEmailMenu.textContent = email;
+                            }
+                        })
+                        .obtenerUsuario();
                 } catch (error) {
                     console.error("Error en cargarUsuario:", error);
-                    document.getElementById("userEmail").textContent =
-                        "Usuario QA";
-                    document.getElementById("userAvatar").textContent = "QA";
+
+                    // Fallback a email del template
+                    const email = "<?= userEmail ?>" || "usuario@qa.com";
+                    const iniciales = email.substring(0, 2).toUpperCase();
+
+                    const userAvatar = document.getElementById("userAvatar");
+                    if (userAvatar) {
+                        userAvatar.textContent = iniciales;
+                    }
+
+                    const userAvatarLarge =
+                        document.getElementById("userAvatarLarge");
+                    if (userAvatarLarge) {
+                        userAvatarLarge.textContent = iniciales;
+                    }
+
+                    const userEmailMenu =
+                        document.getElementById("userEmailMenu");
+                    if (userEmailMenu) {
+                        userEmailMenu.textContent = email;
+                    }
                 }
             }
 
             // ===================================================================
             // FUNCIONES DE PRUEBA
             // ===================================================================
-
-            function testearBackend() {
-                mostrarSpinner();
-
-                google.script.run
-                    .withSuccessHandler(function (response) {
-                        ocultarSpinner();
-
-                        if (response.success) {
-                            const mensaje =
-                                "Backend funcionando! Usuario: " +
-                                response.user;
-                            mostrarToast(mensaje, "success");
-                            console.log("✅ Test backend exitoso:", response);
-                        } else {
-                            mostrarToast("Error en el test", "error");
-                        }
-                    })
-                    .withFailureHandler(function (error) {
-                        ocultarSpinner();
-                        mostrarToast(
-                            "Error de conexión: " + error.message,
-                            "error"
-                        );
-                    })
-                    .testBackend();
-            }
 
             /**
              * Muestra el modal de guía de inicio con instrucciones completas
@@ -855,7 +1064,143 @@
                 return false;
             };
 
-            console.log("✅ Frontend_Index.html cargado");
+            // Frontend_Index.html cargado
+        </script>
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- FOOTER -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <footer class="footer">
+            <div class="footer-content">
+                <a
+                    href="https://streambe.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    <img
+                        src=""
+                        id="footerLogo"
+                        class="footer-logo"
+                        alt="Logo"
+                    />
+                </a>
+            </div>
+        </footer>
+
+        <script>
+            // Cargar logo en el footer cuando el DOM esté listo
+            (function () {
+                function cargarFooterLogo() {
+                    try {
+                        const footerImg = document.getElementById("footerLogo");
+                        if (
+                            footerImg &&
+                            typeof window.qaLogoFull !== "undefined"
+                        ) {
+                            footerImg.src = window.qaLogoFull;
+                            // Footer logo cargado
+                        } else {
+                            console.warn(
+                                "No se pudo cargar el footer logo:",
+                                !footerImg
+                                    ? "Elemento no encontrado"
+                                    : "qaLogoFull no definido"
+                            );
+                        }
+                    } catch (e) {
+                        console.error("Error cargando footer logo:", e);
+                    }
+                }
+
+                if (document.readyState === "loading") {
+                    document.addEventListener(
+                        "DOMContentLoaded",
+                        cargarFooterLogo
+                    );
+                } else {
+                    cargarFooterLogo();
+                }
+            })();
+
+            // Helper para mostrar pantalla de inicio
+            function mostrarPantallaInicio() {
+                var welcomeScreen = document.getElementById("welcomeScreen");
+                var casosScreen = document.getElementById("casosScreen");
+                var setupScreen = document.getElementById("setupScreen");
+                var bugsScreen = document.getElementById("bugsScreen");
+                var metricasScreen = document.getElementById("metricasScreen");
+                var regresionesScreen =
+                    document.getElementById("regresionesScreen");
+                var metricasQAScreen =
+                    document.getElementById("metricasQAScreen");
+                var metricasProyectoScreen = document.getElementById(
+                    "metricasProyectoScreen"
+                );
+
+                if (casosScreen) casosScreen.classList.add("hidden");
+                if (setupScreen) setupScreen.classList.add("hidden");
+                if (bugsScreen) bugsScreen.classList.add("hidden");
+                if (metricasScreen) metricasScreen.classList.add("hidden");
+                if (regresionesScreen)
+                    regresionesScreen.classList.add("hidden");
+                if (metricasQAScreen) metricasQAScreen.classList.add("hidden");
+                if (metricasProyectoScreen)
+                    metricasProyectoScreen.classList.add("hidden");
+                if (welcomeScreen) welcomeScreen.classList.remove("hidden");
+
+                // Ocultar botones de navegación en el header al volver al inicio
+                const headerNavButtons =
+                    document.getElementById("headerNavButtons");
+                if (headerNavButtons) headerNavButtons.classList.add("hidden");
+
+                try {
+                    localStorage.removeItem("qaLastScreen");
+                } catch (e) {}
+
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+
+            // Helper para abrir Historial de Bugs con reintentos
+            function intentarMostrarPanelBugs() {
+                console.log("[Index] intentarMostrarPanelBugs llamado");
+
+                if (typeof mostrarPanelBugs === "function") {
+                    console.log(
+                        "[Index] mostrarPanelBugs existe, ejecutando..."
+                    );
+                    mostrarPanelBugs();
+                } else {
+                    console.error("[Index] mostrarPanelBugs NO está definida");
+                    console.log(
+                        "[Index] window.mostrarPanelBugs:",
+                        window.mostrarPanelBugs
+                    );
+
+                    // Intentar después de un breve delay
+                    setTimeout(function () {
+                        if (typeof mostrarPanelBugs === "function") {
+                            console.log(
+                                "[Index] mostrarPanelBugs encontrada en reintento"
+                            );
+                            mostrarPanelBugs();
+                        } else {
+                            console.error(
+                                "[Index] mostrarPanelBugs sigue sin estar definida"
+                            );
+                            if (typeof mostrarToast === "function") {
+                                mostrarToast(
+                                    "Error: No se pudo cargar el historial de bugs",
+                                    "error"
+                                );
+                            } else {
+                                alert(
+                                    "Error: No se pudo cargar el historial de bugs"
+                                );
+                            }
+                        }
+                    }, 100);
+                }
+            }
         </script>
     </body>
 </html>

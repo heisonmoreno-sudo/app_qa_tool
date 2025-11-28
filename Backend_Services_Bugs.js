@@ -28,16 +28,54 @@ function generarIdBug(sheetUrl) {
             return "BUG-" + new Date().getTime();
         }
 
-        // Obtener contador actual
-        var contadorActual = obtenerValorConfig("ultimo_bug_id", "0", sheetUrl);
-        var nuevoContador = parseInt(contadorActual) + 1;
+        // Abrir spreadsheet y obtener hoja de Bugs
+        var ss = SpreadsheetApp.openByUrl(sheetUrl);
+        var hojaBugs = ss.getSheetByName("Bugs");
 
-        // Guardar nuevo contador
-        guardarValorConfig("ultimo_bug_id", nuevoContador.toString(), sheetUrl);
+        if (!hojaBugs) {
+            // Si no existe la hoja, crear el primer bug
+            Logger.log("✅ Primera vez creando bug: BUG-1");
+            return "BUG-1";
+        }
 
-        var nuevoId = "BUG-" + nuevoContador;
-        Logger.log("✅ ID generado: " + nuevoId);
+        // Obtener todos los IDs existentes (columna A, sin header)
+        var datos = hojaBugs.getDataRange().getValues();
+        var idsExistentes = [];
 
+        for (var i = 1; i < datos.length; i++) {
+            // Empezar en 1 para saltar header
+            var id = String(datos[i][0]).trim();
+            if (id && id.indexOf("BUG-") === 0) {
+                var numero = parseInt(id.replace("BUG-", ""));
+                if (!isNaN(numero)) {
+                    idsExistentes.push(numero);
+                }
+            }
+        }
+
+        if (idsExistentes.length === 0) {
+            Logger.log("✅ No hay bugs, generando BUG-1");
+            return "BUG-1";
+        }
+
+        // Ordenar IDs existentes
+        idsExistentes.sort(function (a, b) {
+            return a - b;
+        });
+
+        // Buscar el primer ID disponible (hueco en la secuencia)
+        var nuevoNumero = 1;
+        for (var j = 0; j < idsExistentes.length; j++) {
+            if (idsExistentes[j] === nuevoNumero) {
+                nuevoNumero++;
+            } else if (idsExistentes[j] > nuevoNumero) {
+                // Encontramos un hueco
+                break;
+            }
+        }
+
+        var nuevoId = "BUG-" + nuevoNumero;
+        Logger.log("✅ ID generado (reutilizando huecos): " + nuevoId);
         return nuevoId;
     } catch (error) {
         Logger.log("❌ Error generando ID: " + error.toString());
@@ -89,10 +127,30 @@ function obtenerOCrearHojaBugs(spreadsheet) {
                     "AsignadoA",
                     "FechaResolucion",
                     "TrelloCardID",
-                    "TrelloCardURL",
+                    "LinkTrello",
+                    "Adjuntos",
                     "Notas",
                 ];
                 hoja.getRange(1, 1, 1, headers.length).setValues([headers]);
+
+                // Aplicar formato consistente a los headers
+                var headerRange = hoja.getRange(1, 1, 1, headers.length);
+                headerRange
+                    .setBackground("#0f172a")
+                    .setFontColor("#ffffff")
+                    .setFontWeight("bold")
+                    .setFontSize(11)
+                    .setFontFamily("Nunito")
+                    .setHorizontalAlignment("center")
+                    .setVerticalAlignment("middle")
+                    .setWrap(true);
+
+                // Aplicar wrap y alineación vertical a todas las celdas de datos
+                var bugDataRange = hoja.getRange(2, 1, 2000, headers.length);
+                bugDataRange.setWrap(true).setVerticalAlignment("middle");
+
+                hoja.setRowHeight(1, 30);
+                hoja.setFrozenRows(1);
             }
         }
 
@@ -126,6 +184,22 @@ function crearBug(datosBug) {
             return {
                 success: false,
                 mensaje: "No se proporcionó URL del Sheet",
+            };
+        }
+
+        // Validar que exista carpeta de evidencias de bugs configurada
+        var carpetaBugs = obtenerValorConfig(
+            "carpeta_evidencias_bugs",
+            "",
+            sheetUrl
+        );
+        if (!carpetaBugs || carpetaBugs === "") {
+            Logger.log("❌ No hay carpeta de evidencias de bugs configurada");
+            return {
+                success: false,
+                mensaje:
+                    "No se puede crear bugs sin una carpeta de evidencias configurada. Por favor, configura la carpeta de evidencias de bugs en la Configuración del Sistema.",
+                codigo: "NO_CARPETA_BUGS",
             };
         }
 
@@ -166,8 +240,9 @@ function crearBug(datosBug) {
             usuario, // DetectadoPor
             datosBug.asignadoA || "", // AsignadoA
             "", // FechaResolucion
-            "", // TrelloCardID
-            "", // TrelloCardURL
+            datosBug.trelloCardId || "", // TrelloCardID
+            datosBug.trelloCardURL || "", // LinkTrello
+            "", // Adjuntos
             datosBug.notas || "", // Notas
         ];
 
@@ -285,33 +360,70 @@ function listarBugs(sheetUrl, filtros) {
         }
 
         var spreadsheet = SpreadsheetApp.openByUrl(sheetUrl);
+        Logger.log("✅ Spreadsheet abierto: " + spreadsheet.getName());
+
+        // Listar todas las hojas disponibles para debugging
+        var todasLasHojas = spreadsheet.getSheets();
+        var nombresHojas = todasLasHojas
+            .map(function (h) {
+                return h.getName();
+            })
+            .join(", ");
+        Logger.log("📑 Hojas disponibles: " + nombresHojas);
+
         var hojaBugs = spreadsheet.getSheetByName("Bugs");
 
         if (hojaBugs === null) {
-            Logger.log("⚠️ Hoja Bugs no existe");
-            return {
-                success: true,
-                data: {
-                    bugs: [],
-                    total: 0,
-                },
-            };
+            Logger.log("⚠️ Hoja 'Bugs' no existe. Intentando crear...");
+
+            // Intentar crear la hoja Bugs
+            try {
+                if (typeof obtenerOCrearHojaBugs === "function") {
+                    hojaBugs = obtenerOCrearHojaBugs(spreadsheet);
+                    Logger.log("✅ Hoja Bugs creada");
+                } else {
+                    Logger.log(
+                        "❌ Función obtenerOCrearHojaBugs no disponible"
+                    );
+                }
+            } catch (createError) {
+                Logger.log(
+                    "❌ Error creando hoja Bugs: " + createError.toString()
+                );
+            }
+
+            // Si aún no existe, retornar lista vacía
+            if (hojaBugs === null) {
+                return {
+                    success: true,
+                    data: {
+                        bugs: [],
+                        total: 0,
+                    },
+                    mensaje: "Hoja Bugs no existe en el spreadsheet",
+                };
+            }
         }
 
+        Logger.log("✅ Hoja Bugs encontrada");
+
         var datos = hojaBugs.getDataRange().getValues();
+        Logger.log("📊 Filas totales en hoja Bugs: " + datos.length);
 
         if (datos.length <= 1) {
-            Logger.log("⚠️ Hoja Bugs está vacía");
+            Logger.log("⚠️ Hoja Bugs está vacía (solo headers o sin datos)");
             return {
                 success: true,
                 data: {
                     bugs: [],
                     total: 0,
                 },
+                mensaje: "Hoja Bugs no tiene datos",
             };
         }
 
         var headers = datos[0];
+        Logger.log("📋 Headers detectados: " + headers.join(", "));
         var bugs = [];
 
         // Convertir filas a objetos y sanitizar datos
@@ -507,6 +619,44 @@ function obtenerDetalleBug(sheetUrl, bugId) {
 }
 
 /**
+ * Obtiene un bug por ID y retorna su información básica incluyendo link de Trello
+ * @param {string} sheetUrl - URL del Sheet
+ * @param {string} bugId - ID del bug
+ * @returns {Object} Datos básicos del bug con link de Trello
+ */
+function obtenerBugPorId(sheetUrl, bugId) {
+    try {
+        Logger.log("🔍 Obteniendo bug por ID: " + bugId);
+
+        var resultado = obtenerDetalleBug(sheetUrl, bugId);
+
+        if (!resultado.success) {
+            return resultado;
+        }
+
+        var bug = resultado.data;
+
+        return {
+            success: true,
+            data: {
+                id: bug.ID,
+                titulo: bug.Titulo,
+                linkTrello: bug.LinkTrello || "",
+                trelloCardId: bug.TrelloCardId || "",
+                severidad: bug.Severidad,
+                estado: bug.Estado,
+            },
+        };
+    } catch (error) {
+        Logger.log("❌ Error en obtenerBugPorId: " + error.toString());
+        return {
+            success: false,
+            mensaje: "Error al obtener bug: " + error.message,
+        };
+    }
+}
+
+/**
  * Obtiene todos los bugs relacionados con un caso
  * @param {string} sheetUrl - URL del Sheet
  * @param {string} casoId - ID del caso
@@ -596,6 +746,24 @@ function actualizarBug(sheetUrl, bugId, datosActualizados) {
                 // Actualizar campos modificados
                 for (var campo in datosActualizados) {
                     var colIndex = headers.indexOf(campo);
+
+                    // Si no encuentra la columna exacta, intentar buscar una columna relacionada con 'trello' (fallback)
+                    if (colIndex === -1) {
+                        var campoLower = String(campo || "").toLowerCase();
+                        if (campoLower.indexOf("trello") > -1) {
+                            for (var hh = 0; hh < headers.length; hh++) {
+                                if (
+                                    String(headers[hh] || "")
+                                        .toLowerCase()
+                                        .indexOf("trello") > -1
+                                ) {
+                                    colIndex = hh;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
                     if (colIndex > -1) {
                         hojaBugs
                             .getRange(i + 1, colIndex + 1)
@@ -663,6 +831,230 @@ function cambiarEstadoBug(sheetUrl, bugId, nuevoEstado) {
 }
 
 /**
+ * Cambia el estado del bug y opcionalmente realiza una acción en Trello
+ * @param {string} sheetUrl
+ * @param {string} bugId
+ * @param {string} nuevoEstado
+ * @param {string} trelloAction - 'none' | 'move' | 'archive' | 'create_and_move'
+ * @param {string} targetListId - ID de la lista destino (opcional)
+ * @param {string} targetBoardId - ID del tablero destino (opcional, usado si se crea card)
+ */
+function cambiarEstadoBugConTrello(
+    sheetUrl,
+    bugId,
+    nuevoEstado,
+    trelloAction,
+    targetListId,
+    targetBoardId
+) {
+    try {
+        Logger.log(
+            "🔄 cambiarEstadoBugConTrello: " +
+                bugId +
+                " -> " +
+                nuevoEstado +
+                " action: " +
+                trelloAction
+        );
+
+        // 1) Actualizar estado en Sheets
+        var resEstado = cambiarEstadoBug(sheetUrl, bugId, nuevoEstado);
+        if (!resEstado || !resEstado.success) {
+            return {
+                success: false,
+                mensaje:
+                    "No se pudo actualizar estado: " +
+                    (resEstado && resEstado.mensaje ? resEstado.mensaje : ""),
+            };
+        }
+
+        // 2) Si no hay acción de Trello, devolver éxito inmediato
+        if (!trelloAction || trelloAction === "none") {
+            return {
+                success: true,
+                mensaje: "Estado actualizado (sin acción Trello)",
+            };
+        }
+
+        // 3) Obtener detalle del bug para saber si hay TrelloCardID
+        var detalle = obtenerDetalleBug(sheetUrl, bugId);
+        if (!detalle || !detalle.success) {
+            return {
+                success: false,
+                mensaje:
+                    "Estado cambiado, pero no se pudo obtener detalle del bug: " +
+                    (detalle && detalle.mensaje ? detalle.mensaje : ""),
+            };
+        }
+
+        var bug = detalle.data || {};
+        var cardId =
+            bug.TrelloCardID || bug.TrelloCardId || bug.trelloCardId || "";
+
+        // 4) Ejecutar acción Trello
+        var trelloResult = { success: true, accion: trelloAction };
+
+        if (trelloAction === "move") {
+            if (!targetListId) {
+                trelloResult = {
+                    success: false,
+                    mensaje: "targetListId requerido para mover",
+                };
+            } else if (cardId && cardId !== "") {
+                trelloResult = moverCardTrello(cardId, targetListId);
+            } else {
+                // No hay cardId: intentar crear card y luego mover no es necesario (crearCardTrello crea en la lista)
+                // Para crear necesitamos targetBoardId to manage labels; si no se proporciona, pass empty and rely on Trello minimal creation
+                try {
+                    var datosBugParaTrello = {
+                        id: bugId,
+                        titulo: bug.Titulo || bug.Title || "",
+                        descripcion: bug.Descripcion || bug.Descripcion || "",
+                        severidad: bug.Severidad || "",
+                        prioridad: bug.Prioridad || "",
+                        precondiciones: bug.Precondiciones || "",
+                        datosPrueba: bug.DatosPrueba || "",
+                        pasosReproducir: bug.PasosReproducir || "",
+                        resultadoEsperado: bug.ResultadoEsperado || "",
+                        resultadoObtenido: bug.ResultadoObtenido || "",
+                        ambiente: bug.Ambiente || "",
+                        navegador: bug.Navegador || "",
+                        etiquetas: bug.Etiquetas || "",
+                        notas: bug.Notas || "",
+                        evidencias: bug.Evidencias || [],
+                    };
+
+                    trelloResult = crearCardTrello(
+                        datosBugParaTrello,
+                        targetListId,
+                        [],
+                        targetBoardId || null,
+                        null
+                    );
+
+                    // Si se creó la card, actualizar el bug en Sheets con TrelloCardID y URL
+                    if (
+                        trelloResult &&
+                        trelloResult.success &&
+                        trelloResult.data &&
+                        trelloResult.data.cardId
+                    ) {
+                        try {
+                            actualizarBug(sheetUrl, bugId, {
+                                TrelloCardID: trelloResult.data.cardId,
+                                TrelloCardURL:
+                                    trelloResult.data.cardUrl ||
+                                    trelloResult.data.cardShortUrl ||
+                                    "",
+                                LinkTrello:
+                                    trelloResult.data.cardUrl ||
+                                    trelloResult.data.cardShortUrl ||
+                                    "",
+                            });
+                        } catch (e) {
+                            Logger.log(
+                                "⚠️ Error actualizando bug con info Trello: " +
+                                    e.toString()
+                            );
+                        }
+                    }
+                } catch (e) {
+                    trelloResult = {
+                        success: false,
+                        mensaje:
+                            "Error creando card en Trello: " + e.toString(),
+                    };
+                }
+            }
+        } else if (trelloAction === "archive" || trelloAction === "archivar") {
+            if (cardId && cardId !== "") {
+                trelloResult = archivarCardTrello(cardId);
+            } else {
+                trelloResult = {
+                    success: false,
+                    mensaje: "No existe TrelloCardID para archivar",
+                };
+            }
+        } else if (trelloAction === "create_and_move") {
+            // alias para crear card en targetListId
+            if (!targetListId) {
+                trelloResult = {
+                    success: false,
+                    mensaje: "targetListId requerido para crear card",
+                };
+            } else {
+                try {
+                    var datosBugParaTrello2 = {
+                        id: bugId,
+                        titulo: bug.Titulo || "",
+                        descripcion: bug.Descripcion || "",
+                        severidad: bug.Severidad || "",
+                        prioridad: bug.Prioridad || "",
+                        etiquetas: bug.Etiquetas || "",
+                    };
+                    trelloResult = crearCardTrello(
+                        datosBugParaTrello2,
+                        targetListId,
+                        [],
+                        targetBoardId || null,
+                        null
+                    );
+                    if (
+                        trelloResult &&
+                        trelloResult.success &&
+                        trelloResult.data &&
+                        trelloResult.data.cardId
+                    ) {
+                        try {
+                            actualizarBug(sheetUrl, bugId, {
+                                TrelloCardID: trelloResult.data.cardId,
+                                TrelloCardURL:
+                                    trelloResult.data.cardUrl ||
+                                    trelloResult.data.cardShortUrl ||
+                                    "",
+                                LinkTrello:
+                                    trelloResult.data.cardUrl ||
+                                    trelloResult.data.cardShortUrl ||
+                                    "",
+                            });
+                        } catch (e) {
+                            Logger.log(
+                                "⚠️ Error actualizando bug con info Trello (create): " +
+                                    e.toString()
+                            );
+                        }
+                    }
+                } catch (e) {
+                    trelloResult = {
+                        success: false,
+                        mensaje: "Error creando card: " + e.toString(),
+                    };
+                }
+            }
+        } else {
+            trelloResult = {
+                success: false,
+                mensaje: "Acción Trello no reconocida",
+            };
+        }
+
+        // Construir resultado final
+        return {
+            success: true,
+            mensaje:
+                "Estado actualizado. Acción Trello ejecutada (ver detalle).",
+            trello: trelloResult,
+        };
+    } catch (error) {
+        Logger.log("❌ Error cambiarEstadoBugConTrello: " + error.toString());
+        return {
+            success: false,
+            mensaje: "Error cambiarEstadoBugConTrello: " + error.message,
+        };
+    }
+}
+
+/**
  * Valida si un caso tiene bugs abiertos
  * @param {string} sheetUrl - URL del Sheet
  * @param {string} casoId - ID del caso
@@ -671,18 +1063,213 @@ function cambiarEstadoBug(sheetUrl, bugId, nuevoEstado) {
 function validarBugsAbiertosDeCaso(sheetUrl, casoId) {
     try {
         Logger.log("🔍 Validando bugs abiertos del caso: " + casoId);
-
         var resultado = obtenerBugsPorCaso(sheetUrl, casoId);
-
         if (!resultado.success) {
+            return { success: false, mensaje: resultado.mensaje };
+        }
+        var bugs = resultado.data || [];
+        var abiertos = [];
+        bugs.forEach(function (b) {
+            var estado = (b.Estado || b.estado || "").toString().toUpperCase();
+            if (estado !== "CERRADO") {
+                abiertos.push(b);
+            }
+        });
+        return {
+            success: true,
+            data: abiertos,
+            cantidadAbiertos: abiertos.length,
+        };
+    } catch (e) {
+        Logger.log("❌ Error validarBugsAbiertosDeCaso: " + e.toString());
+        return {
+            success: false,
+            mensaje: "Error validarBugsAbiertosDeCaso: " + e.message,
+        };
+    }
+}
+function obtenerCasosNoOkPorBug(sheetUrl, bugId) {
+    try {
+        Logger.log("🔍 obtenerCasosNoOkPorBug para bug: " + bugId);
+        var detalle = obtenerDetalleBug(sheetUrl, bugId);
+        if (!detalle || !detalle.success) {
             return {
                 success: false,
-                mensaje: resultado.mensaje,
+                mensaje: "No se pudo obtener detalle del bug",
+            };
+        }
+        var bug = detalle.data || {};
+        var relacionadosRaw =
+            bug.CasosRelacionados || bug.casosRelacionados || "";
+        if (!relacionadosRaw || relacionadosRaw.trim() === "") {
+            return {
+                success: true,
+                data: {
+                    totalRelacionados: 0,
+                    casosNoOk: [],
+                },
+                mensaje: "Bug sin casos relacionados",
+            };
+        }
+        var ids = relacionadosRaw
+            .split(",")
+            .map(function (x) {
+                return x.trim();
+            })
+            .filter(function (x) {
+                return x !== "";
+            });
+        if (!ids.length) {
+            return {
+                success: true,
+                data: { totalRelacionados: 0, casosNoOk: [] },
+                mensaje: "Bug sin casos relacionados válidos",
             };
         }
 
+        var spreadsheet = SpreadsheetApp.openByUrl(sheetUrl);
+        var hojasExcluidas = ["Config", "Bugs", "Ejecuciones", "Regresiones"]; // mismas exclusiones que actualizarCaso
+        var sheets = spreadsheet.getSheets();
+        var casosNoOk = [];
+        var idsSet = {};
+        ids.forEach(function (id) {
+            idsSet[id] = true;
+        });
+
+        sheets.forEach(function (hoja) {
+            var nombreHoja = hoja.getName();
+            if (hojasExcluidas.indexOf(nombreHoja) > -1) return;
+            var datos = hoja.getDataRange().getValues();
+            if (datos.length <= 1) return;
+            var headers = datos[0];
+            var idxID = headers.indexOf("ID");
+            if (idxID === -1) return;
+            var idxTitulo = headers.indexOf("Titulo");
+            if (idxTitulo === -1) idxTitulo = headers.indexOf("Título");
+            var idxResultado = headers.indexOf("ResultadoUltimaEjecucion");
+            if (idxResultado === -1)
+                idxResultado = headers.indexOf("ResultadoÚltimaEjecucion");
+
+            for (var i = 1; i < datos.length; i++) {
+                var idCaso = datos[i][idxID];
+                if (!idsSet[idCaso]) continue;
+                var resultado = idxResultado > -1 ? datos[i][idxResultado] : "";
+                var tituloCaso =
+                    idxTitulo > -1 ? datos[i][idxTitulo] : "(Sin título)";
+                // Considerar no OK si distinto de 'OK'
+                if ((resultado + "").toUpperCase() !== "OK") {
+                    casosNoOk.push({
+                        ID: idCaso,
+                        Titulo: tituloCaso,
+                        ResultadoUltimaEjecucion: resultado || "Sin ejecutar",
+                        Hoja: nombreHoja,
+                    });
+                }
+            }
+        });
+
+        return {
+            success: true,
+            data: {
+                totalRelacionados: ids.length,
+                casosNoOk: casosNoOk,
+            },
+            mensaje: "Casos no OK obtenidos",
+        };
+    } catch (e) {
+        Logger.log("❌ Error obtenerCasosNoOkPorBug: " + e.toString());
+        return { success: false, mensaje: "Error: " + e.message };
+    }
+}
+
+/**
+ * Marca en 'OK' los casos indicados (array de IDs) actualizando ResultadoUltimaEjecucion y FechaUltimaEjecucion.
+ */
+function marcarCasosOk(sheetUrl, casoIds) {
+    try {
+        Logger.log("🔄 marcarCasosOk: " + JSON.stringify(casoIds));
+        if (!casoIds || !casoIds.length) {
+            return {
+                success: true,
+                data: { actualizados: 0 },
+                mensaje: "Sin casos a actualizar",
+            };
+        }
+        var actualizados = 0;
+        casoIds.forEach(function (cid) {
+            if (!cid) return;
+            var r = actualizarCaso(sheetUrl, cid, {
+                ResultadoUltimaEjecucion: "OK",
+                FechaUltimaEjecucion: new Date(),
+            });
+            if (r && r.success) actualizados++;
+        });
+        return {
+            success: true,
+            data: { actualizados: actualizados, solicitados: casoIds.length },
+            mensaje: "Casos marcados OK",
+        };
+    } catch (e) {
+        Logger.log("❌ Error marcarCasosOk: " + e.toString());
+        return { success: false, mensaje: "Error: " + e.message };
+    }
+}
+
+/**
+ * Valida si un caso tiene bugs abiertos
+ * @param {string} sheetUrl - URL del Sheet
+ * @param {string} casoId - ID del caso
+ * @returns {Object} Resultado con lista de bugs abiertos
+ */
+function validarBugsAbiertosDeCaso_INTERNAL(sheetUrl, casoId) {
+    try {
+        Logger.log("🔍 Validando bugs abiertos del caso: " + casoId);
+        var resultado = obtenerBugsPorCaso(sheetUrl, casoId);
+        if (!resultado.success) {
+            return { success: false, mensaje: resultado.mensaje };
+        }
+        var bugs = resultado.data || [];
+        var abiertos = [];
+        bugs.forEach(function (b) {
+            var estado = (b.Estado || b.estado || "").toString().toUpperCase();
+            if (estado !== "CERRADO") {
+                abiertos.push(b);
+            }
+        });
+        return {
+            success: true,
+            data: abiertos,
+            cantidadAbiertos: abiertos.length,
+        };
+    } catch (e) {
+        Logger.log("❌ Error validarBugsAbiertosDeCaso: " + e.toString());
+        return { success: false, mensaje: "Error: " + e.message };
+    }
+}
+
+/**
+ * Obtiene bugs asociados a un caso de prueba
+ */
+function obtenerBugsPorCaso(sheetUrl, casoId) {
+    try {
+        Logger.log("🔍 Obteniendo bugs del caso: " + casoId);
+        var resultado = listarBugs(sheetUrl);
+        if (!resultado.success) {
+            return resultado;
+        }
+
+        var todosLosBugs = resultado.data.bugs || [];
+        var bugsDelCaso = todosLosBugs.filter(function (bug) {
+            var casosRel = bug.CasosRelacionados || "";
+            if (!casosRel) return false;
+            var ids = casosRel.split(",").map(function (id) {
+                return id.trim();
+            });
+            return ids.indexOf(casoId) > -1;
+        });
+
         // Filtrar solo bugs abiertos
-        var bugsAbiertos = resultado.data.bugs.filter(function (bug) {
+        var bugsAbiertos = bugsDelCaso.filter(function (bug) {
             return bug.Estado === "Abierto" && bug.EliminadoPorUsuario !== "Si";
         });
 
@@ -694,10 +1281,11 @@ function validarBugsAbiertosDeCaso(sheetUrl, casoId) {
                 tieneBugsAbiertos: bugsAbiertos.length > 0,
                 bugsAbiertos: bugsAbiertos,
                 cantidad: bugsAbiertos.length,
+                bugs: bugsDelCaso,
             },
         };
     } catch (error) {
-        Logger.log("❌ Error validando bugs: " + error.toString());
+        Logger.log("❌ Error obteniendo bugs por caso: " + error.toString());
         return {
             success: false,
             mensaje: "Error: " + error.message,

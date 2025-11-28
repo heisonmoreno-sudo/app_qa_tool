@@ -16,7 +16,14 @@
  * @param {string} bugTitulo - Título del bug (opcional, solo para bugs)
  * @returns {Object} {success, url, nombre, mensaje}
  */
-function subirEvidenciaADrive(archivo, tipo, casoId, casoTitulo, bugTitulo) {
+function subirEvidenciaADrive(
+    archivo,
+    tipo,
+    casoId,
+    casoTitulo,
+    bugTitulo,
+    sheetUrl
+) {
     try {
         Logger.log("📤 Subiendo evidencia de tipo: " + tipo);
         Logger.log("   Caso: " + casoId);
@@ -28,11 +35,14 @@ function subirEvidenciaADrive(archivo, tipo, casoId, casoTitulo, bugTitulo) {
                 ? "carpeta_evidencias_ejecuciones"
                 : "carpeta_evidencias_bugs";
 
-        // Obtener sheetUrl del contexto
-        var sheetUrl =
-            PropertiesService.getScriptProperties().getProperty(
-                "currentSheetUrl"
-            );
+        // Preferir sheetUrl pasado como parámetro, sino usar script property
+        if (!sheetUrl) {
+            sheetUrl =
+                PropertiesService.getScriptProperties().getProperty(
+                    "currentSheetUrl"
+                );
+        }
+
         var urlCarpeta = obtenerValorConfig(claveCarpeta, "", sheetUrl);
 
         if (!urlCarpeta || urlCarpeta === "") {
@@ -150,6 +160,59 @@ function subirEvidenciaADrive(archivo, tipo, casoId, casoTitulo, bugTitulo) {
             mensaje: "Error al subir archivo: " + error.message,
             codigo: "ERROR_GENERAL",
         };
+    }
+}
+
+/**
+ * Sube un conjunto de evidencias (archivos) y retorna un arreglo con resultados
+ * @param {Array} archivos - Array de objetos {nombre, contenidoBase64, mimeType}
+ * @param {string} sheetUrl - URL del spreadsheet donde buscar la carpeta de evidencias (opcional)
+ * @param {string} tipo - 'bug' o 'ejecucion' (opcional, por defecto 'bug')
+ * @param {string} casoId - ID del caso relacionado (opcional)
+ * @param {string} casoTitulo - Título del caso (opcional)
+ * @param {string} bugTitulo - Título del bug (opcional)
+ * @returns {Object} { success: true, results: [ { success, url, nombre, mensaje } ] }
+ */
+function subirEvidenciasBatch(
+    archivos,
+    sheetUrl,
+    tipo,
+    casoId,
+    casoTitulo,
+    bugTitulo
+) {
+    try {
+        if (!archivos || !Array.isArray(archivos) || archivos.length === 0) {
+            return { success: true, results: [] };
+        }
+
+        var results = [];
+
+        for (var i = 0; i < archivos.length; i++) {
+            var archivo = archivos[i];
+            try {
+                var res = subirEvidenciaADrive(
+                    archivo,
+                    tipo || "bug",
+                    casoId || "",
+                    casoTitulo || "",
+                    bugTitulo || "",
+                    sheetUrl
+                );
+                results.push(res);
+            } catch (err) {
+                results.push({
+                    success: false,
+                    mensaje: err.message || String(err),
+                    nombre: archivo.nombre || "",
+                });
+            }
+        }
+
+        return { success: true, results: results };
+    } catch (error) {
+        Logger.log("❌ Error en subirEvidenciasBatch: " + error.toString());
+        return { success: false, mensaje: error.message };
     }
 }
 
@@ -455,4 +518,62 @@ function testDrive() {
     Logger.log("Resultado: " + JSON.stringify(config, null, 2));
 
     Logger.log("\n✅ Tests completados");
+}
+
+/**
+ * Obtiene el tipo MIME de un archivo de Drive a partir de su URL
+ * @param {string} fileUrl - URL del archivo en Drive
+ * @returns {Object} {success, mimeType, nombre, mensaje}
+ */
+function obtenerTipoArchivoDrive(fileUrl) {
+    try {
+        if (!fileUrl || typeof fileUrl !== "string") {
+            return {
+                success: false,
+                mensaje: "URL no válida",
+            };
+        }
+
+        // Extraer el ID del archivo de la URL
+        var fileId = null;
+
+        // Patrón: /d/FILE_ID/
+        var matchD = fileUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+        if (matchD) {
+            fileId = matchD[1];
+        }
+
+        // Patrón: ?id=FILE_ID
+        if (!fileId) {
+            var matchId = fileUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (matchId) {
+                fileId = matchId[1];
+            }
+        }
+
+        if (!fileId) {
+            return {
+                success: false,
+                mensaje: "No se pudo extraer el ID del archivo",
+            };
+        }
+
+        // Obtener el archivo de Drive
+        var file = DriveApp.getFileById(fileId);
+        var mimeType = file.getMimeType();
+        var nombre = file.getName();
+
+        return {
+            success: true,
+            mimeType: mimeType,
+            nombre: nombre,
+            fileId: fileId,
+        };
+    } catch (error) {
+        Logger.log("❌ Error obteniendo tipo de archivo: " + error.toString());
+        return {
+            success: false,
+            mensaje: "Error: " + error.toString(),
+        };
+    }
 }

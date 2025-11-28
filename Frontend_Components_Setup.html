@@ -12,100 +12,192 @@
     .setup-options {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1.5rem;
-        margin-top: 2rem;
+        gap: 2rem;
+        margin-top: 2.5rem;
     }
 
     .option-card {
         background: white;
-        border: 2px solid var(--border-color);
-        border-radius: var(--radius-lg);
-        padding: 2rem;
+        border: 2px solid #d0d0d0;
+        border-radius: 12px;
+        padding: 2.5rem;
         cursor: pointer;
-        transition: all var(--transition-base);
+        transition: all 0.3s ease;
         text-align: center;
+        font-family: "Nunito", sans-serif;
     }
 
     .option-card:hover {
-        border-color: var(--accent-color);
+        border-color: #74a1d1;
         transform: translateY(-4px);
-        box-shadow: 0 8px 16px rgba(59, 130, 246, 0.2);
+        box-shadow: 0 8px 16px rgba(116, 161, 209, 0.2);
     }
 
     .option-icon {
         font-size: 3rem;
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
     }
 
     .option-title {
         font-size: 1.25rem;
         font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 0.5rem;
+        color: #515151;
+        margin-bottom: 0.75rem;
+        font-family: "Nunito", sans-serif;
     }
 
     .option-description {
-        color: var(--text-secondary);
+        color: #8b8b8b;
         font-size: 0.95rem;
+        font-family: "Nunito", sans-serif;
+        line-height: 1.5;
     }
 
     .config-status {
-        background: #fef3c7;
-        border-left: 4px solid var(--warning-color);
-        padding: 1rem 1.5rem;
-        border-radius: var(--radius-md);
+        background: #fef7e8;
+        border-left: 4px solid #f9c00b;
+        padding: 1.5rem;
+        border-radius: 8px;
         margin: 1.5rem 0;
+        font-family: "Nunito", sans-serif;
     }
 
     .config-status.success {
         background: #dcfce7;
-        border-left-color: var(--success-color);
+        border-left-color: #10b981;
     }
 
     .config-status.error {
         background: #fee2e2;
-        border-left-color: var(--error-color);
+        border-left-color: #ef4444;
     }
 
     .checklist {
         list-style: none;
         padding: 0;
-        margin: 1rem 0;
+        margin: 1.5rem 0;
     }
 
     .checklist li {
-        padding: 0.5rem 0;
+        padding: 0.75rem 0;
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         gap: 0.75rem;
+        font-family: "Nunito", sans-serif;
+        line-height: 1.6;
     }
 
     .checklist li::before {
         content: "⏳";
         font-size: 1.25rem;
+        flex-shrink: 0;
+        margin-top: 0.1rem;
     }
 
     .checklist li.done::before {
         content: "✅";
     }
 
+    .checklist li.in-progress::before {
+        content: "⚙️";
+        animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .rotating-icon {
+        display: inline-block;
+        animation: spin 2s linear infinite;
+    }
+
+    /* Centrado de pantalla Setup */
+    #setupScreen {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 2rem 1rem;
+    }
+
+    #setupScreen.hidden {
+        display: none !important;
+    }
+
+    #setupScreen .card {
+        width: 100%;
+    }
+
     .progress-bar {
         width: 100%;
         height: 8px;
-        background: var(--border-color);
-        border-radius: var(--radius-sm);
+        background: #d0d0d0;
+        border-radius: 4px;
         overflow: hidden;
-        margin: 1rem 0;
+        margin: 1.5rem 0;
     }
 
     .progress-fill {
         height: 100%;
-        background: linear-gradient(
-            90deg,
-            var(--accent-color) 0%,
-            var(--accent-hover) 100%
-        );
-        transition: width var(--transition-base);
+        background: linear-gradient(90deg, #74a1d1 0%, #5a87bb 100%);
+        transition: width 0.3s ease;
+    }
+
+    /* ═══════════════════════════════════════════════════════ */
+    /* RESPONSIVE DESIGN                                        */
+    /* ═══════════════════════════════════════════════════════ */
+
+    @media (max-width: 640px) {
+        .setup-options {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .option-card {
+            padding: 1.5rem;
+        }
+
+        .option-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .option-title {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .option-description {
+            font-size: 0.9rem;
+        }
+    }
+
+    @media (min-width: 641px) and (max-width: 1024px) {
+        .setup-options {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .option-card {
+            padding: 2rem;
+        }
+    }
+
+    @media (min-width: 1025px) {
+        .setup-options {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        .option-card {
+            padding: 2.5rem;
+        }
     }
 </style>
 
@@ -114,7 +206,7 @@
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 
 <div id="setupScreen" class="hidden">
-    <div class="card" style="max-width: 900px; margin: 2rem auto">
+    <div class="card" style="max-width: 900px; margin: 0 auto">
         <div style="text-align: center; margin-bottom: 2rem">
             <div style="font-size: 3rem; margin-bottom: 1rem">⚙️</div>
             <h2
@@ -150,20 +242,209 @@
         <div id="checklistContainer" style="display: none">
             <h3
                 style="
-                    font-size: 1.25rem;
+                    font-size: 1.1rem;
                     font-weight: 600;
-                    margin: 1.5rem 0 1rem;
+                    margin: 1.25rem 0 0.75rem;
+                    color: var(--text-primary);
                 "
             >
-                📋 Lo que se creará:
+                📋 Lo que se creará en tu Google Sheet:
             </h3>
-            <ul class="checklist" id="configChecklist">
-                <li>Hoja de Configuración (Config)</li>
-                <li>Hoja de Casos de Prueba</li>
-                <li>Hoja de Bugs</li>
-                <li>Hoja de Ejecuciones</li>
-                <li>Hoja de Regresiones</li>
+            <ul
+                class="checklist"
+                id="configChecklist"
+                style="list-style: none; padding: 0; margin: 0"
+            >
+                <li
+                    data-step="config"
+                    style="
+                        padding: 0.5rem 0;
+                        margin-bottom: 0.5rem;
+                        border-bottom: 1px solid #e5e7eb;
+                    "
+                >
+                    <div style="display: flex; align-items: start; gap: 0.5rem">
+                        <span style="font-size: 1.2rem; margin-top: 0.1rem"
+                            >⚙️</span
+                        >
+                        <div>
+                            <strong
+                                style="
+                                    color: var(--text-primary);
+                                    font-size: 0.95rem;
+                                    display: block;
+                                    margin-bottom: 0.25rem;
+                                "
+                                >Hoja de Configuración</strong
+                            >
+                            <span
+                                style="
+                                    color: var(--text-secondary);
+                                    font-size: 0.85rem;
+                                    line-height: 1.4;
+                                "
+                            >
+                                Almacena la configuración del workspace, IDs
+                                autoincrementales y configuración de Trello
+                            </span>
+                        </div>
+                    </div>
+                </li>
+                <li
+                    data-step="casos"
+                    style="
+                        padding: 0.5rem 0;
+                        margin-bottom: 0.5rem;
+                        border-bottom: 1px solid #e5e7eb;
+                    "
+                >
+                    <div style="display: flex; align-items: start; gap: 0.5rem">
+                        <span style="font-size: 1.2rem; margin-top: 0.1rem"
+                            >📝</span
+                        >
+                        <div>
+                            <strong
+                                style="
+                                    color: var(--text-primary);
+                                    font-size: 0.95rem;
+                                    display: block;
+                                    margin-bottom: 0.25rem;
+                                "
+                                >Hoja de Casos de Prueba</strong
+                            >
+                            <span
+                                style="
+                                    color: var(--text-secondary);
+                                    font-size: 0.85rem;
+                                    line-height: 1.4;
+                                "
+                            >
+                                Gestiona todos tus casos de prueba con sus
+                                pasos, resultados esperados y evidencias
+                            </span>
+                        </div>
+                    </div>
+                </li>
+                <li
+                    data-step="bugs"
+                    style="
+                        padding: 0.5rem 0;
+                        margin-bottom: 0.5rem;
+                        border-bottom: 1px solid #e5e7eb;
+                    "
+                >
+                    <div style="display: flex; align-items: start; gap: 0.5rem">
+                        <span style="font-size: 1.2rem; margin-top: 0.1rem"
+                            >🐛</span
+                        >
+                        <div>
+                            <strong
+                                style="
+                                    color: var(--text-primary);
+                                    font-size: 0.95rem;
+                                    display: block;
+                                    margin-bottom: 0.25rem;
+                                "
+                                >Hoja de Bugs</strong
+                            >
+                            <span
+                                style="
+                                    color: var(--text-secondary);
+                                    font-size: 0.85rem;
+                                    line-height: 1.4;
+                                "
+                            >
+                                Registra y da seguimiento a bugs detectados con
+                                severidad, prioridad y pasos para reproducir
+                            </span>
+                        </div>
+                    </div>
+                </li>
+                <li
+                    data-step="ejecuciones"
+                    style="
+                        padding: 0.5rem 0;
+                        margin-bottom: 0.5rem;
+                        border-bottom: 1px solid #e5e7eb;
+                    "
+                >
+                    <div style="display: flex; align-items: start; gap: 0.5rem">
+                        <span style="font-size: 1.2rem; margin-top: 0.1rem"
+                            >▶️</span
+                        >
+                        <div>
+                            <strong
+                                style="
+                                    color: var(--text-primary);
+                                    font-size: 0.95rem;
+                                    display: block;
+                                    margin-bottom: 0.25rem;
+                                "
+                                >Hoja de Ejecuciones</strong
+                            >
+                            <span
+                                style="
+                                    color: var(--text-secondary);
+                                    font-size: 0.85rem;
+                                    line-height: 1.4;
+                                "
+                            >
+                                Historial de todas las ejecuciones de casos de
+                                prueba realizadas
+                            </span>
+                        </div>
+                    </div>
+                </li>
+                <li data-step="regresiones" style="padding: 0.5rem 0">
+                    <div style="display: flex; align-items: start; gap: 0.5rem">
+                        <span style="font-size: 1.2rem; margin-top: 0.1rem"
+                            >🔁</span
+                        >
+                        <div>
+                            <strong
+                                style="
+                                    color: var(--text-primary);
+                                    font-size: 0.95rem;
+                                    display: block;
+                                    margin-bottom: 0.25rem;
+                                "
+                                >Hoja de Regresiones</strong
+                            >
+                            <span
+                                style="
+                                    color: var(--text-secondary);
+                                    font-size: 0.85rem;
+                                    line-height: 1.4;
+                                "
+                            >
+                                Gestiona suites de pruebas de regresión y sus
+                                resultados
+                            </span>
+                        </div>
+                    </div>
+                </li>
             </ul>
+            <div
+                style="
+                    background: #e0f2fe;
+                    border-left: 4px solid #0284c7;
+                    padding: 0.75rem;
+                    border-radius: var(--radius-md);
+                    margin-top: 1rem;
+                "
+            >
+                <p
+                    style="
+                        margin: 0;
+                        color: #0c4a6e;
+                        font-size: 0.85rem;
+                        line-height: 1.5;
+                    "
+                >
+                    ℹ️ <strong>Cada hoja</strong> se creará con sus encabezados,
+                    formato, validaciones y estructura completa lista para usar.
+                </p>
+            </div>
         </div>
 
         <!-- Botones de acción -->
@@ -189,11 +470,26 @@
         </div>
 
         <!-- Progreso de configuración -->
-        <div id="progressContainer" style="display: none; margin-top: 2rem">
+        <div
+            id="progressContainer"
+            style="
+                display: none;
+                margin-top: 2rem;
+                max-width: 700px;
+                margin-left: auto;
+                margin-right: auto;
+            "
+        >
             <h3
-                style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem"
+                id="progressTitle"
+                style="
+                    font-size: 1.1rem;
+                    font-weight: 600;
+                    margin-bottom: 1rem;
+                    text-align: center;
+                "
             >
-                Configurando workspace...
+                <span class="rotating-icon">⚙️</span> Configurando workspace...
             </h3>
             <div class="progress-bar">
                 <div
@@ -208,6 +504,7 @@
                     text-align: center;
                     color: var(--text-secondary);
                     margin-top: 0.5rem;
+                    font-size: 0.95rem;
                 "
             >
                 Iniciando...
@@ -236,18 +533,55 @@
             >
                 <div class="form-group">
                     <label class="form-label required"
-                        >Nombre del Workspace</label
+                        >📁 Carpeta Padre en Google Drive</label
+                    >
+                    <input
+                        type="url"
+                        id="parentDriveFolderUrl"
+                        class="form-input"
+                        required
+                        placeholder="https://drive.google.com/drive/folders/xxxxx"
+                    />
+                    <p class="form-help">
+                        URL de la carpeta donde se creará el workspace y todas
+                        sus subcarpetas de evidencias.
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required"
+                        >🗂️ Nombre de Carpeta del Workspace</label
+                    >
+                    <input
+                        type="text"
+                        id="nombreCarpetaWorkspace"
+                        class="form-input"
+                        required
+                        placeholder="Ej: Sprint 1 - Enero 2024"
+                        minlength="3"
+                        maxlength="100"
+                    />
+                    <p class="form-help">
+                        Carpeta contenedora que organizará el Sheet y las
+                        subcarpetas de evidencias (casos, bugs, regresiones).
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required"
+                        >📝 Nombre del Workspace</label
                     >
                     <input
                         type="text"
                         id="nombreNuevoWorkspace"
                         class="form-input"
                         required
-                        placeholder="Ej: QA Proyecto X"
+                        placeholder="Ej: QA Proyecto Alpha - 2024"
                         minlength="3"
                     />
                     <p class="form-help">
-                        Se creará un nuevo Google Sheet con este nombre
+                        Identificador principal del workspace. Se usará como
+                        nombre del Google Sheet.
                     </p>
                 </div>
 
@@ -268,12 +602,13 @@
                             color: var(--text-secondary);
                         "
                     >
-                        <li>Google Sheet nuevo</li>
+                        <li>Google Sheet nuevo con todas las hojas</li>
+                        <li>Carpeta principal del workspace</li>
                         <li>
-                            Todas las hojas necesarias (Config, Casos, Bugs,
-                            etc.)
+                            Subcarpetas: Evidencias Casos, Evidencias Bugs,
+                            Evidencias Regresiones
                         </li>
-                        <li>Headers y estructura completa</li>
+                        <li>Headers, validaciones y estructura completa</li>
                         <li>Configuración lista para usar</li>
                     </ul>
                 </div>
@@ -300,162 +635,1094 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
-<!-- SCRIPTS ESPECÍFICOS DE SETUP                                                -->
+<!-- PANTALLA PROGRESO CREACIÓN WORKSPACE                                        -->
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 
-<script>
-    // ===================================================================
-    // FUNCIONES DE CONFIGURACIÓN DE WORKSPACE
-    // ===================================================================
+<div
+    id="workspaceProgressScreen"
+    class="hidden"
+    style="align-self: center; width: 100%"
+>
+    <div class="container" style="max-width: 700px">
+        <div class="card">
+            <div class="card-body" style="padding: 3rem 2rem">
+                <!-- Título con icono rotante -->
+                <h2
+                    id="workspaceProgressTitle"
+                    style="
+                        font-size: 1.5rem;
+                        font-weight: 600;
+                        margin: 0 0 2rem;
+                        text-align: center;
+                        color: var(--text-primary);
+                    "
+                >
+                    <span class="rotating-icon">⚙️</span> Creando Workspace
+                </h2>
 
-    function mostrarPantallaSetup(sheetUrl, infoVerificacion) {
-        currentSheetUrl = sheetUrl;
+                <!-- Checklist de progreso -->
+                <div id="workspaceChecklistContainer">
+                    <h3
+                        style="
+                            font-size: 1.1rem;
+                            font-weight: 600;
+                            margin: 0 0 1rem;
+                            color: var(--text-primary);
+                        "
+                    >
+                        📋 Configurando tu nuevo workspace:
+                    </h3>
+                    <ul
+                        class="checklist"
+                        id="workspaceChecklist"
+                        style="
+                            list-style: none;
+                            padding: 0;
+                            margin: 0 0 1.5rem 0;
+                        "
+                    >
+                        <li
+                            data-step="drive"
+                            style="
+                                padding: 0.5rem 0;
+                                margin-bottom: 0.5rem;
+                                border-bottom: 1px solid #e5e7eb;
+                            "
+                        >
+                            <div
+                                style="
+                                    display: flex;
+                                    align-items: start;
+                                    gap: 0.5rem;
+                                "
+                            >
+                                <span
+                                    style="
+                                        font-size: 1.2rem;
+                                        margin-top: 0.1rem;
+                                    "
+                                    >📁</span
+                                >
+                                <div>
+                                    <strong
+                                        style="
+                                            color: var(--text-primary);
+                                            font-size: 0.95rem;
+                                            display: block;
+                                            margin-bottom: 0.25rem;
+                                        "
+                                        >Carpeta en Google Drive</strong
+                                    >
+                                    <span
+                                        style="
+                                            color: var(--text-secondary);
+                                            font-size: 0.85rem;
+                                            line-height: 1.4;
+                                        "
+                                    >
+                                        Creando estructura de carpetas para el
+                                        workspace
+                                    </span>
+                                </div>
+                            </div>
+                        </li>
+                        <li
+                            data-step="sheet"
+                            style="
+                                padding: 0.5rem 0;
+                                margin-bottom: 0.5rem;
+                                border-bottom: 1px solid #e5e7eb;
+                            "
+                        >
+                            <div
+                                style="
+                                    display: flex;
+                                    align-items: start;
+                                    gap: 0.5rem;
+                                "
+                            >
+                                <span
+                                    style="
+                                        font-size: 1.2rem;
+                                        margin-top: 0.1rem;
+                                    "
+                                    >📊</span
+                                >
+                                <div>
+                                    <strong
+                                        style="
+                                            color: var(--text-primary);
+                                            font-size: 0.95rem;
+                                            display: block;
+                                            margin-bottom: 0.25rem;
+                                        "
+                                        >Google Sheet</strong
+                                    >
+                                    <span
+                                        style="
+                                            color: var(--text-secondary);
+                                            font-size: 0.85rem;
+                                            line-height: 1.4;
+                                        "
+                                    >
+                                        Creando el archivo principal del
+                                        workspace
+                                    </span>
+                                </div>
+                            </div>
+                        </li>
+                        <li
+                            data-step="config"
+                            style="
+                                padding: 0.5rem 0;
+                                margin-bottom: 0.5rem;
+                                border-bottom: 1px solid #e5e7eb;
+                            "
+                        >
+                            <div
+                                style="
+                                    display: flex;
+                                    align-items: start;
+                                    gap: 0.5rem;
+                                "
+                            >
+                                <span
+                                    style="
+                                        font-size: 1.2rem;
+                                        margin-top: 0.1rem;
+                                    "
+                                    >⚙️</span
+                                >
+                                <div>
+                                    <strong
+                                        style="
+                                            color: var(--text-primary);
+                                            font-size: 0.95rem;
+                                            display: block;
+                                            margin-bottom: 0.25rem;
+                                        "
+                                        >Hoja de Configuración</strong
+                                    >
+                                    <span
+                                        style="
+                                            color: var(--text-secondary);
+                                            font-size: 0.85rem;
+                                            line-height: 1.4;
+                                        "
+                                    >
+                                        Configuración del workspace e IDs
+                                        autoincrementales
+                                    </span>
+                                </div>
+                            </div>
+                        </li>
+                        <li
+                            data-step="casos"
+                            style="
+                                padding: 0.5rem 0;
+                                margin-bottom: 0.5rem;
+                                border-bottom: 1px solid #e5e7eb;
+                            "
+                        >
+                            <div
+                                style="
+                                    display: flex;
+                                    align-items: start;
+                                    gap: 0.5rem;
+                                "
+                            >
+                                <span
+                                    style="
+                                        font-size: 1.2rem;
+                                        margin-top: 0.1rem;
+                                    "
+                                    >📝</span
+                                >
+                                <div>
+                                    <strong
+                                        style="
+                                            color: var(--text-primary);
+                                            font-size: 0.95rem;
+                                            display: block;
+                                            margin-bottom: 0.25rem;
+                                        "
+                                        >Hoja de Casos de Prueba</strong
+                                    >
+                                    <span
+                                        style="
+                                            color: var(--text-secondary);
+                                            font-size: 0.85rem;
+                                            line-height: 1.4;
+                                        "
+                                    >
+                                        Estructura para gestionar casos de
+                                        prueba
+                                    </span>
+                                </div>
+                            </div>
+                        </li>
+                        <li
+                            data-step="bugs"
+                            style="
+                                padding: 0.5rem 0;
+                                margin-bottom: 0.5rem;
+                                border-bottom: 1px solid #e5e7eb;
+                            "
+                        >
+                            <div
+                                style="
+                                    display: flex;
+                                    align-items: start;
+                                    gap: 0.5rem;
+                                "
+                            >
+                                <span
+                                    style="
+                                        font-size: 1.2rem;
+                                        margin-top: 0.1rem;
+                                    "
+                                    >🐛</span
+                                >
+                                <div>
+                                    <strong
+                                        style="
+                                            color: var(--text-primary);
+                                            font-size: 0.95rem;
+                                            display: block;
+                                            margin-bottom: 0.25rem;
+                                        "
+                                        >Hoja de Bugs</strong
+                                    >
+                                    <span
+                                        style="
+                                            color: var(--text-secondary);
+                                            font-size: 0.85rem;
+                                            line-height: 1.4;
+                                        "
+                                    >
+                                        Registro y seguimiento de bugs
+                                        encontrados
+                                    </span>
+                                </div>
+                            </div>
+                        </li>
+                        <li
+                            data-step="ejecuciones"
+                            style="
+                                padding: 0.5rem 0;
+                                margin-bottom: 0.5rem;
+                                border-bottom: 1px solid #e5e7eb;
+                            "
+                        >
+                            <div
+                                style="
+                                    display: flex;
+                                    align-items: start;
+                                    gap: 0.5rem;
+                                "
+                            >
+                                <span
+                                    style="
+                                        font-size: 1.2rem;
+                                        margin-top: 0.1rem;
+                                    "
+                                    >▶️</span
+                                >
+                                <div>
+                                    <strong
+                                        style="
+                                            color: var(--text-primary);
+                                            font-size: 0.95rem;
+                                            display: block;
+                                            margin-bottom: 0.25rem;
+                                        "
+                                        >Hoja de Ejecuciones</strong
+                                    >
+                                    <span
+                                        style="
+                                            color: var(--text-secondary);
+                                            font-size: 0.85rem;
+                                            line-height: 1.4;
+                                        "
+                                    >
+                                        Historial de ejecuciones de casos
+                                    </span>
+                                </div>
+                            </div>
+                        </li>
+                        <li
+                            data-step="regresiones"
+                            style="
+                                padding: 0.5rem 0;
+                                margin-bottom: 0.5rem;
+                                border-bottom: 1px solid #e5e7eb;
+                            "
+                        >
+                            <div
+                                style="
+                                    display: flex;
+                                    align-items: start;
+                                    gap: 0.5rem;
+                                "
+                            >
+                                <span
+                                    style="
+                                        font-size: 1.2rem;
+                                        margin-top: 0.1rem;
+                                    "
+                                    >🔄</span
+                                >
+                                <div>
+                                    <strong
+                                        style="
+                                            color: var(--text-primary);
+                                            font-size: 0.95rem;
+                                            display: block;
+                                            margin-bottom: 0.25rem;
+                                        "
+                                        >Hoja de Regresiones</strong
+                                    >
+                                    <span
+                                        style="
+                                            color: var(--text-secondary);
+                                            font-size: 0.85rem;
+                                            line-height: 1.4;
+                                        "
+                                    >
+                                        Suite de casos candidatos a regresión
+                                    </span>
+                                </div>
+                            </div>
+                        </li>
+                        <li
+                            data-step="formato"
+                            style="padding: 0.5rem 0; margin-bottom: 0.5rem"
+                        >
+                            <div
+                                style="
+                                    display: flex;
+                                    align-items: start;
+                                    gap: 0.5rem;
+                                "
+                            >
+                                <span
+                                    style="
+                                        font-size: 1.2rem;
+                                        margin-top: 0.1rem;
+                                    "
+                                    >✨</span
+                                >
+                                <div>
+                                    <strong
+                                        style="
+                                            color: var(--text-primary);
+                                            font-size: 0.95rem;
+                                            display: block;
+                                            margin-bottom: 0.25rem;
+                                        "
+                                        >Formato y Validaciones</strong
+                                    >
+                                    <span
+                                        style="
+                                            color: var(--text-secondary);
+                                            font-size: 0.85rem;
+                                            line-height: 1.4;
+                                        "
+                                    >
+                                        Aplicando estilos y validaciones de
+                                        datos
+                                    </span>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
 
-        document.getElementById("welcomeScreen").classList.add("hidden");
-        document.getElementById("setupScreen").classList.remove("hidden");
+                    <!-- Barra de progreso -->
+                    <div style="margin-top: 1.5rem">
+                        <div class="progress-bar">
+                            <div
+                                id="workspaceProgressFill"
+                                class="progress-fill"
+                                style="width: 0%"
+                            ></div>
+                        </div>
+                        <p
+                            id="workspaceProgressMessage"
+                            style="
+                                text-align: center;
+                                color: var(--text-secondary);
+                                margin-top: 0.75rem;
+                                font-size: 0.95rem;
+                            "
+                        >
+                            Iniciando creación...
+                        </p>
+                    </div>
 
-        const configStatus = document.getElementById("configStatus");
-        const configMessage = document.getElementById("configMessage");
+                    <!-- Info final -->
+                    <div
+                        id="workspaceResultInfo"
+                        style="display: none; margin-top: 2rem"
+                    ></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        if (
-            infoVerificacion.hojasFaltantes &&
-            infoVerificacion.hojasFaltantes.length > 0
-        ) {
-            configMessage.textContent =
-                "Faltan hojas: " + infoVerificacion.hojasFaltantes.join(", ");
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!-- SCRIPTS ESPECÍFICOS DE SETUP                                                -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+    <script>
+        // ===================================================================
+        // FUNCIONES DE CONFIGURACIÓN DE WORKSPACE
+        // ===================================================================
+
+        function mostrarPantallaSetup(sheetUrl, infoVerificacion) {
+            currentSheetUrl = sheetUrl;
+
+            // Limpiar estado anterior del setup
+            limpiarEstadoSetup();
+
+            // Ocultar todas las demás pantallas
+            const welcomeScreen = document.getElementById("welcomeScreen");
+            const casosScreen = document.getElementById("casosScreen");
+            const bugsScreen = document.getElementById("bugsScreen");
+            const setupScreen = document.getElementById("setupScreen");
+
+            if (welcomeScreen) welcomeScreen.classList.add("hidden");
+            if (casosScreen) casosScreen.classList.add("hidden");
+            if (bugsScreen) bugsScreen.classList.add("hidden");
+            if (setupScreen) setupScreen.classList.remove("hidden");
+
+            // Ocultar botones de navegación en el header
+            const headerNavButtons =
+                document.getElementById("headerNavButtons");
+            if (headerNavButtons) headerNavButtons.classList.add("hidden");
+
+            // Scroll al inicio de la pantalla
+            window.scrollTo({ top: 0, behavior: "smooth" });
+
+            const configStatus = document.getElementById("configStatus");
+            const configMessage = document.getElementById("configMessage");
+            const checklistContainer =
+                document.getElementById("checklistContainer");
+
+            if (
+                infoVerificacion.hojasFaltantes &&
+                infoVerificacion.hojasFaltantes.length > 0
+            ) {
+                configMessage.textContent =
+                    "Faltan hojas: " +
+                    infoVerificacion.hojasFaltantes.join(", ");
+            } else {
+                configMessage.textContent =
+                    infoVerificacion.mensaje ||
+                    "El Sheet necesita configuración";
+            }
+
+            // Siempre mostrar el checklist para informar al usuario qué se creará
+            checklistContainer.style.display = "block";
+
+            try {
+                localStorage.setItem("qaLastScreen", "setup");
+            } catch (e) {}
+        }
+
+        // Guardar última pantalla como setup para restauración
+        try {
+            // not executed now; will be set inside mostrarPantallaSetup when called
+        } catch (e) {}
+
+        function autoConfigurarSheet() {
+            if (!currentSheetUrl) {
+                mostrarToast("No hay Sheet seleccionado", "error");
+                return;
+            }
+
+            const btn = document.getElementById("btnAutoConfigurar");
+            btn.disabled = true;
+            btn.textContent = "Configurando...";
+
+            document.getElementById("progressContainer").style.display =
+                "block";
             document.getElementById("checklistContainer").style.display =
                 "block";
-        } else {
-            configMessage.textContent =
-                infoVerificacion.mensaje || "El Sheet necesita configuración";
-        }
-    }
 
-    function autoConfigurarSheet() {
-        if (!currentSheetUrl) {
-            mostrarToast("No hay Sheet seleccionado", "error");
-            return;
-        }
+            // Mostrar progreso simulado en tiempo real
+            simularProgresoConfiguracion();
 
-        const btn = document.getElementById("btnAutoConfigurar");
-        btn.disabled = true;
-        btn.textContent = "Configurando...";
+            // Crear timeout de 60 segundos para evitar que se quede infinitamente esperando
+            let configurationTimeout = setTimeout(function () {
+                console.error(
+                    "⏱️ [Setup] Timeout: La configuración tardó demasiado"
+                );
+                actualizarProgreso(0, "Tiempo agotado");
+                mostrarToast(
+                    "La configuración tardó demasiado. Por favor, reintentar.",
+                    "error"
+                );
+                btn.disabled = false;
+                btn.innerHTML = "<span>⚡</span><span>Reintentar</span>";
+                ocultarSpinner();
+            }, 60000);
 
-        document.getElementById("progressContainer").style.display = "block";
-        actualizarProgreso(20, "Verificando acceso al Sheet...");
+            google.script.run
+                .withSuccessHandler(function (response) {
+                    clearTimeout(configurationTimeout);
 
-        google.script.run
-            .withSuccessHandler(function (response) {
-                if (response.success) {
-                    actualizarProgreso(100, "Configuración completada!");
+                    if (response.success) {
+                        actualizarProgreso(100, "");
 
-                    setTimeout(function () {
-                        mostrarToast(
-                            "Workspace configurado exitosamente!",
-                            "success"
-                        );
+                        // Actualizar título del progreso
+                        const progressTitle =
+                            document.getElementById("progressTitle");
+                        if (progressTitle) {
+                            progressTitle.innerHTML =
+                                "✅ Configuración completada";
+                        }
 
-                        const configStatus =
-                            document.getElementById("configStatus");
-                        configStatus.className = "config-status success";
-                        configStatus.innerHTML =
-                            '<div style="display: flex; align-items: center; gap: 1rem;"><div style="font-size: 2rem;">✅</div><div><strong>Configuración completada</strong><p style="margin: 0.5rem 0 0 0; color: #166534;">Hojas creadas: ' +
-                            response.hojasCreadas.join(", ") +
-                            "</p></div></div>";
-
+                        // Marcar todos los items como completados
                         const checklist =
                             document.getElementById("configChecklist");
                         const items = checklist.getElementsByTagName("li");
                         for (let i = 0; i < items.length; i++) {
+                            items[i].classList.remove("in-progress");
                             items[i].classList.add("done");
                         }
 
-                        btn.textContent = "Ir a Casos";
+                        setTimeout(function () {
+                            mostrarToast(
+                                "Workspace configurado exitosamente!",
+                                "success"
+                            );
+
+                            const configStatus =
+                                document.getElementById("configStatus");
+                            configStatus.className = "config-status success";
+                            configStatus.innerHTML =
+                                '<div style="display: flex; align-items: center; gap: 1rem;"><div style="font-size: 2rem;">✅</div><div><p style="margin: 0; color: #166534;">Hojas creadas: ' +
+                                response.hojasCreadas.join(", ") +
+                                "</p></div></div>";
+
+                            btn.textContent = "Ir a Casos";
+                            btn.disabled = false;
+                            btn.onclick = function () {
+                                mostrarPantallaCasos(currentSheetUrl);
+                            };
+                        }, 1000);
+                    } else {
+                        actualizarProgreso(0, "Error en configuración");
+                        mostrarToast("Error: " + response.error, "error");
                         btn.disabled = false;
-                        btn.onclick = function () {
-                            mostrarPantallaCasos(currentSheetUrl);
-                        };
-                    }, 1000);
-                } else {
-                    actualizarProgreso(0, "Error en configuración");
-                    mostrarToast("Error: " + response.error, "error");
+                        btn.innerHTML =
+                            "<span>⚡</span><span>Reintentar</span>";
+
+                        // Limpiar estado de progreso
+                        const checklist =
+                            document.getElementById("configChecklist");
+                        const items = checklist.getElementsByTagName("li");
+                        for (let i = 0; i < items.length; i++) {
+                            items[i].classList.remove("in-progress", "done");
+                        }
+                    }
+                })
+                .withFailureHandler(function (error) {
+                    clearTimeout(configurationTimeout);
+                    actualizarProgreso(0, "Error de conexión");
+                    mostrarToast("Error: " + error.message, "error");
                     btn.disabled = false;
                     btn.innerHTML = "<span>⚡</span><span>Reintentar</span>";
-                }
-            })
-            .withFailureHandler(function (error) {
-                actualizarProgreso(0, "Error de conexión");
-                mostrarToast("Error: " + error.message, "error");
-                btn.disabled = false;
-                btn.innerHTML = "<span>⚡</span><span>Reintentar</span>";
-            })
-            .configurarWorkspace(currentSheetUrl);
-    }
 
-    function actualizarProgreso(porcentaje, mensaje) {
-        const progressFill = document.getElementById("progressFill");
-        const progressMessage = document.getElementById("progressMessage");
-
-        progressFill.style.width = porcentaje + "%";
-        progressMessage.textContent = mensaje;
-    }
-
-    function abrirModalNuevoWorkspace() {
-        abrirModal("modalNuevoWorkspace");
-        document.getElementById("nombreNuevoWorkspace").value = "";
-        document.getElementById("nombreNuevoWorkspace").focus();
-    }
-
-    function cerrarModalNuevoWorkspace() {
-        cerrarModal("modalNuevoWorkspace");
-    }
-
-    function crearNuevoWorkspace() {
-        const nombre = document
-            .getElementById("nombreNuevoWorkspace")
-            .value.trim();
-
-        if (!nombre) {
-            mostrarToast("Ingresa un nombre para el workspace", "warning");
-            return;
+                    // Limpiar estado de progreso
+                    const checklist =
+                        document.getElementById("configChecklist");
+                    const items = checklist.getElementsByTagName("li");
+                    for (let i = 0; i < items.length; i++) {
+                        items[i].classList.remove("in-progress", "done");
+                    }
+                })
+                .configurarWorkspace(currentSheetUrl);
         }
 
-        cerrarModalNuevoWorkspace();
+        /**
+         * Simula el progreso de configuración en tiempo real
+         * ya que Google Apps Script no permite callbacks en tiempo real
+         */
+        function simularProgresoConfiguracion() {
+            const pasos = [
+                {
+                    delay: 0,
+                    porcentaje: 10,
+                    mensaje: "🔍 Verificando acceso al Sheet...",
+                    step: null,
+                },
+                {
+                    delay: 800,
+                    porcentaje: 20,
+                    mensaje: "⚙️ Creando hoja de Configuración...",
+                    step: "config",
+                },
+                {
+                    delay: 2000,
+                    porcentaje: 35,
+                    mensaje: "📝 Creando hoja de Casos de Prueba...",
+                    step: "casos",
+                },
+                {
+                    delay: 3500,
+                    porcentaje: 55,
+                    mensaje: "🐛 Creando hoja de Bugs...",
+                    step: "bugs",
+                },
+                {
+                    delay: 5000,
+                    porcentaje: 70,
+                    mensaje: "▶️ Creando hoja de Ejecuciones...",
+                    step: "ejecuciones",
+                },
+                {
+                    delay: 6500,
+                    porcentaje: 85,
+                    mensaje: "🔄 Creando hoja de Regresiones...",
+                    step: "regresiones",
+                },
+                {
+                    delay: 8000,
+                    porcentaje: 95,
+                    mensaje: "✨ Aplicando formato y validaciones...",
+                    step: null,
+                },
+            ];
 
-        mostrarSpinner();
+            pasos.forEach(function (paso) {
+                setTimeout(function () {
+                    actualizarProgreso(paso.porcentaje, paso.mensaje);
 
-        google.script.run
-            .withSuccessHandler(function (response) {
-                ocultarSpinner();
+                    // Actualizar checklist
+                    if (paso.step) {
+                        const checklist =
+                            document.getElementById("configChecklist");
+                        const items = checklist.getElementsByTagName("li");
 
-                if (response.success) {
-                    mostrarToast(
-                        "✅ Workspace creado: " + response.nombreSheet,
-                        "success"
-                    );
+                        // Marcar pasos anteriores como completados
+                        for (let i = 0; i < items.length; i++) {
+                            const itemStep = items[i].getAttribute("data-step");
+                            if (itemStep === paso.step) {
+                                items[i].classList.add("in-progress");
+                            } else {
+                                const stepIndex = pasos.findIndex(
+                                    (p) => p.step === itemStep
+                                );
+                                const currentStepIndex = pasos.findIndex(
+                                    (p) => p.step === paso.step
+                                );
+                                if (
+                                    stepIndex >= 0 &&
+                                    stepIndex < currentStepIndex
+                                ) {
+                                    items[i].classList.remove("in-progress");
+                                    items[i].classList.add("done");
+                                }
+                            }
+                        }
+                    }
+                }, paso.delay);
+            });
+        }
 
-                    document.getElementById("sheetUrlInput").value =
-                        response.sheetUrl;
-                    currentSheetUrl = response.sheetUrl;
+        /**
+         * Limpia y reinicia el estado del setup para permitir nuevos intentos
+         */
+        function limpiarEstadoSetup() {
+            console.log("🧹 [Setup] Limpiando estado del setup");
 
-                    setTimeout(function () {
-                        mostrarPantallaCasos(response.sheetUrl);
-                    }, 1500);
-                } else {
-                    mostrarToast("Error: " + response.error, "error");
+            // Ocultar progress container
+            const progressContainer =
+                document.getElementById("progressContainer");
+            if (progressContainer) {
+                progressContainer.style.display = "none";
+            }
+
+            // Reiniciar título del progreso
+            const progressTitle = document.getElementById("progressTitle");
+            if (progressTitle) {
+                progressTitle.innerHTML =
+                    '<span class="rotating-icon">⚙️</span> Configurando workspace...';
+            }
+
+            // Reiniciar barra de progreso
+            actualizarProgreso(0, "");
+
+            // Reiniciar botón a estado inicial
+            const btn = document.getElementById("btnAutoConfigurar");
+            if (btn) {
+                btn.innerHTML =
+                    "<span>⚡</span><span>Auto-Configurar Sheet</span>";
+                btn.disabled = false;
+                btn.onclick = function () {
+                    autoConfigurarSheet();
+                };
+            }
+
+            // Limpiar estado de configuración
+            const configStatus = document.getElementById("configStatus");
+            if (configStatus) {
+                configStatus.className = "config-status";
+                // Restaurar mensaje inicial sin limpiar completamente el contenido
+            }
+
+            // Reiniciar checklist - remover estados de progreso
+            const checklist = document.getElementById("configChecklist");
+            if (checklist) {
+                const items = checklist.getElementsByTagName("li");
+                for (let i = 0; i < items.length; i++) {
+                    items[i].classList.remove("done", "in-progress");
                 }
-            })
-            .withFailureHandler(function (error) {
-                ocultarSpinner();
+            }
+
+            // No ocultar checklistContainer para que el usuario vea lo que se creará
+            // El checklistContainer se ocultará/mostrará según sea necesario en mostrarPantallaSetup
+        }
+
+        function actualizarProgreso(porcentaje, mensaje) {
+            const progressFill = document.getElementById("progressFill");
+            const progressMessage = document.getElementById("progressMessage");
+
+            progressFill.style.width = porcentaje + "%";
+            progressMessage.textContent = mensaje;
+        }
+
+        function abrirModalNuevoWorkspace() {
+            abrirModal("modalNuevoWorkspace");
+            document.getElementById("nombreNuevoWorkspace").value = "";
+            document.getElementById("nombreNuevoWorkspace").focus();
+        }
+
+        function cerrarModalNuevoWorkspace() {
+            cerrarModal("modalNuevoWorkspace");
+        }
+
+        function crearNuevoWorkspace() {
+            const nombre = document
+                .getElementById("nombreNuevoWorkspace")
+                .value.trim();
+
+            const parentFolderUrl = document
+                .getElementById("parentDriveFolderUrl")
+                .value.trim();
+
+            const nombreCarpeta = document
+                .getElementById("nombreCarpetaWorkspace")
+                .value.trim();
+
+            // Validar que todos los campos obligatorios estén completos
+            if (!nombre) {
                 mostrarToast(
-                    "Error al crear workspace: " + error.message,
+                    "Por favor, ingresa el nombre del workspace",
+                    "warning"
+                );
+                return;
+            }
+
+            if (!parentFolderUrl) {
+                mostrarToast(
+                    "Por favor, indica la carpeta padre en Google Drive",
+                    "warning"
+                );
+                return;
+            }
+
+            if (!nombreCarpeta) {
+                mostrarToast(
+                    "Por favor, ingresa el nombre de la carpeta del workspace",
+                    "warning"
+                );
+                return;
+            }
+
+            // Validar formato de URL de Drive
+            if (
+                !parentFolderUrl.includes("drive.google.com") ||
+                !parentFolderUrl.includes("folders")
+            ) {
+                mostrarToast(
+                    "La URL de la carpeta de Drive no es válida",
                     "error"
                 );
-            })
-            .crearNuevoWorkspace(nombre);
-    }
+                return;
+            }
 
-    function iniciarCreacionWorkspace() {
-        abrirModalNuevoWorkspace();
-    }
-</script>
+            cerrarModalNuevoWorkspace();
+
+            // Mostrar pantalla de progreso
+            mostrarModalProgresoWorkspace();
+
+            // Simular progreso
+            simularProgresoCreacionWorkspace();
+
+            // Crear timeout de 60 segundos
+            let creationTimeout = setTimeout(function () {
+                console.error(
+                    "⏱️ [Setup] Timeout: La creación tardó demasiado"
+                );
+                actualizarProgresoWorkspace(0, "Tiempo agotado");
+                mostrarToast(
+                    "La creación tardó demasiado. Por favor, reintentar.",
+                    "error"
+                );
+                ocultarModalProgresoWorkspace();
+            }, 60000);
+
+            google.script.run
+                .withSuccessHandler(function (response) {
+                    clearTimeout(creationTimeout);
+
+                    if (response.success) {
+                        actualizarProgresoWorkspace(
+                            100,
+                            "¡Workspace creado exitosamente!"
+                        );
+
+                        // Marcar todos los items como completados
+                        const checklist =
+                            document.getElementById("workspaceChecklist");
+                        const items = checklist.getElementsByTagName("li");
+                        for (let i = 0; i < items.length; i++) {
+                            items[i].classList.remove("in-progress");
+                            items[i].classList.add("done");
+                        }
+
+                        setTimeout(function () {
+                            ocultarModalProgresoWorkspace();
+
+                            mostrarToast(
+                                "✅ Workspace creado: " + response.nombreSheet,
+                                "success"
+                            );
+
+                            document.getElementById("sheetUrlInput").value =
+                                response.sheetUrl;
+                            currentSheetUrl = response.sheetUrl;
+
+                            // Si backend devolvió carpeta Drive, mostrar enlace rápido
+                            if (response.driveFolderUrl) {
+                                try {
+                                    var html =
+                                        '<div style="margin-top:0.75rem">Carpeta creada: <a href="' +
+                                        response.driveFolderUrl +
+                                        '" target="_blank">Abrir en Drive</a></div>';
+                                    const configStatus =
+                                        document.getElementById("configStatus");
+                                    configStatus.insertAdjacentHTML(
+                                        "afterend",
+                                        html
+                                    );
+                                } catch (e) {}
+                            }
+
+                            setTimeout(function () {
+                                mostrarPantallaCasos(response.sheetUrl);
+                            }, 1500);
+                        }, 1500);
+                    } else {
+                        ocultarModalProgresoWorkspace();
+                        mostrarToast("Error: " + response.error, "error");
+                    }
+                })
+                .withFailureHandler(function (error) {
+                    clearTimeout(creationTimeout);
+                    ocultarModalProgresoWorkspace();
+                    mostrarToast(
+                        "Error al crear workspace: " + error.message,
+                        "error"
+                    );
+                })
+                .crearNuevoWorkspace(nombre, parentFolderUrl, nombreCarpeta);
+        }
+
+        function iniciarCreacionWorkspace() {
+            abrirModalNuevoWorkspace();
+        }
+
+        // ===================================================================
+        // FUNCIONES MODAL PROGRESO WORKSPACE
+        // ===================================================================
+
+        function mostrarModalProgresoWorkspace() {
+            // Ocultar todas las pantallas
+            const welcomeScreen = document.getElementById("welcomeScreen");
+            const casosScreen = document.getElementById("casosScreen");
+            const bugsScreen = document.getElementById("bugsScreen");
+            const setupScreen = document.getElementById("setupScreen");
+            const progressScreen = document.getElementById(
+                "workspaceProgressScreen"
+            );
+
+            if (welcomeScreen) welcomeScreen.classList.add("hidden");
+            if (casosScreen) casosScreen.classList.add("hidden");
+            if (bugsScreen) bugsScreen.classList.add("hidden");
+            if (setupScreen) setupScreen.classList.add("hidden");
+            if (progressScreen) progressScreen.classList.remove("hidden");
+
+            // Ocultar botones de navegación en el header
+            const headerNavButtons =
+                document.getElementById("headerNavButtons");
+            if (headerNavButtons) headerNavButtons.classList.add("hidden");
+
+            // Scroll al inicio
+            window.scrollTo({ top: 0, behavior: "smooth" });
+
+            // Resetear progreso
+            actualizarProgresoWorkspace(0, "Iniciando creación...");
+
+            // Resetear checklist
+            const checklist = document.getElementById("workspaceChecklist");
+            const items = checklist.getElementsByTagName("li");
+            for (let i = 0; i < items.length; i++) {
+                items[i].classList.remove("done", "in-progress");
+            }
+
+            // Ocultar resultado anterior
+            const resultInfo = document.getElementById("workspaceResultInfo");
+            if (resultInfo) resultInfo.style.display = "none";
+        }
+
+        function ocultarModalProgresoWorkspace() {
+            const progressScreen = document.getElementById(
+                "workspaceProgressScreen"
+            );
+            const welcomeScreen = document.getElementById("welcomeScreen");
+
+            if (progressScreen) progressScreen.classList.add("hidden");
+            if (welcomeScreen) welcomeScreen.classList.remove("hidden");
+        }
+
+        function actualizarProgresoWorkspace(porcentaje, mensaje) {
+            const progressFill = document.getElementById(
+                "workspaceProgressFill"
+            );
+            const progressMessage = document.getElementById(
+                "workspaceProgressMessage"
+            );
+
+            if (progressFill) {
+                progressFill.style.width = porcentaje + "%";
+            }
+
+            if (progressMessage && mensaje) {
+                progressMessage.textContent = mensaje;
+            }
+        }
+
+        /**
+         * Simula el progreso de creación de workspace en tiempo real
+         */
+        function simularProgresoCreacionWorkspace() {
+            const pasos = [
+                {
+                    delay: 0,
+                    porcentaje: 5,
+                    mensaje: "🔍 Verificando permisos...",
+                    step: null,
+                },
+                {
+                    delay: 800,
+                    porcentaje: 15,
+                    mensaje: "📁 Creando estructura en Google Drive...",
+                    step: "drive",
+                },
+                {
+                    delay: 2000,
+                    porcentaje: 25,
+                    mensaje: "📊 Creando Google Sheet...",
+                    step: "sheet",
+                },
+                {
+                    delay: 3200,
+                    porcentaje: 35,
+                    mensaje: "⚙️ Configurando hoja Config...",
+                    step: "config",
+                },
+                {
+                    delay: 4500,
+                    porcentaje: 50,
+                    mensaje: "📝 Creando hoja de Casos de Prueba...",
+                    step: "casos",
+                },
+                {
+                    delay: 5800,
+                    porcentaje: 60,
+                    mensaje: "🐛 Creando hoja de Bugs...",
+                    step: "bugs",
+                },
+                {
+                    delay: 7000,
+                    porcentaje: 70,
+                    mensaje: "▶️ Creando hoja de Ejecuciones...",
+                    step: "ejecuciones",
+                },
+                {
+                    delay: 8200,
+                    porcentaje: 80,
+                    mensaje: "🔄 Creando hoja de Regresiones...",
+                    step: "regresiones",
+                },
+                {
+                    delay: 9400,
+                    porcentaje: 90,
+                    mensaje: "✨ Aplicando formato y validaciones...",
+                    step: "formato",
+                },
+                {
+                    delay: 10500,
+                    porcentaje: 95,
+                    mensaje: "🔗 Finalizando configuración...",
+                    step: null,
+                },
+            ];
+
+            pasos.forEach(function (paso) {
+                setTimeout(function () {
+                    actualizarProgresoWorkspace(paso.porcentaje, paso.mensaje);
+
+                    // Actualizar checklist
+                    if (paso.step) {
+                        const checklist =
+                            document.getElementById("workspaceChecklist");
+                        const items = checklist.getElementsByTagName("li");
+
+                        // Marcar pasos anteriores como completados y actual como en progreso
+                        let found = false;
+                        for (let i = 0; i < items.length; i++) {
+                            const stepAttr = items[i].getAttribute("data-step");
+
+                            if (stepAttr === paso.step) {
+                                items[i].classList.remove("done");
+                                items[i].classList.add("in-progress");
+                                found = true;
+                            } else if (!found) {
+                                items[i].classList.remove("in-progress");
+                                items[i].classList.add("done");
+                            }
+                        }
+                    }
+                }, paso.delay);
+            });
+        }
+
+        // ===================================================================
+        // EXPORTAR FUNCIONES AL SCOPE GLOBAL
+        // ===================================================================
+
+        window.mostrarPantallaSetup = mostrarPantallaSetup;
+        window.autoConfigurarSheet = autoConfigurarSheet;
+        window.limpiarEstadoSetup = limpiarEstadoSetup;
+        window.abrirModalNuevoWorkspace = abrirModalNuevoWorkspace;
+        window.cerrarModalNuevoWorkspace = cerrarModalNuevoWorkspace;
+        window.crearNuevoWorkspace = crearNuevoWorkspace;
+        window.iniciarCreacionWorkspace = iniciarCreacionWorkspace;
+
+        console.log("✅ Frontend_Components_Setup.html cargado");
+    </script>
+</div>

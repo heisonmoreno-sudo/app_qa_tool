@@ -1,112 +1,281 @@
 <!-- Bugs History Screen (clean UTF-8, no emojis) -->
-<div id="bugsScreen" class="hidden" style="padding: 1rem">
-    <div class="card" style="margin-top: 0.5rem">
-        <div
-            class="card-header"
-            style="
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 1rem;
-                flex-wrap: wrap;
-            "
-        >
-            <div style="display: flex; align-items: center; gap: 0.5rem">
-                <button
-                    class="btn btn-secondary btn-sm"
-                    onclick="ocultarPanelBugs()"
-                >
-                    ← Volver
-                </button>
-                <div style="font-weight: 700; color: #334155">
-                    Historial de Bugs
-                </div>
-            </div>
-            <div style="display: flex; gap: 0.5rem">
-                <button
-                    class="btn btn-primary"
-                    onclick="abrirModalCrearBug('')"
-                >
-                    Nuevo Bug
-                </button>
-            </div>
-        </div>
-        <div class="card-body">
+<div id="bugsScreen" class="hidden" style="align-self: center; width: 100%">
+    <div class="container">
+        <div class="card">
+            <!-- Header consistente con el resto de la app -->
             <div
                 style="
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-                    gap: 0.75rem;
-                    margin-bottom: 0.75rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 1rem;
+                    flex-wrap: wrap;
+                    padding: 1.5rem;
+                    border-bottom: 1px solid var(--border-color);
                 "
             >
-                <input
-                    id="bugFiltroBusqueda"
-                    class="input-field"
-                    placeholder="Buscar por título o descripción"
-                    oninput="cargarBugs()"
-                />
-                <select
-                    id="bugFiltroEstado"
-                    class="input-field"
-                    onchange="cargarBugs()"
-                >
-                    <option value="Todos">Estado: Todos</option>
-                    <option value="Abierto">Abierto</option>
-                    <option value="Cerrado">Cerrado</option>
-                </select>
-                <select
-                    id="bugFiltroSeveridad"
-                    class="input-field"
-                    onchange="cargarBugs()"
-                >
-                    <option value="Todas">Severidad: Todas</option>
-                    <option value="Crítica">Crítica</option>
-                    <option value="Alta">Alta</option>
-                    <option value="Media">Media</option>
-                    <option value="Baja">Baja</option>
-                </select>
-                <select
-                    id="bugFiltroConCaso"
-                    class="input-field"
-                    onchange="cargarBugs()"
-                >
-                    <option value="Todos">Relación: Todos</option>
-                    <option value="ConCaso">Con Caso</option>
-                    <option value="SinCaso">Sin Caso</option>
-                </select>
+                <div style="display: flex; align-items: center; gap: 1rem">
+                    <h2
+                        style="
+                            margin: 0;
+                            color: var(--text-primary);
+                            font-size: 1.5rem;
+                            font-weight: 600;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                        "
+                    >
+                        <span>🐛</span>
+                        <span>Historial de Bugs</span>
+                    </h2>
+                </div>
+                <div style="display: flex; gap: 0.75rem">
+                    <button
+                        class="btn btn-primary"
+                        onclick="if(typeof window.abrirModalCrearBug === 'function') window.abrirModalCrearBug(''); else console.error('abrirModalCrearBug no disponible');"
+                    >
+                        <span>➕</span>
+                        <span>Crear Bug</span>
+                    </button>
+                </div>
             </div>
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th style="width: 90px">ID</th>
-                            <th>Título</th>
-                            <th>Estado</th>
-                            <th>Severidad</th>
-                            <th>Casos</th>
-                            <th>Link Caso</th>
-                            <th>Fecha</th>
-                            <th style="width: 220px">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaBugs"></tbody>
-                </table>
+
+            <div class="card-body" style="padding: 1.5rem">
+                <!-- Filtros consistentes -->
+                <div
+                    style="
+                        display: grid;
+                        grid-template-columns: repeat(
+                            auto-fit,
+                            minmax(200px, 1fr)
+                        );
+                        gap: 1rem;
+                        margin-bottom: 1.5rem;
+                    "
+                >
+                    <input
+                        id="bugFiltroBusqueda"
+                        class="form-input"
+                        placeholder="Buscar por título o descripción"
+                        oninput="try{localStorage.setItem('qaPage_bugs','1')}catch(e){};cargarBugs()"
+                    />
+                    <select
+                        id="bugFiltroEstado"
+                        class="form-input"
+                        onchange="try{localStorage.setItem('qaPage_bugs','1')}catch(e){};cargarBugs()"
+                    >
+                        <option value="Todos">Estado: Todos</option>
+                        <option value="Abierto">Abierto</option>
+                        <option value="Cerrado">Cerrado</option>
+                    </select>
+                    <select
+                        id="bugFiltroSeveridad"
+                        class="form-input"
+                        onchange="try{localStorage.setItem('qaPage_bugs','1')}catch(e){};cargarBugs()"
+                    >
+                        <option value="Todas">Severidad: Todas</option>
+                        <option value="Bloqueante">Bloqueante</option>
+                        <option value="Crítica">Crítica</option>
+                        <option value="Alta">Alta</option>
+                        <option value="Media">Media</option>
+                        <option value="Baja">Baja</option>
+                    </select>
+                    <select
+                        id="bugFiltroConCaso"
+                        class="form-input"
+                        onchange="try{localStorage.setItem('qaPage_bugs','1')}catch(e){};cargarBugs()"
+                    >
+                        <option value="Todos">Relación: Todos</option>
+                        <option value="ConCaso">Con Caso</option>
+                        <option value="SinCaso">Sin Caso</option>
+                    </select>
+                </div>
+
+                <!-- Tabla -->
+                <div
+                    class="table-container"
+                    style="
+                        background: white;
+                        border-radius: var(--radius-md);
+                        overflow: hidden;
+                    "
+                >
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px">ID</th>
+                                <th style="min-width: 250px">Título</th>
+                                <th style="width: 120px; text-align: center">
+                                    Estado
+                                </th>
+                                <th style="width: 140px; text-align: center">
+                                    Severidad
+                                </th>
+                                <th style="width: 100px; text-align: center">
+                                    Casos
+                                </th>
+                                <th style="width: 120px; text-align: center">
+                                    Fecha
+                                </th>
+                                <th style="width: 140px; text-align: center">
+                                    Acciones
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaBugs">
+                            <tr>
+                                <td colspan="7" class="table-empty-cell">
+                                    Cargando bugs...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    function mostrarPanelBugs() {
+    function generarBadgeEstadoBug(estado) {
+        if (estado === "Cerrado") {
+            return '<span class="badge badge-success">✓ Cerrado</span>';
+        }
+        return '<span class="badge badge-danger">⚠ Abierto</span>';
+    }
+
+    function generarBadgeSeveridad(severidad) {
+        var badgeClass, texto;
+        switch ((severidad || "").toLowerCase()) {
+            case "bloqueante":
+                badgeClass = "badge-danger";
+                texto = "🚫 Bloqueante";
+                break;
+            case "crítica":
+            case "critica":
+                badgeClass = "badge-danger";
+                texto = "🔥 Crítica";
+                break;
+            case "alta":
+                badgeClass = "badge-danger";
+                texto = "🔴 Alta";
+                break;
+            case "media":
+                badgeClass = "badge-warning";
+                texto = "🟡 Media";
+                break;
+            case "baja":
+                badgeClass = "badge-success";
+                texto = "🟢 Baja";
+                break;
+            default:
+                badgeClass = "badge-primary";
+                texto = severidad || "-";
+        }
+        return '<span class="badge ' + badgeClass + '">' + texto + "</span>";
+    }
+
+    function generarBadgeCasosRelacionados(casos) {
+        if (!casos || casos.trim() === "") {
+            return '<span style="color:#94a3b8;font-size:0.9rem;">-</span>';
+        }
+        var count = casos.split(",").filter(function (c) {
+            return c.trim();
+        }).length;
+        return '<span class="badge badge-info">📋 ' + count + "</span>";
+    }
+
+    function generarFechaBadge(fechaStr) {
+        if (!fechaStr)
+            return '<span style="color:#94a3b8;font-size:0.85rem;">-</span>';
         try {
-            console.log("[Bugs] Abrir historial");
+            var fecha = new Date(fechaStr);
+            var dia = fecha.getDate().toString().padStart(2, "0");
+            var mes = (fecha.getMonth() + 1).toString().padStart(2, "0");
+            var anio = fecha.getFullYear();
+            return (
+                '<span class="badge badge-primary">' +
+                dia +
+                "/" +
+                mes +
+                "/" +
+                anio +
+                "</span>"
+            );
+        } catch (e) {
+            return '<span style="color:#94a3b8;font-size:0.85rem;">-</span>';
+        }
+    }
+
+    function mostrarPanelBugs() {
+        console.log("[Bugs] mostrarPanelBugs llamado");
+        try {
+            // Mostrar historial de bugs
         } catch (e) {}
         var bugsScreen = document.getElementById("bugsScreen");
         var casosScreen = document.getElementById("casosScreen");
-        if (casosScreen) casosScreen.classList.add("hidden");
-        if (bugsScreen) bugsScreen.classList.remove("hidden");
+        var setupScreen = document.getElementById("setupScreen");
+        var welcomeScreen = document.getElementById("welcomeScreen");
+        var metricasScreen = document.getElementById("metricasScreen");
+        var regresionesScreen = document.getElementById("regresionesScreen");
+        var metricasQAScreen = document.getElementById("metricasQAScreen");
+        var metricasProyectoScreen = document.getElementById(
+            "metricasProyectoScreen"
+        );
+
+        console.log("[Bugs] Elementos:", {
+            bugsScreen: !!bugsScreen,
+            casosScreen: !!casosScreen,
+            setupScreen: !!setupScreen,
+            welcomeScreen: !!welcomeScreen,
+            metricasScreen: !!metricasScreen,
+            regresionesScreen: !!regresionesScreen,
+        });
+
+        // Guardar la pantalla actual antes de ocultarla
+        var pantallaAnterior = "welcome";
+        if (casosScreen && !casosScreen.classList.contains("hidden")) {
+            pantallaAnterior = "casos";
+        } else if (setupScreen && !setupScreen.classList.contains("hidden")) {
+            pantallaAnterior = "setup";
+        } else if (
+            metricasScreen &&
+            !metricasScreen.classList.contains("hidden")
+        ) {
+            pantallaAnterior = "metricas";
+        }
         try {
+            localStorage.setItem("qaPreviousScreen", pantallaAnterior);
+        } catch (e) {}
+
+        if (casosScreen) casosScreen.classList.add("hidden");
+        if (setupScreen) setupScreen.classList.add("hidden");
+        if (welcomeScreen) welcomeScreen.classList.add("hidden");
+        if (metricasScreen) metricasScreen.classList.add("hidden");
+        if (regresionesScreen) regresionesScreen.classList.add("hidden");
+        if (metricasQAScreen) metricasQAScreen.classList.add("hidden");
+        if (metricasProyectoScreen)
+            metricasProyectoScreen.classList.add("hidden");
+        if (bugsScreen) {
+            bugsScreen.classList.remove("hidden");
+            console.log("[Bugs] Pantalla de bugs mostrada");
+        } else {
+            console.error("[Bugs] No se encontró el elemento bugsScreen");
+        }
+
+        // Mostrar botones de navegación en el header
+        const headerNavButtons = document.getElementById("headerNavButtons");
+        if (headerNavButtons) headerNavButtons.classList.remove("hidden");
+
+        // Scroll al inicio de la pantalla
+        window.scrollTo({ top: 0, behavior: "smooth" });
+
+        try {
+            // Guardar pantalla actual
+            try {
+                localStorage.setItem("qaLastScreen", "bugs");
+            } catch (e) {}
             cargarBugs();
         } catch (e) {
             console.error("[Bugs] Error cargarBugs init:", e);
@@ -116,8 +285,44 @@
     function ocultarPanelBugs() {
         var bugsScreen = document.getElementById("bugsScreen");
         var casosScreen = document.getElementById("casosScreen");
+        var setupScreen = document.getElementById("setupScreen");
+        var welcomeScreen = document.getElementById("welcomeScreen");
+        var metricasScreen = document.getElementById("metricasScreen");
+
         if (bugsScreen) bugsScreen.classList.add("hidden");
-        if (casosScreen) casosScreen.classList.remove("hidden");
+
+        // Recuperar la pantalla anterior
+        var pantallaAnterior = "welcome";
+        try {
+            pantallaAnterior =
+                localStorage.getItem("qaPreviousScreen") || "welcome";
+        } catch (e) {}
+
+        // Restaurar la pantalla anterior
+        if (pantallaAnterior === "casos" && casosScreen) {
+            casosScreen.classList.remove("hidden");
+            try {
+                localStorage.setItem("qaLastScreen", "casos");
+            } catch (e) {}
+        } else if (pantallaAnterior === "setup" && setupScreen) {
+            setupScreen.classList.remove("hidden");
+            try {
+                localStorage.setItem("qaLastScreen", "setup");
+            } catch (e) {}
+        } else if (pantallaAnterior === "metricas" && metricasScreen) {
+            metricasScreen.classList.remove("hidden");
+            try {
+                localStorage.setItem("qaLastScreen", "metricas");
+            } catch (e) {}
+        } else if (welcomeScreen) {
+            welcomeScreen.classList.remove("hidden");
+            try {
+                localStorage.removeItem("qaLastScreen");
+            } catch (e) {}
+        }
+
+        // Scroll al inicio de la pantalla
+        window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     function cargarBugs() {
@@ -128,14 +333,14 @@
                 ? recuperarSheetUrl()
                 : null);
 
-        console.log("[Bugs] URL recuperada:", url);
-        console.log("[Bugs] Tipo de URL:", typeof url);
+        // URL del sheet recuperada y tipo
 
         if (!url || url === "" || url === "null" || url === "undefined") {
             console.warn("[Bugs] No hay sheetUrl válida");
             if (typeof mostrarToast === "function")
                 mostrarToast("Conecta un Sheet primero", "warning");
-            renderizarTablaBugs([]);
+            window.__ultimoListadoBugs = [];
+            renderizarTablaBugsPaged([]);
             return;
         }
 
@@ -160,34 +365,37 @@
         if (relacion === "ConCaso") filtros.conCaso = true;
         else if (relacion === "SinCaso") filtros.conCaso = false;
 
-        console.log("[Bugs] Filtros:", filtros);
-        console.log("[Bugs] Llamando listarBugs con URL:", url);
+        // Filtros preparados para listar bugs
 
         if (typeof mostrarSpinner === "function") mostrarSpinner();
 
-        // ✅ Llamada DIRECTA a listarBugs (Backend_Services_Bugs.js)
+        // ✅ Llamada a api_listarBugs (wrapper en Backend_Code.js)
+        console.log("[Bugs] Llamando a api_listarBugs con filtros:", filtros);
         google.script.run
             .withSuccessHandler(function (res) {
-                console.log("[Bugs] ✅ Respuesta recibida:", res);
-                console.log("[Bugs] Tipo de respuesta:", typeof res);
+                console.log(
+                    "[Bugs] Respuesta recibida de api_listarBugs:",
+                    res
+                );
 
                 if (typeof ocultarSpinner === "function") ocultarSpinner();
 
                 // Validar respuesta
                 if (!res) {
-                    console.error("[Bugs] ❌ Respuesta es null/undefined");
+                    console.error("[Bugs] ERROR: Respuesta es null/undefined");
                     if (typeof mostrarToast === "function") {
                         mostrarToast(
                             "Error: Sin respuesta del servidor",
                             "error"
                         );
                     }
-                    renderizarTablaBugs([]);
+                    window.__ultimoListadoBugs = [];
+                    renderizarTablaBugsPaged([]);
                     return;
                 }
 
                 if (res.success === false) {
-                    console.error("[Bugs] ❌ Error del backend:", res.mensaje);
+                    console.error("[Bugs] ERROR del backend:", res.mensaje);
                     if (typeof mostrarToast === "function") {
                         mostrarToast(
                             "Error: " +
@@ -196,7 +404,8 @@
                             "error"
                         );
                     }
-                    renderizarTablaBugs([]);
+                    window.__ultimoListadoBugs = [];
+                    renderizarTablaBugsPaged([]);
                     return;
                 }
 
@@ -205,15 +414,16 @@
                     res.data && Array.isArray(res.data.bugs)
                         ? res.data.bugs
                         : [];
-                console.log("[Bugs] ✅ Total bugs recibidos:", bugs.length);
-                renderizarTablaBugs(bugs);
+                // Total bugs recibidos: bugs.length
+                window.__ultimoListadoBugs = bugs;
+                renderizarTablaBugsPaged(bugs);
 
                 if (bugs.length === 0 && typeof mostrarToast === "function") {
                     mostrarToast("No hay bugs registrados", "info");
                 }
             })
             .withFailureHandler(function (err) {
-                console.error("[Bugs] ❌ Error en la llamada:", err);
+                console.error("[Bugs] ERROR en la llamada:", err);
                 console.error("[Bugs] Tipo de error:", typeof err);
                 console.error("[Bugs] Error completo:", JSON.stringify(err));
 
@@ -225,27 +435,71 @@
                     mostrarToast("Error al cargar bugs: " + mensaje, "error");
                 }
 
-                renderizarTablaBugs([]);
+                window.__ultimoListadoBugs = [];
+                renderizarTablaBugsPaged([]);
             })
-            .listarBugs(url, filtros);
+            .api_listarBugs(url, filtros);
     }
 
     function renderizarTablaBugs(bugs) {
         var tbody = document.getElementById("tablaBugs");
-        if (!tbody) return;
+        if (!tbody) {
+            console.error("[Bugs] No se encontró tbody#tablaBugs");
+            return;
+        }
+
+        console.log(
+            "[Bugs] renderizarTablaBugs - Total bugs:",
+            bugs ? bugs.length : 0
+        );
+
+        // Solo mostrar mensaje si realmente no hay bugs después de aplicar filtros
         if (!bugs || bugs.length === 0) {
+            var totalBugs = window.__ultimoListadoBugs
+                ? window.__ultimoListadoBugs.length
+                : 0;
+            var mensaje =
+                totalBugs > 0
+                    ? "No se encontraron bugs con los filtros aplicados"
+                    : "No hay bugs registrados";
+
+            console.log("[Bugs] Mostrando mensaje:", mensaje);
+
             tbody.innerHTML =
-                '<tr><td colspan="8" style="text-align:center; padding:1rem; color:#64748b;">Sin bugs para mostrar</td></tr>';
+                '<tr><td colspan="7" class="table-empty-cell">' +
+                mensaje +
+                "</td></tr>";
             return;
         }
         var html = "";
         bugs.forEach(function (b) {
             var id = b.ID || "";
+
+            // Debug: Ver qué campos de Trello están disponibles
+            if (id) {
+                console.log("[Bug " + id + "] Campos Trello:", {
+                    TrelloCardID: b.TrelloCardID,
+                    TrelloCardId: b.TrelloCardId,
+                    trelloCardId: b.trelloCardId,
+                    LinkTrello: b.LinkTrello,
+                    linkTrello: b.linkTrello,
+                    TrelloCardURL: b.TrelloCardURL,
+                });
+            }
+
             var titulo = b.Titulo || "";
             var estado = b.Estado || "Abierto";
             var sev = b.Severidad || "";
             var casos = b.CasosRelacionados || "";
-            var link = b.LinkCasoPrueba || "";
+
+            // Buscar TrelloCardID en todas las variantes posibles
+            var trelloCardId =
+                b.TrelloCardID || b.TrelloCardId || b.trelloCardId || "";
+
+            // Buscar LinkTrello si está disponible (puede tener la URL completa)
+            var trelloUrl =
+                b.LinkTrello || b.linkTrello || b.TrelloCardURL || "";
+
             var fecha = (function () {
                 try {
                     return (
@@ -256,59 +510,202 @@
                     return "";
                 }
             })();
-            var badge =
-                estado === "Cerrado"
-                    ? '<span class="badge badge-success">Cerrado</span>'
-                    : '<span class="badge badge-danger">Abierto</span>';
-            var linkHtml = link
-                ? link
-                      .split("\n")
-                      .map(function (l) {
-                          return '<a href="' + l + '" target="_blank">Link</a>';
-                      })
-                      .join("<br>")
-                : "";
             html +=
                 "<tr>" +
-                "<td>" +
+                '<td style="padding: 0.75rem;">' +
                 id +
                 "</td>" +
-                "<td>" +
+                '<td style="padding: 0.75rem; word-wrap: break-word; overflow-wrap: break-word; white-space: normal;">' +
                 titulo +
                 "</td>" +
-                "<td>" +
-                badge +
+                '<td style="padding: 0.75rem; text-align: center;">' +
+                generarBadgeEstadoBug(estado) +
                 "</td>" +
-                "<td>" +
-                sev +
+                '<td style="padding: 0.75rem; text-align: center;">' +
+                generarBadgeSeveridad(sev) +
                 "</td>" +
-                "<td>" +
-                (casos || "") +
+                '<td style="padding: 0.75rem; text-align: center;">' +
+                generarBadgeCasosRelacionados(casos) +
                 "</td>" +
-                "<td>" +
-                linkHtml +
+                '<td style="padding: 0.75rem; text-align: center;">' +
+                generarFechaBadge(b.FechaDeteccion) +
                 "</td>" +
-                "<td>" +
-                (fecha || "") +
-                "</td>" +
-                '<td style="display:flex; gap:0.35rem; flex-wrap:wrap;">' +
-                '<button class="btn btn-secondary btn-sm" onclick="abrirModalCrearBug(\'' +
+                '<td style="padding: 0.75rem; text-align: center;"><div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; align-items: center;">' +
+                '<button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; display: flex; align-items: center; gap: 0.25rem;" title="Ver/Editar" onclick="window.abrirModalCrearBug(\'' +
                 id +
-                "')\">Ver/Editar</button>" +
+                '\')"><span style="font-size: 1rem;">👁️</span></button>' +
+                (trelloCardId || trelloUrl
+                    ? '<a href="' +
+                      (trelloUrl || "https://trello.com/c/" + trelloCardId) +
+                      '" target="_blank" class="btn btn-info" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; display: flex; align-items: center; gap: 0.25rem; text-decoration: none;" title="Abrir en Trello"><span style="font-size: 1rem;">🔗</span></a>'
+                    : "") +
                 (estado === "Abierto"
-                    ? '<button class="btn btn-success btn-sm" onclick="cambiarEstadoBugUI(\'' +
+                    ? '<button class="btn btn-success" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; display: flex; align-items: center; gap: 0.25rem;" title="Cerrar Bug" onclick="window.abrirModalCerrarBug(\'' +
                       id +
-                      "','Cerrado')\">Cerrar</button>"
-                    : '<button class="btn btn-primary btn-sm" onclick="cambiarEstadoBugUI(\'' +
+                      '\')"><span style="font-size: 1rem;">✔️</span></button>'
+                    : '<button class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; display: flex; align-items: center; gap: 0.25rem;" title="Reabrir Bug" onclick="window.cambiarEstadoBugUI(\'' +
                       id +
-                      "','Abierto')\">Abrir</button>") +
-                '<button class="btn btn-danger btn-sm" onclick="eliminarBugUI(\'' +
+                      "','Abierto')\">" +
+                      '<span style="font-size: 1rem;">🔄</span></button>') +
+                '<button class="btn btn-danger" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; display: flex; align-items: center; gap: 0.25rem;" title="Eliminar Bug" onclick="window.eliminarBugUI(\'' +
                 id +
-                "')\">Eliminar</button>" +
-                "</td>" +
+                '\')"><span style="font-size: 1rem;">🗑️</span></button>' +
+                "</div></td>" +
                 "</tr>";
         });
         tbody.innerHTML = html;
+    }
+
+    // ===================================================================
+    // Paginación cliente para Bugs (List2)
+    // ===================================================================
+    function _leerEstadoPaginacionBugs() {
+        var page = parseInt(localStorage.getItem("qaPage_bugs")) || 1;
+        var pageSize = parseInt(localStorage.getItem("qaPageSize_bugs")) || 20;
+        return { page: page, pageSize: pageSize };
+    }
+
+    function _guardarEstadoPaginacionBugs(page, pageSize) {
+        try {
+            localStorage.setItem("qaPage_bugs", String(page));
+            localStorage.setItem("qaPageSize_bugs", String(pageSize));
+        } catch (e) {}
+    }
+
+    function renderizarTablaBugsPaged(bugs) {
+        var tbody = document.getElementById("tablaBugs");
+        if (!tbody) return;
+
+        var estado = _leerEstadoPaginacionBugs();
+        var page = estado.page || 1;
+        var pageSize = estado.pageSize || 20;
+
+        var total = Array.isArray(bugs) ? bugs.length : 0;
+        var totalPages = Math.max(1, Math.ceil(total / pageSize));
+        if (page > totalPages) page = totalPages;
+        if (page < 1) page = 1;
+
+        var start = (page - 1) * pageSize;
+        var end = start + pageSize;
+        var slice = Array.isArray(bugs) ? bugs.slice(start, end) : [];
+
+        renderizarTablaBugs(slice);
+
+        // Ocultar paginación si no hay bugs
+        var table = tbody.closest("table") || tbody.parentElement;
+        if (table) {
+            var paginationId = "bugsPagination";
+            var existing = document.getElementById(paginationId);
+
+            if (total === 0) {
+                // No hay bugs, ocultar paginación
+                if (existing) {
+                    existing.style.display = "none";
+                }
+                return;
+            }
+
+            // Hay bugs, mostrar paginación
+            if (!existing) {
+                existing = document.createElement("div");
+                existing.id = paginationId;
+                existing.style =
+                    "display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0.5rem 0;";
+                table.parentElement.insertBefore(existing, table);
+            } else {
+                existing.style.display = "flex";
+            }
+
+            var leftHtml =
+                '<div style="display:flex;gap:0.5rem;align-items:center">';
+
+            // Botón anterior - deshabilitado si está en la primera página
+            var btnPrevDisabled = page <= 1;
+            leftHtml +=
+                '<button class="btn btn-sm btn-secondary" ' +
+                'style="min-width:40px;padding:0.5rem;font-size:0.9rem' +
+                (btnPrevDisabled ? ";opacity:0.4;cursor:not-allowed" : "") +
+                '" ' +
+                (btnPrevDisabled ? "disabled " : "") +
+                'onclick="' +
+                (btnPrevDisabled
+                    ? ""
+                    : "(function(){ _paginaAnteriorBugs(); })()") +
+                '">◀️</button>';
+
+            leftHtml +=
+                '<span id="bugsPageInfo" style="font-weight:600"> Página ' +
+                page +
+                " / " +
+                totalPages +
+                " </span>";
+
+            // Botón siguiente - deshabilitado si está en la última página
+            var btnNextDisabled = page >= totalPages;
+            leftHtml +=
+                '<button class="btn btn-sm btn-secondary" ' +
+                'style="min-width:40px;padding:0.5rem;font-size:0.9rem' +
+                (btnNextDisabled ? ";opacity:0.4;cursor:not-allowed" : "") +
+                '" ' +
+                (btnNextDisabled ? "disabled " : "") +
+                'onclick="' +
+                (btnNextDisabled
+                    ? ""
+                    : "(function(){ _paginaSiguienteBugs(); })()") +
+                '">▶️</button>';
+            leftHtml += "</div>";
+
+            var rightHtml =
+                '<div style="display:flex;gap:0.5rem;align-items:center">';
+            rightHtml +=
+                '<label style="font-size:0.85rem;color:#374151">Tamaño:</label>';
+            rightHtml +=
+                '<select id="bugsPageSizeSelect" class="input-field" style="width:90px">';
+            [10, 20, 30].forEach(function (s) {
+                rightHtml +=
+                    '<option value="' +
+                    s +
+                    '"' +
+                    (s === pageSize ? " selected" : "") +
+                    ">" +
+                    s +
+                    "</option>";
+            });
+            rightHtml += "</select>";
+            rightHtml += "</div>";
+
+            existing.innerHTML = leftHtml + rightHtml;
+
+            var select = document.getElementById("bugsPageSizeSelect");
+            if (select) {
+                select.onchange = function () {
+                    var newSize = parseInt(this.value) || 20;
+                    _guardarEstadoPaginacionBugs(1, newSize);
+                    renderizarTablaBugsPaged(window.__ultimoListadoBugs || []);
+                };
+            }
+        }
+
+        _guardarEstadoPaginacionBugs(page, pageSize);
+    }
+
+    function _paginaAnteriorBugs() {
+        var st = _leerEstadoPaginacionBugs();
+        var p = Math.max(1, st.page - 1);
+        _guardarEstadoPaginacionBugs(p, st.pageSize);
+        renderizarTablaBugsPaged(window.__ultimoListadoBugs || []);
+    }
+
+    function _paginaSiguienteBugs() {
+        var st = _leerEstadoPaginacionBugs();
+        var pageSize = st.pageSize || 20;
+        var total = Array.isArray(window.__ultimoListadoBugs)
+            ? window.__ultimoListadoBugs.length
+            : 0;
+        var totalPages = Math.max(1, Math.ceil(total / pageSize));
+        var p = Math.min(totalPages, st.page + 1);
+        _guardarEstadoPaginacionBugs(p, pageSize);
+        renderizarTablaBugsPaged(window.__ultimoListadoBugs || []);
     }
 
     function cambiarEstadoBugUI(bugId, nuevoEstado) {
@@ -351,14 +748,14 @@
                       titulo: "Eliminar Bug",
                       icono: "!",
                       mensaje:
-                          "Al eliminar este bug, los casos vinculados que estén en No_OK y sin otros bugs abiertos pasarán a Sin ejecutar. ¿Confirmas?",
+                          "Al eliminar este bug, los casos vinculados que estén en No OK y sin otros bugs abiertos pasarán a Sin ejecutar. ¿Confirmas?",
                       textoOk: "Sí, eliminar",
                       textoCancelar: "Cancelar",
                   })
                 : confirm(
                       "Eliminar bug " +
                           bugId +
-                          "? Los casos con No_OK podrían pasar a Sin ejecutar."
+                          "? Los casos con No OK podrían pasar a Sin ejecutar."
                   );
         if (!confirmar) return;
         var url =
@@ -401,7 +798,8 @@
     window.mostrarPanelBugs = mostrarPanelBugs;
     window.ocultarPanelBugs = ocultarPanelBugs;
     window.cargarBugs = cargarBugs;
-    window.renderizarTablaBugs = renderizarTablaBugs;
+    window.renderizarTablaBugs = renderizarTablaBugsPaged;
+    window.renderizarTablaBugsPaged = renderizarTablaBugsPaged;
     window.cambiarEstadoBugUI = cambiarEstadoBugUI;
     window.eliminarBugUI = eliminarBugUI;
 </script>

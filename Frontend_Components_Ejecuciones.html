@@ -15,60 +15,71 @@
     }
 
     .caso-info-box {
-        background: #f8fafc;
-        border: 2px solid #e2e8f0;
+        background: #f9fafb;
+        border: 2px solid #d0d0d0;
         border-radius: 8px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        font-family: "Nunito", sans-serif;
     }
 
     .caso-info-box h4 {
         font-size: 1.1rem;
         font-weight: 600;
-        color: #1e293b;
-        margin-bottom: 0.75rem;
+        color: #515151;
+        margin-bottom: 1rem;
+        font-family: "Nunito", sans-serif;
     }
 
     .caso-info-row {
         display: grid;
         grid-template-columns: 120px 1fr;
         gap: 0.5rem;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.75rem;
     }
 
     .caso-info-label {
         font-weight: 600;
-        color: #64748b;
+        color: #74a1d1;
+        font-family: "Nunito", sans-serif;
     }
 
     .caso-info-value {
-        color: #1e293b;
+        color: #515151;
+        font-family: "Nunito", sans-serif;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
     }
 
     .resultado-selector {
         display: flex;
         gap: 1rem;
-        margin: 1rem 0;
+        margin: 1.5rem 0;
     }
 
     .resultado-option {
         flex: 1;
-        padding: 1rem;
-        border: 2px solid #e2e8f0;
+        padding: 1.25rem;
+        border: 2px solid #d0d0d0;
         border-radius: 8px;
         cursor: pointer;
         text-align: center;
-        transition: all 0.2s ease;
+        transition: all 0.3s ease;
+        font-family: "Nunito", sans-serif;
+        font-weight: 500;
     }
 
     .resultado-option:hover {
-        border-color: #cbd5e1;
-        background: #f8fafc;
+        border-color: #74a1d1;
+        background: #f9fafb;
+        box-shadow: 0 2px 8px rgba(116, 161, 209, 0.15);
     }
 
     .resultado-option.selected {
-        border-color: #3b82f6;
-        background: #eff6ff;
+        border-color: #74a1d1;
+        background: #f0f5fb;
+        box-shadow: 0 2px 8px rgba(116, 161, 209, 0.25);
     }
 
     .resultado-option.ok.selected {
@@ -82,13 +93,13 @@
     }
 
     .resultado-option.ejecutando.selected {
-        border-color: #3b82f6;
-        background: #dbeafe;
+        border-color: #74a1d1;
+        background: #f0f5fb;
     }
 
     .resultado-option.bloqueado.selected {
-        border-color: #f59e0b;
-        background: #fef3c7;
+        border-color: #f9c00b;
+        background: #fef7e8;
     }
 
     .resultado-option.descartado.selected {
@@ -173,6 +184,80 @@
         background: #eff6ff !important;
         transform: scale(1.05);
     }
+
+    /* ═══════════════════════════════════════════════════════ */
+    /* RESPONSIVE DESIGN                                        */
+    /* ═══════════════════════════════════════════════════════ */
+
+    @media (max-width: 640px) {
+        .ejecucion-container {
+            max-width: 100% !important;
+            padding: 0 0.5rem;
+        }
+
+        .resultado-selector {
+            gap: 0.75rem;
+            margin: 1rem 0;
+        }
+
+        .resultado-option {
+            padding: 0.75rem;
+        }
+
+        .resultado-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .resultado-label {
+            font-size: 0.9rem;
+        }
+
+        .caso-info-row {
+            grid-template-columns: 1fr;
+            gap: 0.25rem;
+        }
+
+        .caso-info-label {
+            font-weight: 700;
+        }
+
+        .dropzone-evidencias {
+            padding: 1.5rem;
+        }
+    }
+
+    @media (min-width: 641px) and (max-width: 1024px) {
+        .resultado-selector {
+            gap: 1rem;
+        }
+
+        .resultado-option {
+            padding: 1rem;
+        }
+
+        .caso-info-row {
+            grid-template-columns: 120px 1fr;
+        }
+    }
+
+    @media (min-width: 1025px) {
+        .ejecucion-container {
+            max-width: 900px;
+        }
+
+        .resultado-selector {
+            gap: 1rem;
+        }
+
+        .resultado-option {
+            padding: 1.25rem;
+        }
+
+        .caso-info-row {
+            grid-template-columns: 120px 1fr;
+        }
+    }
 </style>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
@@ -180,7 +265,7 @@
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 
 <div id="modalEjecutarCaso" class="modal-overlay">
-    <div class="modal ejecucion-container">
+    <div class="modal ejecucion-container" style="overflow-x: hidden">
         <div class="modal-header">
             <h3 class="modal-title">▶️ Ejecutar Caso de Prueba</h3>
             <button class="modal-close" onclick="cerrarModalEjecucion()">
@@ -198,9 +283,17 @@
                 </div>
                 <div class="caso-info-row">
                     <span class="caso-info-label">Título:</span>
-                    <span class="caso-info-value" id="ejecucionCasoTitulo"
-                        >-</span
+                    <span
+                        class="caso-info-value"
+                        id="ejecucionCasoTitulo"
+                        style="
+                            word-wrap: break-word;
+                            overflow-wrap: break-word;
+                            white-space: normal;
+                        "
                     >
+                        -
+                    </span>
                 </div>
                 <div class="caso-info-row">
                     <span class="caso-info-label">Prioridad:</span>
@@ -226,6 +319,8 @@
                         padding: 1rem;
                         border-radius: 6px;
                         white-space: pre-wrap;
+                        word-wrap: break-word;
+                        overflow-wrap: break-word;
                         font-family: monospace;
                         font-size: 0.9rem;
                     "
@@ -244,6 +339,10 @@
                         padding: 1rem;
                         border-radius: 6px;
                         white-space: pre-wrap;
+                        word-wrap: break-word;
+                        overflow-wrap: break-word;
+                        font-family: monospace;
+                        font-size: 0.9rem;
                     "
                 >
                     -
@@ -316,10 +415,10 @@
 
                     <label
                         class="resultado-option no-ok"
-                        onclick="seleccionarResultado('No_OK')"
+                        onclick="seleccionarResultado('No OK')"
                         style="cursor: pointer"
                     >
-                        <input type="radio" name="resultado" value="No_OK" />
+                        <input type="radio" name="resultado" value="No OK" />
                         <div class="resultado-icon">❌</div>
                         <div class="resultado-label">No OK</div>
                         <div style="font-size: 0.85rem; color: #64748b">
@@ -363,14 +462,16 @@
                 </div>
 
                 <p class="form-help" style="margin-top: 0.75rem">
-                    💡 <strong>Tip:</strong> Selecciona "No_OK" si encontraste
+                    💡 <strong>Tip:</strong> Selecciona "No OK" si encontraste
                     un fallo para habilitar el botón de reportar bug
                 </p>
             </div>
 
             <!-- Observaciones -->
             <div class="form-group">
-                <label class="form-label">💬 Observaciones</label>
+                <label class="form-label" id="ejecucionObservacionesLabel"
+                    >💬 Observaciones</label
+                >
                 <textarea
                     id="ejecucionComentarios"
                     class="form-textarea"
@@ -378,14 +479,82 @@
                     placeholder="Describe lo que observaste durante la ejecución..."
                 ></textarea>
                 <p class="form-help">
-                    Si el resultado es No_OK, las observaciones son obligatorias
-                    (mín. 10 caracteres)
+                    Obligatorio para No OK, Bloqueado y Descartado (mín. 10
+                    caracteres)
                 </p>
+            </div>
+
+            <!-- BUGS VINCULADOS (solo para No OK) -->
+            <div
+                id="bugsVinculadosSection"
+                class="form-group hidden"
+                style="
+                    border: 1px dashed #e2e8f0;
+                    padding: 0.75rem;
+                    border-radius: 6px;
+                    margin-top: 1rem;
+                    background: #fff;
+                "
+            >
+                <label class="form-label" id="ejecucionBugsLabel"
+                    >🐛 Bugs vinculados al caso</label
+                >
+                <div
+                    style="
+                        font-size: 0.9rem;
+                        color: #64748b;
+                        margin-bottom: 0.5rem;
+                    "
+                >
+                    Selecciona uno o más bugs que estén relacionados con este
+                    fallo.<br />
+                    Obligatorio para No OK (se requiere al menos 1 bug)
+                </div>
+                <div
+                    id="bugsVinculadosList"
+                    style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 0.5rem;
+                        max-height: 160px;
+                        overflow: auto;
+                        margin-bottom: 0.5rem;
+                    "
+                ></div>
+                <div style="display: flex; gap: 0.5rem">
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        onclick="cargarBugsRelacionadosCaso()"
+                    >
+                        🔄 Cargar bugs
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-primary"
+                        onclick="reportarBugDesdeCaso()"
+                    >
+                        ➕ Reportar bug
+                    </button>
+                    <div
+                        id="bugsVinculadosHint"
+                        style="
+                            margin-left: auto;
+                            color: #94a3b8;
+                            font-size: 0.85rem;
+                            align-self: center;
+                        "
+                    >
+                        0 seleccionados
+                    </div>
+                </div>
             </div>
 
             <!-- Evidencias -->
             <div class="evidencias-section">
-                <label class="form-label">📎 Evidencias (Opcional)</label>
+                <label class="form-label" id="ejecucionEvidenciasLabel"
+                    >📎 Evidencias</label
+                >
                 <p
                     style="
                         font-size: 0.9rem;
@@ -393,7 +562,8 @@
                         margin-bottom: 1rem;
                     "
                 >
-                    Puedes agregar capturas de pantalla, videos o documentos
+                    Puedes agregar capturas de pantalla, videos o documentos<br />
+                    Obligatorio para OK (se requiere al menos 1 evidencia)
                 </p>
 
                 <div
@@ -467,13 +637,6 @@
             <button class="btn btn-primary" onclick="guardarEjecucion()">
                 💾 Guardar Ejecución
             </button>
-            <button
-                class="btn btn-secondary"
-                onclick="reportarBugDesdeCaso()"
-                id="btnReportarBug"
-            >
-                🐛 Reportar Bug
-            </button>
             <button class="btn btn-secondary" onclick="cerrarModalEjecucion()">
                 Cancelar
             </button>
@@ -493,6 +656,7 @@
 
         if (!window.casoEnEjecucion) window.casoEnEjecucion = null;
         if (!window.evidenciasTemporales) window.evidenciasTemporales = [];
+        if (!window.ejecucionBugsAsignados) window.ejecucionBugsAsignados = [];
         if (!window.contadorLinks) window.contadorLinks = 0;
 
         console.log("✅ Variables globales de Ejecuciones inicializadas");
@@ -568,7 +732,8 @@
 
         // Limpiar formulario
         document.getElementById("resultadoEjecucion").value = "";
-        document.getElementById("ejecucionComentarios").value = "";
+        document.getElementById("ejecucionComentarios").value =
+            caso.ComentariosEjecucion || "";
         document.getElementById("ambienteEjecucion").value = "";
         document.getElementById("navegadorEjecucion").value = "";
 
@@ -583,8 +748,9 @@
                 case "OK":
                     seleccionarResultado("OK");
                     break;
+                case "No OK":
                 case "No_OK":
-                    seleccionarResultado("No_OK");
+                    seleccionarResultado("No OK");
                     break;
                 case "Bloqueado":
                     seleccionarResultado("Bloqueado");
@@ -645,14 +811,59 @@
             opcionSeleccionada.classList.add("selected");
         }
 
+        // Actualizar asteriscos según el resultado seleccionado
+        const observacionesLabel = document.getElementById(
+            "ejecucionObservacionesLabel"
+        );
+        const bugsLabel = document.getElementById("ejecucionBugsLabel");
+        const evidenciasLabel = document.getElementById(
+            "ejecucionEvidenciasLabel"
+        );
+
+        // Remover clase 'required' de todos
+        if (observacionesLabel) observacionesLabel.classList.remove("required");
+        if (bugsLabel) bugsLabel.classList.remove("required");
+        if (evidenciasLabel) evidenciasLabel.classList.remove("required");
+
+        // Agregar clase 'required' según el resultado
+        if (resultado === "OK") {
+            // OK requiere evidencias
+            if (evidenciasLabel) evidenciasLabel.classList.add("required");
+        } else if (resultado === "No OK" || resultado === "No_OK") {
+            // No OK requiere observaciones y bugs
+            if (observacionesLabel)
+                observacionesLabel.classList.add("required");
+            if (bugsLabel) bugsLabel.classList.add("required");
+        } else if (resultado === "Bloqueado" || resultado === "Descartado") {
+            // Bloqueado y Descartado requieren observaciones
+            if (observacionesLabel)
+                observacionesLabel.classList.add("required");
+        }
+
         // Mostrar/ocultar botón de reportar bug
         const btnReportarBug = document.getElementById("btnReportarBug");
 
         if (btnReportarBug) {
-            // Solo mostrar si es "No_OK"
+            // Solo mostrar si es "No OK"
             btnReportarBug.style.display =
-                resultado === "No_OK" ? "inline-flex" : "none";
+                resultado === "No OK" || resultado === "No_OK"
+                    ? "inline-flex"
+                    : "none";
         }
+
+        // Mostrar/ocultar sección de bugs vinculados
+        try {
+            const sec = document.getElementById("bugsVinculadosSection");
+            if (sec) {
+                if (resultado === "No OK" || resultado === "No_OK") {
+                    sec.classList.remove("hidden");
+                    // cargar lista inicial
+                    cargarBugsRelacionadosCaso();
+                } else {
+                    sec.classList.add("hidden");
+                }
+            }
+        } catch (e) {}
     }
 
     // ===================================================================
@@ -701,12 +912,21 @@
     });
 
     function procesarArchivosEjecucion(files) {
+        console.log("📎 Procesando archivos:", files.length);
         let archivosValidos = 0;
 
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
+            console.log(
+                "📄 Archivo:",
+                file.name,
+                "Tamaño:",
+                file.size,
+                "bytes"
+            );
 
             if (file.size > 50 * 1024 * 1024) {
+                console.warn("❌ Archivo muy grande:", file.name);
                 mostrarToast(
                     '❌ "' + file.name + '" excede los 50 MB',
                     "error",
@@ -717,6 +937,7 @@
 
             const reader = new FileReader();
             reader.onload = function (e) {
+                console.log("✅ Archivo leído:", file.name);
                 window.evidenciasTemporales.push({
                     tipo: "archivo",
                     nombre: file.name,
@@ -724,6 +945,10 @@
                     mimeType: file.type,
                     contenidoBase64: e.target.result.split(",")[1],
                 });
+                console.log(
+                    "📦 Total evidencias:",
+                    window.evidenciasTemporales.length
+                );
 
                 renderizarListaEvidencias();
 
@@ -736,6 +961,7 @@
             };
 
             reader.onerror = function () {
+                console.error("❌ Error leyendo archivo:", file.name);
                 mostrarToast('❌ Error leyendo "' + file.name + '"', "error");
             };
 
@@ -774,10 +1000,47 @@
         window.evidenciasTemporales.forEach((evidencia, index) => {
             const tamañoMB = (evidencia.tamaño / (1024 * 1024)).toFixed(2);
 
+            // Obtener icono basado en el tipo de archivo
+            let icono = "📎";
+            const ext = evidencia.nombre.split(".").pop().toLowerCase();
+            const mime = evidencia.mimeType || "";
+
+            if (
+                mime.startsWith("image/") ||
+                ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"].includes(
+                    ext
+                )
+            ) {
+                icono = "🖼️";
+            } else if (
+                mime.startsWith("video/") ||
+                ["mp4", "avi", "mov", "wmv", "flv", "webm", "mkv"].includes(ext)
+            ) {
+                icono = "🎥";
+            } else if (mime.includes("pdf") || ext === "pdf") {
+                icono = "📕";
+            } else if (mime.includes("word") || ["doc", "docx"].includes(ext)) {
+                icono = "📘";
+            } else if (
+                mime.includes("excel") ||
+                mime.includes("spreadsheet") ||
+                ["xls", "xlsx"].includes(ext)
+            ) {
+                icono = "📗";
+            } else if (
+                mime.includes("zip") ||
+                mime.includes("compressed") ||
+                ["zip", "rar", "7z"].includes(ext)
+            ) {
+                icono = "📦";
+            } else if (mime.includes("text") || ["txt", "log"].includes(ext)) {
+                icono = "📄";
+            }
+
             html += '<div class="evidencia-item">';
             html +=
                 '  <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">';
-            html += '    <span style="font-size: 1.5rem;">📎</span>';
+            html += '    <span style="font-size: 1.5rem;">' + icono + "</span>";
             html += '    <div style="flex: 1;">';
             html +=
                 '      <div style="font-weight: 500; word-break: break-word;">' +
@@ -802,7 +1065,121 @@
     function eliminarEvidenciaEjecucion(index) {
         window.evidenciasTemporales.splice(index, 1);
         renderizarListaEvidencias();
-        mostrarToast("✅ Evidencia eliminada", "success");
+        mostrarToast("Evidencia eliminada", "success");
+    }
+
+    /**
+     * Carga los bugs relacionados al caso desde backend y renderiza checkboxes
+     */
+    function cargarBugsRelacionadosCaso() {
+        try {
+            const lista = document.getElementById("bugsVinculadosList");
+            const hint = document.getElementById("bugsVinculadosHint");
+            if (!lista) return;
+            lista.innerHTML = '<div style="color:#94a3b8">Cargando...</div>';
+
+            const sheetUrl = window.currentSheetUrl;
+            const casoId = window.casoEnEjecucion
+                ? window.casoEnEjecucion.ID
+                : null;
+            if (!sheetUrl || !casoId) {
+                lista.innerHTML =
+                    '<div style="color:#ef4444">No hay caso o Sheet disponible</div>';
+                return;
+            }
+
+            google.script.run
+                .withSuccessHandler(function (res) {
+                    lista.innerHTML = "";
+                    if (
+                        res &&
+                        res.success &&
+                        res.data &&
+                        res.data.bugs &&
+                        res.data.bugs.length
+                    ) {
+                        // Inicializar window.ejecucionBugsAsignados con los bugs relacionados al caso
+                        if (!window.ejecucionBugsAsignados) {
+                            window.ejecucionBugsAsignados = [];
+                        }
+
+                        // Auto-marcar todos los bugs que vienen de la relación del caso
+                        res.data.bugs.forEach(function (b) {
+                            const id = b.ID || b.id || "";
+                            if (
+                                id &&
+                                window.ejecucionBugsAsignados.indexOf(id) === -1
+                            ) {
+                                window.ejecucionBugsAsignados.push(id);
+                            }
+                        });
+
+                        res.data.bugs.forEach(function (b) {
+                            const id = b.ID || b.id || "";
+                            const title = b.Titulo || b.titulo || id;
+                            const row = document.createElement("label");
+                            row.style.cssText =
+                                "display:flex; gap:0.5rem; align-items:center;";
+                            const chk = document.createElement("input");
+                            chk.type = "checkbox";
+                            chk.value = id;
+                            chk.checked =
+                                (window.ejecucionBugsAsignados || []).indexOf(
+                                    id
+                                ) > -1;
+                            chk.onchange = function (e) {
+                                if (!window.ejecucionBugsAsignados)
+                                    window.ejecucionBugsAsignados = [];
+                                if (e.target.checked) {
+                                    if (
+                                        window.ejecucionBugsAsignados.indexOf(
+                                            id
+                                        ) === -1
+                                    )
+                                        window.ejecucionBugsAsignados.push(id);
+                                } else {
+                                    const idx =
+                                        window.ejecucionBugsAsignados.indexOf(
+                                            id
+                                        );
+                                    if (idx > -1)
+                                        window.ejecucionBugsAsignados.splice(
+                                            idx,
+                                            1
+                                        );
+                                }
+                                if (hint)
+                                    hint.textContent =
+                                        (window.ejecucionBugsAsignados || [])
+                                            .length + " seleccionados";
+                            };
+                            row.appendChild(chk);
+                            const span = document.createElement("span");
+                            span.style.cssText =
+                                "font-size:0.95rem; color:#111827";
+                            span.textContent =
+                                title + (b.Estado ? " (" + b.Estado + ")" : "");
+                            row.appendChild(span);
+                            lista.appendChild(row);
+                        });
+                    } else {
+                        lista.innerHTML =
+                            '<div style="color:#94a3b8">No hay bugs vinculados a este caso</div>';
+                    }
+                    if (hint)
+                        hint.textContent =
+                            (window.ejecucionBugsAsignados || []).length +
+                            " seleccionados";
+                })
+                .withFailureHandler(function (err) {
+                    lista.innerHTML =
+                        '<div style="color:#ef4444">Error cargando bugs</div>';
+                    console.error("Error cargando bugs relacionados:", err);
+                })
+                .obtenerBugsPorCaso(window.currentSheetUrl, casoId);
+        } catch (e) {
+            console.error("cargarBugsRelacionadosCaso error:", e);
+        }
     }
 
     // ===================================================================
@@ -823,21 +1200,71 @@
 
         if (!resultado) {
             mostrarToast(
-                "⚠️ Debes seleccionar un resultado (OK/No_OK)",
+                "Debes seleccionar un resultado (OK/No OK)",
                 "warning"
             );
             return;
         }
 
         if (
-            resultado === "No_OK" &&
+            (resultado === "No OK" || resultado === "No_OK") &&
             (!observaciones || observaciones.length < 10)
         ) {
             mostrarToast(
-                "⚠️ Si el resultado es No_OK, debes escribir observaciones (mín. 10 caracteres)",
+                "Si el resultado es No OK, debes escribir observaciones (mín. 10 caracteres)",
                 "warning"
             );
             return;
+        }
+
+        // Requerir evidencias para marcar OK
+        if (resultado === "OK") {
+            if (
+                !window.evidenciasTemporales ||
+                window.evidenciasTemporales.length === 0
+            ) {
+                mostrarToast(
+                    "Para marcar OK, debes adjuntar al menos una evidencia",
+                    "warning"
+                );
+                return;
+            }
+        }
+
+        // Requerir observaciones para Bloqueado
+        if (resultado === "Bloqueado") {
+            if (!observaciones || observaciones.length < 10) {
+                mostrarToast(
+                    "Si el resultado es Bloqueado, debes escribir observaciones (mín. 10 caracteres)",
+                    "warning"
+                );
+                return;
+            }
+        }
+
+        // Requerir observaciones para Descartado
+        if (resultado === "Descartado") {
+            if (!observaciones || observaciones.length < 10) {
+                mostrarToast(
+                    "Si el resultado es Descartado, debes escribir observaciones explicando el motivo (mín. 10 caracteres)",
+                    "warning"
+                );
+                return;
+            }
+        }
+
+        // Si es No OK: requerir al menos un bug vinculado (local selection)
+        if (resultado === "No OK" || resultado === "No_OK") {
+            if (
+                !window.ejecucionBugsAsignados ||
+                window.ejecucionBugsAsignados.length === 0
+            ) {
+                mostrarToast(
+                    "Debes vincular al menos un bug a este caso (usa 'Cargar bugs' o 'Reportar bug').",
+                    "warning"
+                );
+                return;
+            }
         }
 
         if (!window.casoEnEjecucion) {
@@ -863,14 +1290,36 @@
             evidencias: [],
         };
 
-        // Agregar evidencias si hay
+        // Si es No OK, agregar bugs vinculados al payload
+        if (resultado === "No OK" || resultado === "No_OK") {
+            datosEjecucion.bugsVinculados =
+                window.ejecucionBugsAsignados.slice();
+        }
+
+        // Agregar evidencias completas (con base64) si hay
         if (
             window.evidenciasTemporales &&
             window.evidenciasTemporales.length > 0
         ) {
-            datosEjecucion.evidencias = window.evidenciasTemporales.map(
-                (e) => e.nombre
+            console.log(
+                "📤 Preparando evidencias para envío:",
+                window.evidenciasTemporales.length
             );
+            datosEjecucion.evidencias = window.evidenciasTemporales.map(
+                function (e) {
+                    return {
+                        nombre: e.nombre,
+                        contenidoBase64: e.contenidoBase64,
+                        mimeType: e.mimeType || "application/octet-stream",
+                    };
+                }
+            );
+            console.log(
+                "✅ Evidencias añadidas al payload:",
+                datosEjecucion.evidencias.length
+            );
+        } else {
+            console.warn("⚠️ No hay evidencias temporales para enviar");
         }
 
         console.log("📦 Datos de ejecución:", datosEjecucion);
@@ -894,14 +1343,14 @@
                     if (typeof cargarTodosLosCasos === "function") {
                         setTimeout(() => {
                             cargarTodosLosCasos();
-                        }, 500);
+                        }, 800);
                     }
 
-                    // ✅ Actualizar la barra de progreso (800 ms después)
+                    // ✅ Actualizar la barra de progreso (1000 ms después)
                     if (typeof actualizarBarraEjecucion === "function") {
                         setTimeout(() => {
                             actualizarBarraEjecucion();
-                        }, 800);
+                        }, 1000);
                     }
                 } else {
                     mostrarToast("Error: " + response.mensaje, "error");
@@ -945,8 +1394,13 @@
     // CERRAR MODAL
     // ===================================================================
 
-    function cerrarModalEjecucion() {
-        cerrarModal("modalEjecutarCaso");
+    async function cerrarModalEjecucion() {
+        // Usar validación con cambios
+        const puedoCerrar = await intentarCerrarModalConValidacion(
+            "modalEjecutarCaso"
+        );
+        if (!puedoCerrar) return;
+
         window.casoEnEjecucion = null;
         window.evidenciasTemporales = [];
     }

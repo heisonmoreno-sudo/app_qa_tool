@@ -1,0 +1,46 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     FRONTEND_BRANDING.HTML
+     Logos y assets de marca - ACTUALIZAR CON TUS LOGOS
+     ═══════════════════════════════════════════════════════════════════════════ -->
+
+<script>
+    /**
+     * INSTRUCCIONES DE BRANDING:
+     *
+     * Header:
+     *   - Usa solo texto "QA Management System" (definido en el HTML con .logo-text)
+     *   - Para volver a usar un ícono: asignar window.qaImagetype = "ruta.svg" y añadir <img id="headerImagetype"> en el header.
+     *
+     * Footer:
+     *   - Usa el SVG ubicado en raíz: logo.svg
+     *   - Para reemplazarlo: editar el contenido de logo.svg o asignar window.qaLogoFull a otra ruta / data URI.
+     *
+     * Opcional (base64):
+     *   - window.qaImagetype / window.qaLogoFull pueden apuntar a "data:image/svg+xml;base64,..." o PNG.
+     *
+     * Tamaños sugeridos:
+     *   - Texto header: gestionado vía CSS (.logo-text)
+     *   - Logo footer: max-width 200px (clase .footer-logo)
+     */
+
+    // Header ahora usa solo texto (QA Management System). qaImagetype se deja null.
+    window.qaImagetype = null;
+
+    // Logo para footer (icono completo)
+    window.qaLogoFull =
+        "data:image/png;base64,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";
+
+    /**
+     * Obtiene el imagotype para el header
+     */
+    function getStreambeImagetype() {
+        return window.qaImagetype;
+    }
+
+    /**
+     * Obtiene el logo completo para el footer
+     */
+    function getStreambeLogoFull() {
+        return window.qaLogoFull;
+    }
+</script>

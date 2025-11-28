@@ -15,7 +15,7 @@ var TEST_SHEET_URL =
  * @param {string} sheetUrl - URL del Sheet
  * @param {string} casoId - ID del caso
  * @param {Object} datosEjecucion - Datos de la ejecución
- *   - estadoEjecucion: string (Sin ejecutar, Ejecutando, OK, No_OK, Bloqueado, Descartado)
+ *   - estadoEjecucion: string (Sin ejecutar, Ejecutando, OK, No OK, Bloqueado, Descartado)
  *   - comentarios: string
  *   - evidencias: array de URLs
  * @returns {Object} Resultado
@@ -290,8 +290,11 @@ function obtenerResumenEjecucion(sheetUrl) {
 
             var headers = datos[0];
 
-            // ✅ CAMBIO: Buscar ResultadoUltimaEjecucion
+            // ✅ CAMBIO: Buscar ResultadoUltimaEjecucion (nombre técnico o legible)
             var colResultado = headers.indexOf("ResultadoUltimaEjecucion");
+            if (colResultado === -1) {
+                colResultado = headers.indexOf("Resultado Última Ejecución");
+            }
 
             if (colResultado === -1) continue;
 
@@ -319,6 +322,7 @@ function obtenerResumenEjecucion(sheetUrl) {
                     case "OK":
                         resumen.ok++;
                         break;
+                    case "No OK":
                     case "No_OK":
                         resumen.noOk++;
                         break;
@@ -342,7 +346,7 @@ function obtenerResumenEjecucion(sheetUrl) {
         Logger.log("  - Ejecutando: " + resumen.ejecutando);
         Logger.log("  - Bloqueados: " + resumen.bloqueados);
         Logger.log("  - OK: " + resumen.ok);
-        Logger.log("  - No_OK: " + resumen.noOk);
+        Logger.log("  - No OK: " + resumen.noOk);
         Logger.log("  - Descartados: " + resumen.descartados);
         Logger.log("  - % Éxito: " + resumen.porcentaje + "%");
 
@@ -480,7 +484,7 @@ function testEjecucion() {
 
     // ✅ CAMBIO: Usar TC-1 que es el que existe
     var resultado = actualizarEstadoEjecucion(sheetUrl, "TC-1", {
-        estadoEjecucion: "No_OK", // Cambiar a No_OK para ver si actualiza
+        estadoEjecucion: "No OK", // Cambiar a No OK para ver si actualiza
         comentarios: "Test ejecutado desde Apps Script - Cambio de estado",
         evidencias: ["https://drive.google.com/file/d/ejemplo123"],
     });
@@ -630,6 +634,11 @@ function obtenerResumenEjecucion(sheetUrl) {
                     ? findHeaderIndex(headers, "ResultadoUltimaEjecucion")
                     : headers.indexOf("ResultadoUltimaEjecucion");
 
+            // Fallback a nombre legible
+            if (colResultado === -1) {
+                colResultado = headers.indexOf("Resultado Última Ejecución");
+            }
+
             // Fallback a legacy
             if (colResultado === -1) {
                 colResultado = headers.indexOf("EstadoEjecucion");
@@ -645,6 +654,8 @@ function obtenerResumenEjecucion(sheetUrl) {
             }
             if (colEstadoDiseno === -1) {
                 colEstadoDiseno = headers.indexOf("EstadoDiseño");
+                if (colEstadoDiseno === -1)
+                    colEstadoDiseno = headers.indexOf("Estado Diseño");
                 if (colEstadoDiseno === -1)
                     colEstadoDiseno = headers.indexOf("Estado");
             }
@@ -674,6 +685,7 @@ function obtenerResumenEjecucion(sheetUrl) {
                         resumen.ok++;
                         resumen.total++;
                         break;
+                    case "No OK":
                     case "No_OK":
                         resumen.noOk++;
                         resumen.total++;

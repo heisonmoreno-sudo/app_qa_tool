@@ -161,10 +161,47 @@
 
         // Cambiar pantallas
         const welcomeScreen = document.getElementById("welcomeScreen");
+        const setupScreen = document.getElementById("setupScreen");
         const casosScreen = document.getElementById("casosScreen");
+        const bugsScreen = document.getElementById("bugsScreen");
+        const metricasScreen = document.getElementById("metricasScreen");
+        const regresionesScreen = document.getElementById("regresionesScreen");
+        const metricasQAScreen = document.getElementById("metricasQAScreen");
+        const metricasProyectoScreen = document.getElementById(
+            "metricasProyectoScreen"
+        );
 
         if (welcomeScreen) welcomeScreen.classList.add("hidden");
+        if (setupScreen) setupScreen.classList.add("hidden");
+        if (bugsScreen) bugsScreen.classList.add("hidden");
+        if (metricasScreen) metricasScreen.classList.add("hidden");
+        if (regresionesScreen) regresionesScreen.classList.add("hidden");
+        if (metricasQAScreen) metricasQAScreen.classList.add("hidden");
+        if (metricasProyectoScreen)
+            metricasProyectoScreen.classList.add("hidden");
         if (casosScreen) casosScreen.classList.remove("hidden");
+
+        // Mostrar botones de navegación en el header
+        const headerNavButtons = document.getElementById("headerNavButtons");
+        if (headerNavButtons) headerNavButtons.classList.remove("hidden");
+
+        // Scroll al inicio de la pantalla
+        window.scrollTo({ top: 0, behavior: "smooth" });
+
+        // Mostrar botones en el header
+        const btnRegresionesHeader = document.getElementById(
+            "btnRegresionesHeader"
+        );
+        if (btnRegresionesHeader) {
+            btnRegresionesHeader.style.display = "inline-block";
+        }
+
+        const btnHistorialBugsHeader = document.getElementById(
+            "btnHistorialBugsHeader"
+        );
+        if (btnHistorialBugsHeader) {
+            btnHistorialBugsHeader.style.display = "inline-block";
+        }
 
         // Restaurar filtros guardados
         if (typeof restaurarFiltrosDesdeLocalStorage === "function") {
@@ -182,6 +219,26 @@
         if (typeof cargarTodosLosCasos === "function") {
             cargarTodosLosCasos();
         }
+
+        // Actualizar barra de ejecución
+        if (typeof actualizarBarraEjecucion === "function") {
+            actualizarBarraEjecucion();
+        }
+
+        // Cargar configuración de carpetas de evidencias
+        google.script.run
+            .withSuccessHandler(function (carpetas) {
+                console.log("📁 Carpetas de evidencias cargadas:", carpetas);
+                window.configuracionSistema = carpetas;
+            })
+            .withFailureHandler(function (error) {
+                console.error("❌ Error cargando carpetas:", error);
+                window.configuracionSistema = {
+                    carpeta_evidencias_bugs: "",
+                    carpeta_evidencias_ejecuciones: "",
+                };
+            })
+            .obtenerCarpetasEvidencias(sheetUrl);
 
         // ✅ CRÍTICO: Guardar sheetUrl en backend ANTES de actualizar indicador
         google.script.run
@@ -202,6 +259,11 @@
                 console.error("❌ Error preparando sheetUrl:", error);
             })
             .prepararSheetUrl(sheetUrl);
+
+        // Guardar pantalla actual para restaurar después de recarga
+        try {
+            localStorage.setItem("qaLastScreen", "casos");
+        } catch (e) {}
     }
 
     /**
@@ -210,11 +272,42 @@
     function volverAlDashboard() {
         console.log("🏠 [Navegacion] Volviendo al dashboard");
 
+        // Limpiar spinner y progress bar del setup
+        ocultarSpinner();
+
+        // Ocultar botones del header
+        const btnRegresionesHeader = document.getElementById(
+            "btnRegresionesHeader"
+        );
+        if (btnRegresionesHeader) {
+            btnRegresionesHeader.style.display = "none";
+        }
+
+        const btnHistorialBugsHeader = document.getElementById(
+            "btnHistorialBugsHeader"
+        );
+        if (btnHistorialBugsHeader) {
+            btnHistorialBugsHeader.style.display = "none";
+        }
+
+        // Limpiar estado de setup si existe
+        if (typeof limpiarEstadoSetup === "function") {
+            limpiarEstadoSetup();
+        }
+
         const casosScreen = document.getElementById("casosScreen");
+        const setupScreen = document.getElementById("setupScreen");
+        const bugsScreen = document.getElementById("bugsScreen");
         const welcomeScreen = document.getElementById("welcomeScreen");
 
         if (casosScreen) casosScreen.classList.add("hidden");
+        if (setupScreen) setupScreen.classList.add("hidden");
+        if (bugsScreen) bugsScreen.classList.add("hidden");
         if (welcomeScreen) welcomeScreen.classList.remove("hidden");
+
+        try {
+            localStorage.setItem("qaLastScreen", "welcome");
+        } catch (e) {}
     }
 
     // ===================================================================

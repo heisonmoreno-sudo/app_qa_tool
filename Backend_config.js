@@ -200,10 +200,11 @@ function obtenerValorConfig(clave, valorPorDefecto, sheetUrl) {
  * @param {any} valor - El valor
  * @returns {boolean} true si se guardó correctamente
  */
-function guardarValorConfig(clave, valor) {
+function guardarValorConfig(clave, valor, sheetUrl) {
     const config = {};
     config[clave] = valor;
-    return guardarConfiguracion(config);
+    // Pasar sheetUrl a guardarConfiguracion para que guarde en el spreadsheet correcto
+    return guardarConfiguracion(config, sheetUrl);
 }
 
 /**
@@ -219,12 +220,23 @@ function crearHojaConfig() {
         const headers = [["Clave", "Valor", "Descripción"]];
         configSheet.getRange(1, 1, 1, 3).setValues(headers);
 
-        // Formato de headers
+        // Formato de headers: aplicar estilo consistente
         const headerRange = configSheet.getRange(1, 1, 1, 3);
-        headerRange.setBackground("#4285f4");
+        headerRange.setBackground("#0f172a");
         headerRange.setFontColor("#ffffff");
         headerRange.setFontWeight("bold");
+        headerRange.setFontSize(11);
+        headerRange.setFontFamily("Nunito");
         headerRange.setHorizontalAlignment("center");
+        headerRange.setVerticalAlignment("middle");
+        headerRange.setWrap(true);
+
+        // Aplicar wrap y alineación vertical a todas las celdas de datos
+        const configDataRange = configSheet.getRange(2, 1, 1000, 3);
+        configDataRange.setWrap(true).setVerticalAlignment("middle");
+
+        // Ajustar altura de fila para headers
+        configSheet.setRowHeight(1, 30);
 
         // Ajustar anchos
         configSheet.setColumnWidth(1, 250); // Clave
@@ -380,4 +392,34 @@ function testConfiguracion() {
     Logger.log("ID Login 1: " + idHoja1 + ", ID Login 2: " + idHoja2);
 
     Logger.log("\n✅ Tests completados");
+}
+
+/**
+ * Obtiene las carpetas de evidencias configuradas
+ * @param {string} sheetUrl - URL del Sheet (opcional)
+ * @returns {Object} Objeto con las carpetas configuradas
+ */
+function obtenerCarpetasEvidencias(sheetUrl) {
+    try {
+        return {
+            carpeta_evidencias_bugs: obtenerValorConfig(
+                "carpeta_evidencias_bugs",
+                "",
+                sheetUrl
+            ),
+            carpeta_evidencias_ejecuciones: obtenerValorConfig(
+                "carpeta_evidencias_ejecuciones",
+                "",
+                sheetUrl
+            ),
+        };
+    } catch (error) {
+        Logger.log(
+            "Error obteniendo carpetas de evidencias: " + error.toString()
+        );
+        return {
+            carpeta_evidencias_bugs: "",
+            carpeta_evidencias_ejecuciones: "",
+        };
+    }
 }

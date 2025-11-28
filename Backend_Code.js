@@ -44,8 +44,26 @@ function mostrarError(mensaje) {
 
 function obtenerUsuario() {
     try {
+        var email = Session.getActiveUser().getEmail() || "usuario@qa.com";
+        var photoUrl = null;
+
+        // Intentar obtener la foto de perfil
+        try {
+            var person = People.People.get("people/me", {
+                personFields: "photos",
+            });
+            if (person && person.photos && person.photos.length > 0) {
+                photoUrl = person.photos[0].url;
+            }
+        } catch (photoError) {
+            Logger.log(
+                "⚠️ No se pudo obtener foto de perfil: " + photoError.toString()
+            );
+        }
+
         return {
-            email: Session.getActiveUser().getEmail() || "usuario@qa.com",
+            email: email,
+            photoUrl: photoUrl,
             success: true,
         };
     } catch (error) {
@@ -113,6 +131,66 @@ function prepararSheetUrl(sheetUrl) {
     } catch (error) {
         Logger.log("Error preparando sheetUrl: " + error.toString());
         return { success: false };
+    }
+}
+
+/**
+ * API wrapper: api_obtenerDetalleBug
+ * Expone la funcionalidad de obtenerDetalleBug para google.script.run sin
+ * colisionar con la implementación en Backend_Services_Bugs.js.
+ * @param {string} sheetUrl - URL del Sheet
+ * @param {string} bugId - ID del bug a obtener
+ * @returns {Object} Resultado con datos del bug o error
+ */
+function api_obtenerDetalleBug(sheetUrl, bugId) {
+    try {
+        Logger.log("[API] api_obtenerDetalleBug iniciado");
+        Logger.log("  - sheetUrl: " + sheetUrl);
+        Logger.log("  - bugId: " + bugId);
+
+        // Validar parámetros
+        if (!sheetUrl || !bugId) {
+            var msg =
+                "Parámetros incompletos: sheetUrl=" +
+                !!sheetUrl +
+                ", bugId=" +
+                !!bugId;
+            Logger.log("[API] ERROR: " + msg);
+            return {
+                success: false,
+                mensaje: msg,
+            };
+        }
+
+        // Verificar que la implementación real exista
+        if (typeof obtenerDetalleBug !== "function") {
+            Logger.log("[API] ERROR: obtenerDetalleBug no está definida");
+            return {
+                success: false,
+                mensaje: "Función no disponible en backend",
+            };
+        }
+
+        Logger.log("[API] Llamando a obtenerDetalleBug...");
+        var resultado = obtenerDetalleBug(sheetUrl, bugId);
+        Logger.log("[API] Resultado: " + JSON.stringify(resultado));
+
+        // Retornar resultado (debe tener success:true si fue exitoso)
+        return (
+            resultado || {
+                success: false,
+                mensaje: "Función retornó null/undefined",
+            }
+        );
+    } catch (e) {
+        var errorMsg =
+            "[API] Excepción en api_obtenerDetalleBug: " + e.toString();
+        Logger.log(errorMsg);
+        if (e.stack) Logger.log("Stack: " + e.stack);
+        return {
+            success: false,
+            mensaje: "Error: " + e.message,
+        };
     }
 }
 
@@ -227,22 +305,83 @@ function guardarEjecucion(datosEjecucion) {
             };
         }
 
-        // Llamar a la función de actualización de estado
+        // Si hay evidencias, subirlas primero a Drive
+        var urlsEvidencias = [];
+        if (datosEjecucion.evidencias && datosEjecucion.evidencias.length > 0) {
+            Logger.log(
+                "📤 Subiendo " +
+                    datosEjecucion.evidencias.length +
+                    " evidencia(s) a Drive..."
+            );
+
+            // Preparar archivos para subida batch
+            var archivosParaSubir = datosEjecucion.evidencias.map(function (
+                evidencia
+            ) {
+                return {
+                    nombre: evidencia.nombre || evidencia,
+                    contenidoBase64: evidencia.contenidoBase64 || "",
+                    mimeType: evidencia.mimeType || "application/octet-stream",
+                };
+            });
+
+            // Subir evidencias usando la función batch
+            var resultadoSubida = subirEvidenciasBatch(
+                archivosParaSubir,
+                datosEjecucion.sheetUrl,
+                "ejecucion",
+                datosEjecucion.casoId,
+                datosEjecucion.casoTitulo || datosEjecucion.casoId,
+                ""
+            );
+
+            if (
+                resultadoSubida &&
+                resultadoSubida.success &&
+                resultadoSubida.results
+            ) {
+                // Recopilar URLs exitosas
+                resultadoSubida.results.forEach(function (res) {
+                    if (res.success && res.url) {
+                        urlsEvidencias.push(res.url);
+                        Logger.log("  ✓ Evidencia subida: " + res.nombre);
+                    } else {
+                        Logger.log(
+                            "  ✗ Error subiendo: " +
+                                (res.nombre || "archivo") +
+                                " - " +
+                                (res.mensaje || "desconocido")
+                        );
+                    }
+                });
+
+                Logger.log(
+                    "✅ Total evidencias subidas exitosamente: " +
+                        urlsEvidencias.length +
+                        "/" +
+                        archivosParaSubir.length
+                );
+            } else {
+                Logger.log("⚠️ Error en subida batch de evidencias");
+            }
+        }
+
+        // Llamar a la función de actualización de estado con las URLs
         var resultado = actualizarEstadoEjecucion(
             datosEjecucion.sheetUrl,
             datosEjecucion.casoId,
             {
                 estadoEjecucion: datosEjecucion.resultado,
                 comentarios: datosEjecucion.observaciones || "",
-                evidencias: datosEjecucion.evidencias || [],
+                evidencias: urlsEvidencias, // Ahora son URLs, no nombres
+                ambiente: datosEjecucion.ambiente || "",
+                navegador: datosEjecucion.navegador || "",
+                bugsVinculados: datosEjecucion.bugsVinculados || [],
             }
         );
 
         if (resultado.success) {
             Logger.log("✅ Ejecución guardada exitosamente");
-
-            // TODO: Si hay evidencias, subirlas a Drive
-            // (esto lo implementaremos después)
 
             return {
                 success: true,
@@ -250,6 +389,7 @@ function guardarEjecucion(datosEjecucion) {
                 data: {
                     casoId: datosEjecucion.casoId,
                     resultado: datosEjecucion.resultado,
+                    evidenciasSubidas: urlsEvidencias.length,
                 },
             };
         } else {
@@ -260,6 +400,99 @@ function guardarEjecucion(datosEjecucion) {
         return {
             success: false,
             mensaje: "Error al guardar ejecución: " + error.message,
+        };
+    }
+}
+
+/**
+ * Función diagnóstica para troubleshooting de edición de bugs
+ * Retorna información sobre el estado actual del sistema
+ * @param {string} sheetUrl - URL del Sheet
+ * @param {string} bugId - ID del bug a verificar (opcional)
+ * @returns {Object} Información diagnóstica
+ */
+function diagnosticarEditarBug(sheetUrl, bugId) {
+    try {
+        Logger.log("🔍 Iniciando diagnóstico de edición de bugs");
+
+        var diagnostico = {
+            timestamp: new Date().toISOString(),
+            sheetUrl: sheetUrl,
+            bugId: bugId,
+            checks: {},
+        };
+
+        // 1. Verificar acceso al Sheet
+        try {
+            var ss = SpreadsheetApp.openByUrl(sheetUrl);
+            diagnostico.checks.sheetAccess = {
+                success: true,
+                sheetName: ss.getName(),
+            };
+        } catch (e) {
+            diagnostico.checks.sheetAccess = {
+                success: false,
+                error: e.toString(),
+            };
+        }
+
+        // 2. Verificar hoja Bugs
+        try {
+            var ss = SpreadsheetApp.openByUrl(sheetUrl);
+            var hojasBugs = ss.getSheetByName("Bugs");
+            if (hojasBugs) {
+                diagnostico.checks.bugsSheet = {
+                    success: true,
+                    lastRow: hojasBugs.getLastRow(),
+                    lastColumn: hojasBugs.getLastColumn(),
+                };
+            } else {
+                diagnostico.checks.bugsSheet = {
+                    success: false,
+                    error: "Hoja Bugs no encontrada",
+                };
+            }
+        } catch (e) {
+            diagnostico.checks.bugsSheet = {
+                success: false,
+                error: e.toString(),
+            };
+        }
+
+        // 3. Si se proporciona bugId, verificar si existe
+        if (bugId) {
+            try {
+                var resultado = obtenerDetalleBug(sheetUrl, bugId);
+                diagnostico.checks.bugExists = {
+                    success: resultado.success,
+                    mensaje: resultado.mensaje,
+                    foundBug: resultado.success ? resultado.data : null,
+                };
+            } catch (e) {
+                diagnostico.checks.bugExists = {
+                    success: false,
+                    error: e.toString(),
+                };
+            }
+        }
+
+        // 4. Verificar que obtenerDetalleBug esté disponible
+        diagnostico.checks.functionAvailable = {
+            obtenerDetalleBug: typeof obtenerDetalleBug === "function",
+            api_obtenerDetalleBug: typeof api_obtenerDetalleBug === "function",
+        };
+
+        Logger.log("✅ Diagnóstico completado: " + JSON.stringify(diagnostico));
+
+        return {
+            success: true,
+            diagnostico: diagnostico,
+        };
+    } catch (error) {
+        Logger.log("❌ Error en diagnóstico: " + error.toString());
+        return {
+            success: false,
+            error: error.message,
         };
     }
 }

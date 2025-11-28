@@ -45,6 +45,9 @@
 
                     const selectHoja = document.getElementById("casoHoja");
                     const selectFiltro = document.getElementById("filtroHoja");
+                    const hojaActualmenteSeleccionada = selectHoja
+                        ? selectHoja.value
+                        : null;
 
                     if (selectHoja) {
                         selectHoja.innerHTML =
@@ -63,6 +66,29 @@
                         // Opción para crear nueva
                         selectHoja.innerHTML +=
                             '<option value="_nueva">➕ Crear nueva hoja</option>';
+
+                        // ⭐ DETECCIÓN: Si la hoja que estaba seleccionada fue eliminada, avisar
+                        if (
+                            hojaActualmenteSeleccionada &&
+                            hojaActualmenteSeleccionada !== "_nueva" &&
+                            hojaActualmenteSeleccionada !== "" &&
+                            !response.data.hojas.includes(
+                                hojaActualmenteSeleccionada
+                            )
+                        ) {
+                            console.warn(
+                                "⚠️ [Hojas] La hoja seleccionada fue eliminada: " +
+                                    hojaActualmenteSeleccionada
+                            );
+                            mostrarToast(
+                                '⚠️ La hoja "' +
+                                    hojaActualmenteSeleccionada +
+                                    '" fue eliminada. Se usará la hoja por defecto.',
+                                "warning",
+                                4000
+                            );
+                            selectHoja.value = "";
+                        }
                     }
 
                     if (selectFiltro) {
@@ -129,10 +155,15 @@
     /**
      * Cierra el modal de crear hoja y vuelve al modal de casos
      */
-    function cerrarModalCrearHoja() {
+    async function cerrarModalCrearHoja() {
         console.log("❌ [Hojas] Cerrando modal crear hoja");
 
-        cerrarModal("modalCrearHoja");
+        // Usar validación con cambios
+        const puedeoCerrar = await intentarCerrarModalConValidacion(
+            "modalCrearHoja"
+        );
+        if (!puedeoCerrar) return;
+
         abrirModal("modalCrearCaso");
 
         // Limpiar advertencia
@@ -326,6 +357,15 @@
                     // Marcar como recién creada
                     window.hojaRecienCreada = nombreHoja;
 
+                    // Limpiar flag de cambios sin guardar antes de cerrar
+                    window.formularioTieneCambios = false;
+                    const formulario = document.querySelector(
+                        "#modalCrearHoja form"
+                    );
+                    if (formulario) {
+                        formulario.removeAttribute("data-tiene-cambios");
+                    }
+
                     // Recargar hojas y seleccionar la nueva
                     cargarHojasDisponibles(function () {
                         const selectHoja = document.getElementById("casoHoja");
@@ -336,7 +376,17 @@
                             );
                         }
 
-                        cerrarModalCrearHoja();
+                        // Cerrar modal sin validación
+                        cerrarModal("modalCrearHoja");
+                        abrirModal("modalCrearCaso");
+
+                        // Limpiar advertencia
+                        const advertencia = document.getElementById(
+                            "advertenciaNombreHoja"
+                        );
+                        if (advertencia) {
+                            advertencia.classList.add("hidden");
+                        }
                     });
                 } else {
                     console.error(

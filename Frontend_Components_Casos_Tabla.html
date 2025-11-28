@@ -4,7 +4,10 @@
     // ===================================================================
     function generarBadgeEstadoEjecucion(estado) {
         var badgeClass = "badge badge-primary";
-        var texto = estado || "Sin ejecutar";
+        var texto =
+            typeof estadoToLabel === "function"
+                ? estadoToLabel(estado)
+                : estado || "Sin ejecutar";
         switch (estado) {
             case "Ejecutando":
                 badgeClass = "badge badge-warning";
@@ -12,6 +15,7 @@
             case "OK":
                 badgeClass = "badge badge-success";
                 break;
+            case "No OK":
             case "No_OK":
                 badgeClass = "badge badge-danger";
                 break;
@@ -23,7 +27,10 @@
                 break;
             default:
                 badgeClass = "badge badge-primary";
-                texto = "Sin ejecutar";
+                texto =
+                    typeof estadoToLabel === "function"
+                        ? estadoToLabel("Sin ejecutar")
+                        : "Sin ejecutar";
         }
         var extra =
             estado === "Descartado" ? "background:#94a3b8;color:white;" : "";
@@ -39,72 +46,252 @@
     }
     window.generarBadgeEstadoEjecucion = generarBadgeEstadoEjecucion;
 
-    // ===================================================================
-    // Cargar datos desde el backend
-    // ===================================================================
-    function actualizarBarraEjecucion() {
-        try {
-            var urlActual =
-                typeof recuperarSheetUrl === "function"
-                    ? recuperarSheetUrl()
-                    : null;
-            if (!urlActual) return;
-
-            google.script.run
-                .withSuccessHandler(function (response) {
-                    if (!response || !response.success) return;
-                    var data = response.data || {};
-                    var total = data.total || 0;
-                    var ok = data.ok || 0;
-                    var noOk = data.noOk || 0;
-                    var bloqueados = data.bloqueados || 0;
-                    var sinEjecutar = data.sinEjecutar || 0;
-                    var ejecutando = data.ejecutando || 0;
-                    var descartados = data.descartados || 0;
-                    var porcentaje =
-                        total > 0 ? Math.round((ok / total) * 100) : 0;
-
-                    var contenedor =
-                        document.getElementById("resumenEjecucion");
-                    var barra = document.getElementById("barraEjecucionOK");
-                    var texto = document.getElementById(
-                        "textoResumenEjecucion"
-                    );
-                    if (!contenedor || !barra || !texto) return;
-
-                    contenedor.style.display = "block";
-                    barra.style.width = porcentaje + "%";
-                    texto.innerHTML =
-                        "OK: <strong>" +
-                        ok +
-                        "</strong> | " +
-                        "No_OK: <strong>" +
-                        noOk +
-                        "</strong> | " +
-                        "Bloqueado: <strong>" +
-                        bloqueados +
-                        "</strong> | " +
-                        "Ejecutando: <strong>" +
-                        ejecutando +
-                        "</strong> | " +
-                        "Sin ejecutar: <strong>" +
-                        sinEjecutar +
-                        "</strong> | " +
-                        "Descartado: <strong>" +
-                        descartados +
-                        "</strong>" +
-                        '<br><span style="color:#10b981; font-weight:600;">Progreso: ' +
-                        porcentaje +
-                        "%</span>";
-                })
-                .withFailureHandler(function (err) {
-                    console.warn("Error obteniendo resumen:", err);
-                })
-                .obtenerResumenEjecucion(urlActual);
-        } catch (e) {
-            console.warn("Fallo en actualizarBarraEjecucion:", e);
+    function generarBadgePrioridad(prioridad) {
+        var color, bgColor, texto;
+        switch ((prioridad || "").toLowerCase()) {
+            case "critica":
+            case "crítica":
+                color = "#7f1d1d";
+                bgColor = "#fecaca";
+                texto = "🔴 Crítica";
+                break;
+            case "alta":
+                color = "#991b1b";
+                bgColor = "#fee2e2";
+                texto = "🔴 Alta";
+                break;
+            case "media":
+                color = "#92400e";
+                bgColor = "#fef3c7";
+                texto = "🟡 Media";
+                break;
+            case "baja":
+                color = "#065f46";
+                bgColor = "#d1fae5";
+                texto = "🟢 Baja";
+                break;
+            default:
+                color = "#475569";
+                bgColor = "#f1f5f9";
+                texto = prioridad || "-";
         }
+        return (
+            '<span style="display:inline-block;padding:0.25rem 0.6rem;border-radius:6px;font-size:0.8rem;font-weight:600;color:' +
+            color +
+            ";background:" +
+            bgColor +
+            ';">' +
+            texto +
+            "</span>"
+        );
     }
+
+    function generarBadgeEstadoDiseño(estado) {
+        var color, bgColor, texto;
+        switch ((estado || "").toLowerCase()) {
+            case "completado":
+                color = "#065f46";
+                bgColor = "#d1fae5";
+                texto = "✅ Completado";
+                break;
+            case "en progreso":
+            case "en_progreso":
+                color = "#1e40af";
+                bgColor = "#dbeafe";
+                texto = "🔄 En Progreso";
+                break;
+            case "pendiente":
+                color = "#92400e";
+                bgColor = "#fef3c7";
+                texto = "⏳ Pendiente";
+                break;
+            case "eliminado":
+                color = "#991b1b";
+                bgColor = "#fee2e2";
+                texto = "🗑️ Eliminado";
+                break;
+            // Estados antiguos por compatibilidad
+            case "aprobado":
+                color = "#065f46";
+                bgColor = "#d1fae5";
+                texto = estado;
+                break;
+            case "rechazado":
+                color = "#991b1b";
+                bgColor = "#fee2e2";
+                texto = estado;
+                break;
+            default:
+                color = "#475569";
+                bgColor = "#f1f5f9";
+                texto = estado || "-";
+        }
+        return (
+            '<span style="display:inline-block;padding:0.25rem 0.6rem;border-radius:6px;font-size:0.8rem;font-weight:600;color:' +
+            color +
+            ";background:" +
+            bgColor +
+            ';">' +
+            texto +
+            "</span>"
+        );
+    }
+
+    function generarIconoCritico(esCritico) {
+        return esCritico
+            ? '<span style="font-size:1.5rem;line-height:1;">⚡</span>'
+            : '<span style="color:#cbd5e1;">-</span>';
+    }
+
+    function generarIconoRegresion(esRegresion) {
+        return esRegresion
+            ? '<span style="font-size:1.5rem;line-height:1;">🔄</span>'
+            : '<span style="color:#cbd5e1;">-</span>';
+    }
+
+    function generarBadgeBugs(count) {
+        if (count <= 0)
+            return '<span style="color:#94a3b8;font-size:0.9rem;">-</span>';
+        return (
+            '<span style="display:inline-flex;align-items:center;gap:0.3rem;padding:0.25rem 0.6rem;border-radius:6px;font-size:0.85rem;font-weight:700;color:#dc2626;background:#fee2e2;box-shadow:0 1px 3px rgba(220,38,38,0.2);"><span style="font-size:1rem;">🐛</span>' +
+            count +
+            "</span>"
+        );
+    }
+
+    function generarBadgeBugsClickeable(count, bugIds, casoId) {
+        if (count <= 0)
+            return '<span style="color:#94a3b8;font-size:0.9rem;">-</span>';
+
+        // Dividir los IDs de bugs
+        var bugs = [];
+        if (typeof bugIds === "string" && bugIds.trim() !== "") {
+            bugs = bugIds
+                .split(",")
+                .map(function (s) {
+                    return s.trim();
+                })
+                .filter(function (x) {
+                    return x && x.length > 0;
+                });
+        }
+
+        if (bugs.length === 0) {
+            return generarBadgeBugs(count);
+        }
+
+        // Crear ID único para el dropdown
+        var dropdownId = "bugs-dropdown-" + casoId;
+
+        return (
+            '<div style="position:relative;display:inline-block;">' +
+            "<button onclick=\"toggleBugsDropdown('" +
+            dropdownId +
+            "')\" " +
+            'style="display:inline-flex;align-items:center;gap:0.3rem;padding:0.25rem 0.6rem;border-radius:6px;font-size:0.85rem;font-weight:700;color:#dc2626;background:#fee2e2;border:none;cursor:pointer;box-shadow:0 1px 3px rgba(220,38,38,0.2);" ' +
+            'title="Click para ver bugs vinculados">' +
+            '<span style="font-size:1rem;">🐛</span>' +
+            count +
+            "</button>" +
+            '<div id="' +
+            dropdownId +
+            '" class="bugs-dropdown" style="display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:0.25rem;background:white;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);min-width:180px;max-width:220px;z-index:1000;">' +
+            '<div style="padding:0.5rem;border-bottom:1px solid #e2e8f0;font-weight:600;font-size:0.85rem;color:#1e293b;">🐛 Bugs Vinculados</div>' +
+            '<div style="max-height:150px;overflow-y:auto;">' +
+            bugs
+                .map(function (bugId) {
+                    return (
+                        '<div style="padding:0.4rem 0.6rem;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;gap:0.5rem;">' +
+                        '<span style="font-size:0.85rem;font-weight:600;color:#334155;">' +
+                        bugId +
+                        "</span>" +
+                        "<button onclick=\"abrirBugEnTrello('" +
+                        bugId +
+                        "')\" " +
+                        'style="padding:0.25rem 0.5rem;font-size:0.75rem;background:#3b82f6;color:white;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;" ' +
+                        'title="Abrir en Trello">' +
+                        '<span style="font-size:0.9rem;">🔗</span>' +
+                        "</button>" +
+                        "</div>"
+                    );
+                })
+                .join("") +
+            "</div>" +
+            "</div>" +
+            "</div>"
+        );
+    }
+
+    window.generarBadgePrioridad = generarBadgePrioridad;
+    window.generarBadgeEstadoDiseño = generarBadgeEstadoDiseño;
+    window.generarIconoCritico = generarIconoCritico;
+    window.generarIconoRegresion = generarIconoRegresion;
+    window.generarBadgeBugs = generarBadgeBugs;
+    window.generarBadgeBugsClickeable = generarBadgeBugsClickeable;
+
+    // Función para toggle del dropdown de bugs
+    window.toggleBugsDropdown = function (dropdownId) {
+        var dropdown = document.getElementById(dropdownId);
+        if (!dropdown) return;
+
+        // Cerrar otros dropdowns abiertos
+        var allDropdowns = document.querySelectorAll(".bugs-dropdown");
+        allDropdowns.forEach(function (d) {
+            if (d.id !== dropdownId) {
+                d.style.display = "none";
+            }
+        });
+
+        // Toggle el dropdown actual
+        if (dropdown.style.display === "none") {
+            dropdown.style.display = "block";
+        } else {
+            dropdown.style.display = "none";
+        }
+    };
+
+    // Cerrar dropdowns al hacer click fuera
+    document.addEventListener("click", function (e) {
+        if (
+            !e.target.closest('[onclick*="toggleBugsDropdown"]') &&
+            !e.target.closest(".bugs-dropdown")
+        ) {
+            var allDropdowns = document.querySelectorAll(".bugs-dropdown");
+            allDropdowns.forEach(function (d) {
+                d.style.display = "none";
+            });
+        }
+    });
+
+    // Función para abrir bug en Trello
+    window.abrirBugEnTrello = function (bugId) {
+        console.log("🔗 Abriendo bug en Trello:", bugId);
+
+        mostrarSpinner();
+        google.script.run
+            .withSuccessHandler(function (response) {
+                ocultarSpinner();
+                if (
+                    response.success &&
+                    response.data &&
+                    response.data.linkTrello
+                ) {
+                    window.open(response.data.linkTrello, "_blank");
+                } else {
+                    mostrarToast(
+                        "No se encontró el enlace de Trello para el bug " +
+                            bugId,
+                        "warning"
+                    );
+                }
+            })
+            .withFailureHandler(function (error) {
+                ocultarSpinner();
+                console.error("Error obteniendo link de Trello:", error);
+                mostrarToast("Error al obtener el enlace de Trello", "error");
+            })
+            .obtenerBugPorId(window.currentSheetUrl, bugId);
+    };
 
     function mostrarErrorEnTabla(mensaje) {
         var tbody = document.getElementById("tablaCasos");
@@ -112,7 +299,7 @@
         tbody.innerHTML =
             "" +
             "<tr>" +
-            '  <td colspan="7" style="text-align:center; padding:2rem;">' +
+            '  <td colspan="8" style="text-align:center; padding:2rem;">' +
             '    <div style="color:#ef4444;">' +
             (mensaje || "Ocurrió un error") +
             "</div>" +
@@ -177,7 +364,61 @@
         }
     }
 
-    function cargarTodosLosCasos() {
+    function confirmarRestaurarCasoTabla(casoId) {
+        try {
+            if (
+                !confirm(
+                    "¿Estás seguro de que deseas restaurar este caso de prueba? Volverá a estar disponible."
+                )
+            ) {
+                return;
+            }
+
+            if (typeof mostrarSpinner === "function") mostrarSpinner();
+
+            google.script.run
+                .withSuccessHandler(function (response) {
+                    if (typeof ocultarSpinner === "function") ocultarSpinner();
+                    if (response && response.success) {
+                        if (typeof mostrarToast === "function")
+                            mostrarToast(
+                                "Caso restaurado exitosamente",
+                                "success"
+                            );
+                        if (typeof cargarTodosLosCasos === "function")
+                            cargarTodosLosCasos();
+                    } else {
+                        if (typeof mostrarToast === "function")
+                            mostrarToast(
+                                "Error al restaurar el caso: " +
+                                    (response
+                                        ? response.message
+                                        : "Desconocido"),
+                                "error"
+                            );
+                    }
+                })
+                .withFailureHandler(function (error) {
+                    if (typeof ocultarSpinner === "function") ocultarSpinner();
+                    if (typeof mostrarToast === "function")
+                        mostrarToast(
+                            "Error al restaurar el caso: " + error.message,
+                            "error"
+                        );
+                })
+                .restaurarCaso(
+                    typeof recuperarSheetUrl === "function"
+                        ? recuperarSheetUrl()
+                        : null,
+                    casoId
+                );
+        } catch (e) {
+            if (typeof ocultarSpinner === "function") ocultarSpinner();
+            console.error("confirmarRestaurarCasoTabla error:", e);
+        }
+    }
+
+    function cargarTodosLosCasos(skipSpinner) {
         try {
             var url =
                 typeof recuperarSheetUrl === "function"
@@ -193,44 +434,79 @@
                 return;
             }
 
-            if (typeof mostrarSpinner === "function") mostrarSpinner();
+            // Solo mostrar spinner si no está ya visible
+            if (!skipSpinner && typeof mostrarSpinner === "function")
+                mostrarSpinner();
 
-            var filtros = { incluirEliminados: !!window.mostrarEliminados };
+            var filtros = {
+                incluirEliminados: !!window.mostrarEliminados,
+                excluirRegresiones: true, // CRÍTICO: Necesario para cargar casos de todas las hojas
+            };
 
             google.script.run
                 .withSuccessHandler(function (response) {
                     if (typeof ocultarSpinner === "function") ocultarSpinner();
+
+                    console.log(
+                        "📊 [Tabla] Respuesta de listarCasos:",
+                        response
+                    );
+
                     if (!response || response.success !== true) {
                         var msg =
                             response && response.mensaje
                                 ? response.mensaje
                                 : "No se pudieron cargar los casos";
+                        console.warn("⚠️ [Tabla] Error en respuesta:", msg);
                         if (typeof mostrarToast === "function")
                             mostrarToast(msg, "warning");
                         mostrarErrorEnTabla(msg);
                         return;
                     }
 
-                    window.casosActuales =
+                    var casosCargados =
                         response.data && response.data.casos
                             ? response.data.casos
                             : [];
+
+                    // Si mostrarEliminados está activo, filtrar para mostrar SOLO eliminados
+                    if (window.mostrarEliminados) {
+                        casosCargados = casosCargados.filter(function (caso) {
+                            return (
+                                caso.Estado === "Eliminado" ||
+                                caso.EstadoDiseño === "Eliminado"
+                            );
+                        });
+                    }
+
+                    window.casosActuales = casosCargados;
                     window.casosFiltrados = window.casosActuales;
 
-                    renderizarTablaCasos(window.casosActuales);
-                    actualizarBarraEjecucion();
+                    console.log(
+                        "✅ [Tabla] Casos cargados:",
+                        window.casosActuales.length
+                    );
+                    console.log(
+                        "📋 [Tabla] Llamando a renderizarTablaCasosPaged..."
+                    );
 
-                    if (typeof mostrarToast === "function") {
-                        if (window.casosActuales.length > 0) {
-                            mostrarToast(
-                                "Casos cargados: " +
-                                    window.casosActuales.length,
-                                "success"
-                            );
-                        } else {
+                    renderizarTablaCasosPaged(window.casosActuales);
+
+                    // Actualizar barra de ejecución solo si la función existe
+                    if (typeof actualizarBarraEjecucion === "function") {
+                        actualizarBarraEjecucion();
+                    }
+
+                    // Solo mostrar toast si no hay casos y es carga inicial
+                    if (
+                        window.casosActuales.length === 0 &&
+                        !window._cargaInicialCompletada
+                    ) {
+                        if (typeof mostrarToast === "function") {
                             mostrarToast("No hay casos creados aún", "info");
                         }
                     }
+                    window._cargaInicialCompletada = true;
                 })
                 .withFailureHandler(function (error) {
                     if (typeof ocultarSpinner === "function") ocultarSpinner();
@@ -255,15 +531,32 @@
     // Renderizar tabla
     // ===================================================================
     function renderizarTablaCasos(casos) {
-        var tbody = document.getElementById("tablaCasos");
-        if (!tbody) return;
+        console.log(
+            "🖼️ [Tabla] renderizarTablaCasos llamado con",
+            casos ? casos.length : 0,
+            "casos"
+        );
 
-        if (!casos || casos.length === 0) {
-            tbody.innerHTML =
-                '<tr><td colspan="7" style="text-align:center; padding:1.25rem; color:#64748b;">Sin casos para mostrar</td></tr>';
+        var tbody = document.getElementById("tablaCasos");
+        if (!tbody) {
+            console.error(
+                "❌ [Tabla] No se encontró tbody en renderizarTablaCasos"
+            );
             return;
         }
 
+        if (!casos || casos.length === 0) {
+            console.log("📝 [Tabla] No hay casos para mostrar");
+            tbody.innerHTML =
+                '<tr><td colspan="8" class="table-empty-cell">📝 No hay casos registrados</td></tr>';
+            return;
+        }
+
+        console.log(
+            "✅ [Tabla] Renderizando",
+            casos.length,
+            "casos en la tabla"
+        );
         var html = "";
         for (var i = 0; i < casos.length; i++) {
             var c = casos[i] || {};
@@ -273,8 +566,26 @@
             var titulo = c.Titulo || "";
             var hoja = c.Hoja || "";
             var prioridad = c.Prioridad || "";
-            var critico =
-                c.FlujoCritico === "Si" || c.FlujoCritico === "Sí" ? "✓" : "";
+            var linkedRawCard =
+                c.LinkBugRelacionado || c.LinkBugRelacionado || "";
+            var linkedCountCard = 0;
+            try {
+                if (
+                    typeof linkedRawCard === "string" &&
+                    linkedRawCard.trim() !== ""
+                ) {
+                    linkedCountCard = linkedRawCard
+                        .split(",")
+                        .map(function (s) {
+                            return s.trim();
+                        })
+                        .filter(function (x) {
+                            return x && x.length > 0;
+                        }).length;
+                }
+            } catch (e) {
+                linkedCountCard = 0;
+            }
             var regresion =
                 c.CandidatoRegresion === "Si" || c.CandidatoRegresion === "Sí"
                     ? "✓"
@@ -288,44 +599,51 @@
                 "<td>" +
                 hoja +
                 "</td>" +
-                "<td>" +
+                '<td style="word-wrap:break-word;overflow-wrap:break-word;white-space:normal;">' +
                 titulo +
                 "</td>" +
-                "<td>" +
-                prioridad +
+                '<td style="text-align:center;">' +
+                generarBadgePrioridad(prioridad) +
                 "</td>" +
-                "<td>" +
-                estadoDise +
+                '<td style="text-align:center;">' +
+                generarBadgeEstadoDiseño(estadoDise) +
                 "</td>" +
-                "<td>" +
+                '<td style="text-align:center;padding:0.5rem 0.25rem;">' +
                 generarBadgeEstadoEjecucion(estadoEjec) +
                 "</td>" +
                 '<td style="text-align:center;">' +
-                critico +
+                generarBadgeBugsClickeable(linkedCountCard, linkedRawCard, id) +
                 "</td>" +
-                '<td style="text-align:center;">' +
-                regresion +
-                "</td>" +
-                '<td style="display:flex; gap:0.4rem; flex-wrap:wrap;">' +
-                '<button class="btn btn-secondary btn-icon" title="Ver" onclick="if(window.verDetalleCaso) verDetalleCaso(\'' +
+                '<td style="text-align:center;"><div style="display:flex;gap:0.25rem;justify-content:center;flex-wrap:wrap;">' +
+                '<button class="btn btn-secondary btn-icon" style="padding:0.4rem 0.5rem;font-size:1.1rem;min-width:auto;" title="Ver detalle" onclick="if(window.verDetalleCaso) verDetalleCaso(&quot;' +
                 id +
-                "')\">👁️ Ver</button>" +
-                '<button class="btn btn-primary btn-icon" title="Editar" onclick="if(window.editarCaso) editarCaso(\'' +
-                id +
-                "')\">✏️ Editar</button>" +
-                '<button class="btn btn-success btn-icon" title="Ejecutar" onclick="if(window.abrirModalEjecutarCaso) abrirModalEjecutarCaso(\'' +
-                id +
-                "')\">▶️ Ejecutar</button>" +
-                '<button class="btn btn-secondary btn-icon" title="Reportar bug" onclick="if(window.abrirModalCrearBug) abrirModalCrearBug(\'' +
-                id +
-                "')\">🐛 Bug</button>" +
-                '<button class="btn btn-danger btn-icon" title="Eliminar" onclick="confirmarEliminarCasoTabla(\'' +
-                id +
-                "')\">🗑️ Eliminar</button>" +
-                "</td>" +
+                '&quot;)">👁️</button>' +
+                (estadoDise !== "Eliminado"
+                    ? '<button class="btn btn-primary btn-icon" style="padding:0.4rem 0.5rem;font-size:1.1rem;min-width:auto;" title="Editar caso" onclick="if(window.editarCaso) editarCaso(&quot;' +
+                      id +
+                      '&quot;)">✏️</button>' +
+                      '<button class="btn btn-success btn-icon" style="padding:0.4rem 0.5rem;font-size:1.1rem;min-width:auto;" title="Ejecutar caso" onclick="if(window.abrirModalEjecutarCaso) abrirModalEjecutarCaso(&quot;' +
+                      id +
+                      '&quot;)">▶️</button>' +
+                      '<button class="btn btn-danger btn-icon" style="padding:0.4rem 0.5rem;font-size:1.1rem;min-width:auto;" title="Eliminar caso" onclick="confirmarEliminarCasoTabla(&quot;' +
+                      id +
+                      '&quot;)">🗑️</button>'
+                    : '<button class="btn btn-success btn-icon" style="padding:0.4rem 0.5rem;font-size:1.1rem;min-width:auto;" title="Restaurar caso" onclick="confirmarRestaurarCasoTabla(&quot;' +
+                      id +
+                      '&quot;)">↩️</button>') +
+                "</div></td>" +
                 "</tr>";
         }
+
+        console.log(
+            "📝 [Tabla] Asignando HTML al tbody. Longitud HTML:",
+            html.length
+        );
         tbody.innerHTML = html;
+        console.log(
+            "✅ [Tabla] innerHTML asignado. Filas en tbody:",
+            tbody.getElementsByTagName("tr").length
+        );
 
         // Renderizar cards para móvil también
         renderizarCasosCards(casos);
@@ -353,6 +671,26 @@
             var titulo = escapeHtml(c.Titulo) || "";
             var hoja = escapeHtml(c.Hoja) || "";
             var prioridad = c.Prioridad || "";
+            var linkedRawCard =
+                c.LinkBugRelacionado || c.LinkBugRelacionado || "";
+            var linkedCountCard = 0;
+            try {
+                if (
+                    typeof linkedRawCard === "string" &&
+                    linkedRawCard.trim() !== ""
+                ) {
+                    linkedCountCard = linkedRawCard
+                        .split(",")
+                        .map(function (s) {
+                            return s.trim();
+                        })
+                        .filter(function (x) {
+                            return x && x.length > 0;
+                        }).length;
+                }
+            } catch (e) {
+                linkedCountCard = 0;
+            }
 
             html += '<div class="caso-card">';
 
@@ -361,6 +699,13 @@
             html += '<span class="badge badge-primary">' + id + "</span>";
             html += generarBadgeEstadoEjecucion(estadoEjec);
             html += "</div>";
+
+            if (linkedCountCard > 0) {
+                html +=
+                    '<div style="margin-top:0.5rem;color:#334155;font-weight:600">🐛 ' +
+                    linkedCountCard +
+                    " bug(s)</div>";
+            }
 
             // Título
             html += '<h3 class="caso-card-title">' + titulo + "</h3>";
@@ -390,39 +735,106 @@
 
             // Acciones
             html += '<div class="caso-card-actions">';
-            html +=
-                '<button class="btn btn-success btn-sm" onclick="if(window.abrirModalEjecutarCaso) abrirModalEjecutarCaso(\'' +
-                id +
-                "')\">▶️ Ejecutar</button>";
-            html += '<div class="actions-menu">';
-            html +=
-                '<button class="btn-action-menu" onclick="toggleActionsMenu(this)">⋮</button>';
-            html += '<div class="actions-dropdown">';
-            html +=
-                "<button onclick=\"if(window.verDetalleCaso) verDetalleCaso('" +
-                id +
-                '\'); closeAllMenus();"><span class="icon">👁️</span> Ver Detalle</button>';
-            html +=
-                "<button onclick=\"if(window.editarCaso) editarCaso('" +
-                id +
-                '\'); closeAllMenus();"><span class="icon">✏️</span> Editar</button>';
-            html +=
-                "<button onclick=\"if(window.abrirModalCrearBug) abrirModalCrearBug('" +
-                id +
-                '\'); closeAllMenus();"><span class="icon">🐛</span> Reportar Bug</button>';
-            html += "<hr>";
-            html +=
-                '<button class="danger" onclick="confirmarEliminarCasoTabla(\'' +
-                id +
-                '\'); closeAllMenus();"><span class="icon">🗑️</span> Eliminar</button>';
-            html += "</div>";
-            html += "</div>";
+            if (estadoDise !== "Eliminado") {
+                html +=
+                    '<button class="btn btn-success btn-sm" onclick="if(window.abrirModalEjecutarCaso) abrirModalEjecutarCaso(\'' +
+                    id +
+                    "')\">▶️ Ejecutar</button>";
+                html += '<div class="actions-menu">';
+                html +=
+                    '<button class="btn-action-menu" onclick="toggleActionsMenu(this)">⋮</button>';
+                html += '<div class="actions-dropdown">';
+                html +=
+                    "<button onclick=\"if(window.verDetalleCaso) verDetalleCaso('" +
+                    id +
+                    '\'); closeAllMenus();"><span class="icon">👁️</span> Ver Detalle</button>';
+                html +=
+                    "<button onclick=\"if(window.editarCaso) editarCaso('" +
+                    id +
+                    '\'); closeAllMenus();"><span class="icon">✏️</span> Editar</button>';
+                html +=
+                    "<button onclick=\"if(window.abrirModalCrearBug) abrirModalCrearBug('" +
+                    id +
+                    '\'); closeAllMenus();"><span class="icon">🐛</span> Reportar Bug</button>';
+                html += "<hr>";
+                html +=
+                    '<button class="danger" onclick="confirmarEliminarCasoTabla(\'' +
+                    id +
+                    '\'); closeAllMenus();"><span class="icon">🗑️</span> Eliminar</button>';
+                html += "</div>";
+                html += "</div>";
+            } else {
+                html +=
+                    '<button class="btn btn-success btn-sm" onclick="confirmarRestaurarCasoTabla(\'' +
+                    id +
+                    "')\">↩️ Restaurar</button>";
+                html +=
+                    '<button class="btn btn-secondary btn-sm" onclick="if(window.verDetalleCaso) verDetalleCaso(\'' +
+                    id +
+                    "')\">👁️ Ver</button>";
+            }
             html += "</div>";
 
             html += "</div>"; // .caso-card
         }
 
         container.innerHTML = html;
+    }
+
+    // Mostrar bugs vinculados a un caso: abre el historial de bugs y renderiza solo los encontrados
+    function mostrarBugsDeCaso(casoId) {
+        try {
+            var url =
+                typeof recuperarSheetUrl === "function"
+                    ? recuperarSheetUrl()
+                    : null;
+            if (!url) {
+                if (typeof mostrarToast === "function")
+                    mostrarToast("URL del Sheet no disponible", "error");
+                return;
+            }
+
+            if (typeof mostrarPanelBugs === "function") mostrarPanelBugs();
+
+            google.script.run
+                .withSuccessHandler(function (res) {
+                    if (!res || res.success !== true) {
+                        if (typeof mostrarToast === "function")
+                            mostrarToast(
+                                "No se encontraron bugs para el caso",
+                                "info"
+                            );
+                        window.__ultimoListadoBugs = [];
+                        if (typeof renderizarTablaBugsPaged === "function")
+                            renderizarTablaBugsPaged([]);
+                        return;
+                    }
+
+                    var bugs =
+                        res.data && Array.isArray(res.data.bugs)
+                            ? res.data.bugs
+                            : [];
+                    window.__ultimoListadoBugs = bugs;
+                    if (typeof renderizarTablaBugsPaged === "function")
+                        renderizarTablaBugsPaged(bugs);
+                })
+                .withFailureHandler(function (err) {
+                    if (typeof mostrarToast === "function")
+                        mostrarToast(
+                            "Error cargando bugs: " +
+                                (err && err.message ? err.message : err),
+                            "error"
+                        );
+                    window.__ultimoListadoBugs = [];
+                    if (typeof renderizarTablaBugsPaged === "function")
+                        renderizarTablaBugsPaged([]);
+                })
+                .obtenerBugsPorCaso(url, casoId);
+        } catch (e) {
+            console.error("mostrarBugsDeCaso error:", e);
+            if (typeof mostrarToast === "function")
+                mostrarToast("Error mostrando bugs del caso", "error");
+        }
     }
 
     // ===================================================================
@@ -482,15 +894,13 @@
                 estadoEjecucion:
                     document.getElementById("filtroEstadoEjecucion")?.value ||
                     "Todos",
-                flujoCritico:
-                    !!document.getElementById("filtroFlujoCritico")?.checked,
                 candidatosRegresion: !!document.getElementById(
                     "filtroCandidatosRegresion"
                 )?.checked,
             };
 
             localStorage.setItem("qaFiltrosCasos", JSON.stringify(filtros));
-            console.log("💾 Filtros guardados en localStorage");
+            // Filtros guardados en localStorage
         } catch (e) {
             console.warn("⚠️ No se pudieron guardar filtros:", e);
         }
@@ -503,7 +913,7 @@
         try {
             var filtrosGuardados = localStorage.getItem("qaFiltrosCasos");
             if (!filtrosGuardados) {
-                console.log("📭 No hay filtros guardados");
+                // No hay filtros guardados
                 return;
             }
 
@@ -532,11 +942,6 @@
             if (selectEstadoEjecucion && filtros.estadoEjecucion)
                 selectEstadoEjecucion.value = filtros.estadoEjecucion;
 
-            var checkFlujoCritico =
-                document.getElementById("filtroFlujoCritico");
-            if (checkFlujoCritico)
-                checkFlujoCritico.checked = filtros.flujoCritico || false;
-
             var checkCandidatosRegresion = document.getElementById(
                 "filtroCandidatosRegresion"
             );
@@ -544,7 +949,7 @@
                 checkCandidatosRegresion.checked =
                     filtros.candidatosRegresion || false;
 
-            console.log("📥 Filtros restaurados desde localStorage");
+            // Filtros restaurados desde localStorage
 
             // Aplicar filtros restaurados
             aplicarFiltrosEnTiempoReal();
@@ -569,8 +974,6 @@
             var estadoEje =
                 document.getElementById("filtroEstadoEjecucion")?.value ||
                 "Todos";
-            var soloFlujoCritico =
-                !!document.getElementById("filtroFlujoCritico")?.checked;
             var soloCandidatosRegresion = !!document.getElementById(
                 "filtroCandidatosRegresion"
             )?.checked;
@@ -613,12 +1016,6 @@
                 }
 
                 if (
-                    soloFlujoCritico &&
-                    caso.FlujoCritico !== "Si" &&
-                    caso.FlujoCritico !== "Sí"
-                )
-                    return false;
-                if (
                     soloCandidatosRegresion &&
                     caso.CandidatoRegresion !== "Si" &&
                     caso.CandidatoRegresion !== "Sí"
@@ -628,7 +1025,11 @@
                 return true;
             });
 
-            renderizarTablaCasos(window.casosFiltrados);
+            // Reset page to 1 when filters change (user expectation)
+            try {
+                localStorage.setItem("qaPage_casos", "1");
+            } catch (e) {}
+            renderizarTablaCasosPaged(window.casosFiltrados);
         } catch (e) {
             console.warn("Error aplicando filtros:", e);
         }
@@ -654,8 +1055,6 @@
             "filtroEstadoEjecucion"
         );
         if (selectEstadoEjecucion) selectEstadoEjecucion.value = "Todos";
-        var checkFlujoCritico = document.getElementById("filtroFlujoCritico");
-        if (checkFlujoCritico) checkFlujoCritico.checked = false;
         var checkCandidatosRegresion = document.getElementById(
             "filtroCandidatosRegresion"
         );
@@ -664,7 +1063,7 @@
         // Limpiar localStorage
         try {
             localStorage.removeItem("qaFiltrosCasos");
-            console.log("🗑️ Filtros eliminados de localStorage");
+            // Filtros eliminados de localStorage
         } catch (e) {
             console.warn("⚠️ No se pudo limpiar localStorage:", e);
         }
@@ -692,13 +1091,13 @@
                 incluirEliminados: !!window.mostrarEliminados,
                 excluirRegresiones: true,
             };
-            console.log("[Casos] Listar con filtros:", filtros);
+            // Listar casos con filtros (debug hidden)
 
             if (typeof mostrarSpinner === "function") mostrarSpinner();
             google.script.run
                 .withSuccessHandler(function (res) {
                     if (typeof ocultarSpinner === "function") ocultarSpinner();
-                    console.log("[Casos] Respuesta listarCasos:", res);
+                    // Respuesta listarCasos recibida
                     if (!res || res.success !== true) {
                         var msg =
                             res && res.mensaje
@@ -708,13 +1107,13 @@
                         mostrarToast && mostrarToast(msg, "warning");
                         window.casosActuales = [];
                         window.casosFiltrados = [];
-                        renderizarTablaCasos([]);
+                        renderizarTablaCasosPaged([]);
                         return;
                     }
                     window.casosActuales =
                         res.data && res.data.casos ? res.data.casos : [];
                     window.casosFiltrados = window.casosActuales;
-                    renderizarTablaCasos(window.casosActuales);
+                    renderizarTablaCasosPaged(window.casosActuales);
                     if (typeof actualizarBarraEjecucion === "function") {
                         setTimeout(function () {
                             try {
@@ -749,13 +1148,188 @@
     // ===================================================================
     // Exportar funciones al scope global
     // ===================================================================
+    // ===================================================================
+    // Paginación cliente para Casos
+    // ===================================================================
+    function _leerEstadoPaginacionCasos() {
+        var page = parseInt(localStorage.getItem("qaPage_casos")) || 1;
+        var pageSize = parseInt(localStorage.getItem("qaPageSize_casos")) || 20;
+        return { page: page, pageSize: pageSize };
+    }
+
+    function _guardarEstadoPaginacionCasos(page, pageSize) {
+        try {
+            localStorage.setItem("qaPage_casos", String(page));
+            localStorage.setItem("qaPageSize_casos", String(pageSize));
+        } catch (e) {}
+    }
+
+    function renderizarTablaCasosPaged(casos) {
+        console.log(
+            "🎨 [Tabla] renderizarTablaCasosPaged llamado con",
+            casos ? casos.length : 0,
+            "casos"
+        );
+
+        var tbody = document.getElementById("tablaCasos");
+        if (!tbody) {
+            console.error("❌ [Tabla] No se encontró el elemento tablaCasos");
+            return;
+        }
+
+        console.log("✅ [Tabla] Elemento tbody encontrado");
+
+        var estado = _leerEstadoPaginacionCasos();
+        var page = estado.page || 1;
+        var pageSize = estado.pageSize || 20;
+
+        var total = Array.isArray(casos) ? casos.length : 0;
+        var totalPages = Math.max(1, Math.ceil(total / pageSize));
+        if (page > totalPages) page = totalPages;
+        if (page < 1) page = 1;
+
+        var start = (page - 1) * pageSize;
+        var end = start + pageSize;
+        var slice = Array.isArray(casos) ? casos.slice(start, end) : [];
+
+        // Reuse existing renderer for table + cards
+        renderizarTablaCasos(slice);
+
+        // Crear o actualizar controles de paginación
+        var table = tbody.closest("table") || tbody.parentElement;
+        if (table) {
+            var paginationId = "casosPagination";
+            var existing = document.getElementById(paginationId);
+            if (!existing) {
+                existing = document.createElement("div");
+                existing.id = paginationId;
+                existing.style =
+                    "display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1rem; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0;";
+                // Insertar DESPUÉS de la tabla
+                var tableContainer = table.parentElement;
+                tableContainer.insertBefore(existing, table.nextSibling);
+            }
+
+            var leftHtml =
+                '<div style="display:flex;gap:0.5rem;align-items:center">';
+
+            // Botón anterior - deshabilitado si está en la primera página
+            var btnPrevDisabled = page <= 1;
+            leftHtml +=
+                '<button class="btn btn-sm btn-secondary" ' +
+                'style="min-width:40px;padding:0.5rem;font-size:0.9rem' +
+                (btnPrevDisabled ? ";opacity:0.4;cursor:not-allowed" : "") +
+                '" ' +
+                (btnPrevDisabled ? "disabled " : "") +
+                'onclick="' +
+                (btnPrevDisabled
+                    ? ""
+                    : "(function(){ _paginaAnteriorCasos(); })()") +
+                '">◀️</button>';
+
+            leftHtml +=
+                '<span id="casosPageInfo" style="font-weight:600;font-size:0.95rem;color:#475569;min-width:100px;text-align:center"> Página ' +
+                page +
+                " / " +
+                totalPages +
+                " </span>";
+
+            // Botón siguiente - deshabilitado si está en la última página
+            var btnNextDisabled = page >= totalPages;
+            leftHtml +=
+                '<button class="btn btn-sm btn-secondary" ' +
+                'style="min-width:40px;padding:0.5rem;font-size:0.9rem' +
+                (btnNextDisabled ? ";opacity:0.4;cursor:not-allowed" : "") +
+                '" ' +
+                (btnNextDisabled ? "disabled " : "") +
+                'onclick="' +
+                (btnNextDisabled
+                    ? ""
+                    : "(function(){ _paginaSiguienteCasos(); })()") +
+                '">▶️</button>';
+            leftHtml += "</div>";
+
+            var rightHtml =
+                '<div style="display:flex;gap:0.75rem;align-items:center">';
+            rightHtml +=
+                '<label style="font-size:0.9rem;color:#475569;font-weight:500">Resultados por página:</label>';
+            rightHtml +=
+                '<select id="casosPageSizeSelect" class="input-field" style="width:80px;padding:0.5rem;font-size:0.9rem;border:1px solid #cbd5e1;border-radius:6px;background:white">';
+            [10, 20, 30].forEach(function (s) {
+                rightHtml +=
+                    '<option value="' +
+                    s +
+                    '"' +
+                    (s === pageSize ? " selected" : "") +
+                    ">" +
+                    s +
+                    "</option>";
+            });
+            rightHtml += "</select>";
+            rightHtml += "</div>";
+
+            existing.innerHTML = leftHtml + rightHtml;
+
+            // Attach change handler con removeEventListener para evitar duplicados
+            var select = document.getElementById("casosPageSizeSelect");
+            if (select) {
+                // Remover listeners anteriores si existen
+                var oldHandler = select._changeHandler;
+                if (oldHandler) {
+                    select.removeEventListener("change", oldHandler);
+                }
+
+                // Crear nuevo handler
+                var newHandler = function () {
+                    var newSize = parseInt(this.value) || 20;
+                    _guardarEstadoPaginacionCasos(1, newSize);
+                    renderizarTablaCasosPaged(
+                        window.casosFiltrados || window.casosActuales || []
+                    );
+                };
+
+                // Guardar referencia y agregar listener
+                select._changeHandler = newHandler;
+                select.addEventListener("change", newHandler);
+            }
+        }
+
+        _guardarEstadoPaginacionCasos(page, pageSize);
+    }
+
+    function _paginaAnteriorCasos() {
+        var st = _leerEstadoPaginacionCasos();
+        var p = Math.max(1, st.page - 1);
+        _guardarEstadoPaginacionCasos(p, st.pageSize);
+        renderizarTablaCasosPaged(
+            window.casosFiltrados || window.casosActuales || []
+        );
+    }
+
+    function _paginaSiguienteCasos() {
+        var st = _leerEstadoPaginacionCasos();
+        var pageSize = st.pageSize || 20;
+        var total = Array.isArray(window.casosFiltrados)
+            ? window.casosFiltrados.length
+            : Array.isArray(window.casosActuales)
+            ? window.casosActuales.length
+            : 0;
+        var totalPages = Math.max(1, Math.ceil(total / pageSize));
+        var p = Math.min(totalPages, st.page + 1);
+        _guardarEstadoPaginacionCasos(p, pageSize);
+        renderizarTablaCasosPaged(
+            window.casosFiltrados || window.casosActuales || []
+        );
+    }
+
     window.cargarTodosLosCasos = cargarTodosLosCasos;
-    window.renderizarTablaCasos = renderizarTablaCasos;
+    window.renderizarTablaCasosPaged = renderizarTablaCasosPaged;
     window.renderizarCasosCards = renderizarCasosCards;
     window.toggleActionsMenu = toggleActionsMenu;
     window.closeAllMenus = closeAllMenus;
     window.aplicarFiltrosEnTiempoReal = aplicarFiltrosEnTiempoReal;
     window.toggleMostrarEliminados = toggleMostrarEliminados;
+    window.confirmarRestaurarCasoTabla = confirmarRestaurarCasoTabla;
     window.limpiarFiltros = limpiarFiltros;
     window.restaurarFiltrosDesdeLocalStorage =
         restaurarFiltrosDesdeLocalStorage;

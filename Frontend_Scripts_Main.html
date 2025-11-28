@@ -49,6 +49,50 @@
         if (overlay) {
             overlay.classList.remove("active");
         }
+
+        // Restaurar overflow del body como medida de seguridad
+        // Solo si no hay modales activos
+        try {
+            const modalesActivos = document.querySelectorAll(
+                ".modal-overlay.active"
+            );
+            if (modalesActivos.length === 0) {
+                document.body.style.overflow = "auto";
+            }
+        } catch (e) {
+            console.warn("Error al restaurar overflow:", e);
+        }
+    }
+
+    /**
+     * Función de emergencia para restaurar el scroll si se queda bloqueado
+     */
+    function restaurarScroll() {
+        console.log("🔧 Restaurando scroll del body...");
+        try {
+            document.body.style.overflow = "auto";
+            document.body.style.overflowY = "auto";
+            document.documentElement.style.overflow = "auto";
+            document.documentElement.style.overflowY = "auto";
+
+            // Limpiar stack de modales si está vacío pero hay clases activas
+            const modalesActivos = document.querySelectorAll(
+                ".modal-overlay.active"
+            );
+            if (modalesActivos.length > 0 && modalStack.length === 0) {
+                console.warn(
+                    "⚠️ Detectados modales activos sin stack, limpiando..."
+                );
+                modalesActivos.forEach(function (modal) {
+                    modal.classList.remove("active");
+                });
+            }
+
+            console.log("✅ Scroll restaurado correctamente");
+            mostrarToast("Scroll restaurado", "success");
+        } catch (e) {
+            console.error("❌ Error al restaurar scroll:", e);
+        }
     }
 
     // ───────────────────────────────────────────────────────────────────────────
@@ -90,8 +134,78 @@
     // FUNCIONES DE MODALES CON NAVEGACIÓN POR TECLADO
     // ───────────────────────────────────────────────────────────────────────────
 
+    // ───────────────────────────────────────────────────────────────────────────
+    // UTIL: Mapear códigos de estado a etiquetas amigables
+    // ───────────────────────────────────────────────────────────────────────────
+    const QA_ESTADO_LABELS = {
+        OK: "✓ Exitoso",
+        "No OK": "✗ Fallido",
+        No_OK: "✗ Fallido",
+        No_ejecutado: "Sin ejecutar",
+        "Sin ejecutar": "Sin ejecutar",
+        Ejecutando: "⚡ En progreso",
+        Bloqueado: "🔒 Bloqueado",
+        Descartado: "⊘ Descartado",
+    };
+
+    function estadoToLabel(estado) {
+        if (!estado && estado !== "") return "";
+        return QA_ESTADO_LABELS[estado] || estado;
+    }
+
+    window.estadoToLabel = estadoToLabel;
+
     let modalStack = []; // Stack de modales abiertos
     let focusBeforeModal = null; // Elemento con foco antes de abrir modal
+    let modalClickListeners = {}; // Almacenar listeners de overlay por modal ID
+
+    /**
+     * Intenta cerrar un modal validando si hay cambios sin guardar
+     * @param {string} modalId - ID del modal a cerrar
+     * @returns {boolean} - true si se cerró, false si el usuario canceló
+     */
+    async function intentarCerrarModalConValidacion(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return false;
+
+        // Obtener el formulario dentro del modal (si existe)
+        const formulario = modal.querySelector("form");
+
+        // Verificar si hay cambios sin guardar
+        // 1. Variable global window.formularioTieneCambios (usado en Casos)
+        // 2. Variable específica por modal (usado en Bugs, Ejecuciones, etc.)
+        const tieneCambios =
+            window.formularioTieneCambios ||
+            (formulario &&
+                formulario.hasAttribute("data-tiene-cambios") &&
+                formulario.getAttribute("data-tiene-cambios") === "true");
+
+        if (tieneCambios) {
+            // Mostrar confirmación personalizada
+            const confirmar = await mostrarConfirmacionApp({
+                titulo: "Cambios sin guardar",
+                mensaje:
+                    "Tienes cambios sin guardar.<br><br>¿Deseas descartar los cambios y cerrar?",
+                icono: "⚠️",
+                textoOk: "Descartar cambios",
+                textoCancelar: "Seguir editando",
+            });
+
+            if (!confirmar) {
+                return false; // Usuario canceló, no cerrar modal
+            }
+
+            // Limpiar flag de cambios
+            window.formularioTieneCambios = false;
+            if (formulario) {
+                formulario.removeAttribute("data-tiene-cambios");
+            }
+        }
+
+        // Cerrar el modal
+        cerrarModal(modalId);
+        return true;
+    }
 
     /**
      * Abre un modal con trap de foco y soporte para teclado
@@ -111,6 +225,20 @@
         modal.classList.add("active");
         document.body.style.overflow = "hidden";
 
+        // Ajustar z-index dinámicamente según profundidad del stack
+        try {
+            const rootStyles = getComputedStyle(document.documentElement);
+            const base =
+                parseInt(rootStyles.getPropertyValue("--z-modal")) || 1000;
+            const step = 20; // incremento por nivel
+            const overlayZ = base + modalStack.length * step;
+            const innerModal = modal.querySelector(".modal");
+            modal.style.zIndex = overlayZ; // overlay
+            if (innerModal) innerModal.style.zIndex = overlayZ + 5; // modal content slightly above overlay
+        } catch (e) {
+            // no-op
+        }
+
         // Aplicar trap de foco
         aplicarTrapDeFoco(modal);
 
@@ -124,6 +252,19 @@
 
         // Listener para ESC
         modal.addEventListener("keydown", manejarEscapeModal);
+
+        // Listener para click en overlay (cierre al hacer clic fuera del modal)
+        const handleOverlayClick = (e) => {
+            // Solo reaccionar si el click es en el overlay (no en el contenido del modal)
+            if (e.target === modal) {
+                e.stopPropagation();
+                intentarCerrarModalConValidacion(modalId);
+            }
+        };
+
+        // Guardar el listener para poder removerlo después
+        modalClickListeners[modalId] = handleOverlayClick;
+        modal.addEventListener("click", handleOverlayClick);
     }
 
     /**
@@ -134,28 +275,72 @@
         const modal = document.getElementById(modalId);
         if (!modal) return;
 
-        // Remover del stack
-        const index = modalStack.indexOf(modalId);
-        if (index > -1) {
-            modalStack.splice(index, 1);
-        }
+        try {
+            // Remover del stack
+            const index = modalStack.indexOf(modalId);
+            if (index > -1) {
+                modalStack.splice(index, 1);
+            }
 
-        // Ocultar modal
-        modal.classList.remove("active");
+            // Remover listener de click en overlay
+            if (modalClickListeners[modalId]) {
+                modal.removeEventListener(
+                    "click",
+                    modalClickListeners[modalId]
+                );
+                delete modalClickListeners[modalId];
+            }
 
-        // Remover trap de foco
-        removerTrapDeFoco(modal);
+            // Ocultar modal
+            modal.classList.remove("active");
 
-        // Remover listener de ESC
-        modal.removeEventListener("keydown", manejarEscapeModal);
+            // Limpiar inline z-index del modal cerrado
+            try {
+                modal.style.zIndex = "";
+                const innerModal = modal.querySelector(".modal");
+                if (innerModal) innerModal.style.zIndex = "";
+            } catch (e) {}
 
-        // Restaurar overflow solo si no hay más modales
-        if (modalStack.length === 0) {
-            document.body.style.overflow = "auto";
+            // Remover trap de foco
+            removerTrapDeFoco(modal);
 
-            // Restaurar foco
-            if (focusBeforeModal && focusBeforeModal.focus) {
-                focusBeforeModal.focus();
+            // Remover listener de ESC
+            modal.removeEventListener("keydown", manejarEscapeModal);
+
+            // Restaurar overflow solo si no hay más modales
+            if (modalStack.length === 0) {
+                document.body.style.overflow = "auto";
+
+                // Restaurar foco
+                if (focusBeforeModal && focusBeforeModal.focus) {
+                    focusBeforeModal.focus();
+                }
+            } else {
+                // Recalcular z-index para los modales aún abiertos según su posición en el stack
+                try {
+                    const rootStyles = getComputedStyle(
+                        document.documentElement
+                    );
+                    const base =
+                        parseInt(rootStyles.getPropertyValue("--z-modal")) ||
+                        1000;
+                    const step = 20;
+                    for (let i = 0; i < modalStack.length; i++) {
+                        const id = modalStack[i];
+                        const m = document.getElementById(id);
+                        if (!m) continue;
+                        const z = base + (i + 1) * step;
+                        m.style.zIndex = z;
+                        const inner = m.querySelector(".modal");
+                        if (inner) inner.style.zIndex = z + 5;
+                    }
+                } catch (e) {}
+            }
+        } catch (error) {
+            // Si hay un error, asegurar que el overflow se restaure
+            console.error("Error al cerrar modal:", error);
+            if (modalStack.length === 0) {
+                document.body.style.overflow = "auto";
             }
         }
     }
@@ -218,10 +403,10 @@
      */
     function manejarEscapeModal(e) {
         if (e.key === "Escape") {
-            // Cerrar el último modal del stack
+            // Cerrar el último modal del stack (con validación de cambios)
             if (modalStack.length > 0) {
                 const ultimoModal = modalStack[modalStack.length - 1];
-                cerrarModal(ultimoModal);
+                intentarCerrarModalConValidacion(ultimoModal);
             }
         }
     }
@@ -232,13 +417,13 @@
 
     /**
      * Retorna la clase de badge según la prioridad del caso
-     * @param {string} prioridad - Prioridad del caso (Critica, Alta, Media, Baja)
+     * @param {string} prioridad - Prioridad del caso (Crítica, Alta, Media, Baja)
      * @returns {string} - Clase CSS del badge
-     * @example getBadgePrioridad('Critica') // 'badge-danger'
+     * @example getBadgePrioridad('Crítica') // 'badge-danger'
      */
     function getBadgePrioridad(prioridad) {
         const badges = {
-            Critica: "badge-danger",
+            Crítica: "badge-danger",
             Alta: "badge-warning",
             Media: "badge-info",
             Baja: "badge-success",
@@ -257,8 +442,14 @@
             OK: "badge-success",
             No_OK: "badge-danger",
             Pendiente: "badge-warning",
+            "En Progreso": "badge-info",
+            Completado: "badge-success",
+            Eliminado: "badge-danger",
+            // Estados antiguos por compatibilidad
             "En diseño": "badge-info",
             "En diseno": "badge-info",
+            Aprobado: "badge-success",
+            Rechazado: "badge-danger",
             Ejecutando: "badge-primary",
         };
         return badges[estado] || "badge-primary";
@@ -708,8 +899,19 @@
     // FUNCIONES DE DEPURACIÓN
     // ───────────────────────────────────────────────────────────────────────────
 
+    // Debug helper: se activa poniendo `window.QA_DEBUG = true` en la consola
+    window.QA_DEBUG = window.QA_DEBUG || false;
     function debugLog(mensaje, datos) {
-        console.log(`[DEBUG] ${mensaje}`, datos || "");
+        try {
+            if (!window.QA_DEBUG) return;
+            if (console && typeof console.debug === "function") {
+                console.debug("[QA DEBUG] " + mensaje, datos || "");
+            } else if (console && typeof console.log === "function") {
+                console.log("[QA DEBUG] " + mensaje, datos || "");
+            }
+        } catch (e) {
+            /* ignore */
+        }
     }
 
     // Verificar que las funciones críticas estén disponibles
@@ -732,6 +934,107 @@
                 console.error(`❌ Función ${func} NO disponible`);
             }
         });
+
+        // Restaurar última pantalla vista (si existe)
+        setTimeout(function () {
+            try {
+                var last = null;
+                try {
+                    last = localStorage.getItem("qaLastScreen");
+                } catch (e) {
+                    last = null;
+                }
+
+                if (!last) return;
+
+                debugLog("Restaurando última pantalla:", last);
+
+                // Si la última pantalla fue bugs, mostrar casos en su lugar
+                if (last === "bugs") {
+                    debugLog("Redirigiendo de bugs a casos");
+                    last = "casos";
+                }
+
+                if (last === "casos") {
+                    var url = null;
+                    try {
+                        url = recuperarSheetUrl();
+                    } catch (e) {
+                        url = null;
+                    }
+                    if (url && typeof mostrarPantallaCasos === "function") {
+                        mostrarPantallaCasos(url);
+                    }
+                } else if (last === "setup") {
+                    var url = null;
+                    try {
+                        url = recuperarSheetUrl();
+                    } catch (e) {
+                        url = null;
+                    }
+                    if (typeof mostrarPantallaSetup === "function")
+                        mostrarPantallaSetup(url || "", {});
+                } else if (last === "metricasProyecto") {
+                    if (typeof mostrarMetricasProyecto === "function")
+                        mostrarMetricasProyecto();
+                } else if (last === "metricasQA") {
+                    if (typeof mostrarMetricasQA === "function")
+                        mostrarMetricasQA();
+                }
+            } catch (e) {
+                console.warn("No se pudo restaurar última pantalla:", e);
+            }
+        }, 250);
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // FUNCIONES DE MENÚ DE USUARIO
+    // ───────────────────────────────────────────────────────────────────────────
+
+    function toggleUserMenu() {
+        const menu = document.getElementById("userMenu");
+        if (menu) {
+            menu.classList.toggle("hidden");
+        }
+    }
+
+    function cerrarSesion() {
+        if (
+            confirm(
+                "¿Estás seguro de que deseas cerrar sesión de la aplicación?"
+            )
+        ) {
+            // Limpiar localStorage para resetear el estado de la app
+            localStorage.clear();
+
+            // Recargar la aplicación sin cerrar sesión de Google
+            // No usar spinner para evitar que se quede infinito
+            window.top.location.reload();
+        }
+    }
+
+    function cambiarCuenta() {
+        // Limpiar localStorage
+        localStorage.clear();
+
+        // Redirigir a la página de selección de cuenta de Google
+        // Esto fuerza al usuario a elegir una cuenta diferente
+        window.top.location.href = "https://accounts.google.com/AccountChooser";
+    }
+
+    // Cerrar menú al hacer clic fuera
+    document.addEventListener("click", function (event) {
+        const userMenu = document.getElementById("userMenu");
+        const userAvatar = document.getElementById("userAvatar");
+
+        if (
+            userMenu &&
+            !userMenu.classList.contains("hidden") &&
+            !userMenu.contains(event.target) &&
+            !userAvatar.contains(event.target)
+        ) {
+            userMenu.classList.add("hidden");
+        }
     });
 
     // ───────────────────────────────────────────────────────────────────────────
@@ -741,6 +1044,7 @@
     // Asegurar que las funciones estén disponibles globalmente
     window.mostrarSpinner = mostrarSpinner;
     window.ocultarSpinner = ocultarSpinner;
+    window.restaurarScroll = restaurarScroll;
     window.mostrarToast = mostrarToast;
     window.abrirModal = abrirModal;
     window.cerrarModal = cerrarModal;
@@ -755,6 +1059,18 @@
     window.mostrarErrorTipificado = mostrarErrorTipificado;
     window.detectarTipoError = detectarTipoError;
     window.cerrarErrorModal = cerrarErrorModal;
+    window.intentarCerrarModalConValidacion = intentarCerrarModalConValidacion;
+    window.toggleUserMenu = toggleUserMenu;
+    window.cerrarSesion = cerrarSesion;
+    window.cambiarCuenta = cambiarCuenta;
 
-    console.log("✅ Frontend Scripts Main cargado correctamente");
+    // Atajo de teclado de emergencia para restaurar scroll (Ctrl+Alt+R)
+    document.addEventListener("keydown", function (e) {
+        if (e.ctrlKey && e.altKey && e.key === "r") {
+            e.preventDefault();
+            restaurarScroll();
+        }
+    });
+
+    // Frontend Scripts Main cargado
 </script>

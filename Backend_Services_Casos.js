@@ -63,16 +63,12 @@ function listarCasos(sheetUrl, filtros) {
 
             todasLasHojas.forEach(function (hoja) {
                 var nombreHoja = hoja.getName();
-
                 if (hojasExcluidas.indexOf(nombreHoja) === -1) {
                     Logger.log("Revisando hoja: " + nombreHoja);
-
                     var datos = hoja.getDataRange().getValues();
-
                     if (datos.length > 1) {
                         var headers = datos[0];
                         var indexID = headers.indexOf("ID");
-
                         if (indexID > -1) {
                             Logger.log(
                                 "✅ Hoja de casos detectada: " +
@@ -81,79 +77,22 @@ function listarCasos(sheetUrl, filtros) {
                                     (datos.length - 1) +
                                     " filas)"
                             );
-
                             for (var i = 1; i < datos.length; i++) {
                                 var caso = {};
                                 for (var j = 0; j < headers.length; j++) {
                                     var valor = datos[i][j];
-
                                     if (valor instanceof Date) {
                                         caso[headers[j]] = valor.toISOString();
                                     } else {
                                         caso[headers[j]] = valor;
                                     }
                                 }
-
-                                if (!caso.Hoja || caso.Hoja === "") {
-                                    caso.Hoja = nombreHoja;
-                                }
-
-                                if (caso.ID && caso.ID !== "") {
-                                    todosCasos.push(caso);
-                                }
+                                todosCasos.push(caso);
                             }
                         }
                     }
                 }
             });
-
-            Logger.log("📊 Total de casos encontrados: " + todosCasos.length);
-        } else {
-            Logger.log('Modo: Cargar solo desde hoja "Casos"');
-
-            var hojaCasos = spreadsheet.getSheetByName("Casos");
-
-            if (hojaCasos === null) {
-                Logger.log('ERROR: No existe la hoja "Casos"');
-                return {
-                    success: false,
-                    mensaje: "No se encontró la hoja de Casos",
-                };
-            }
-
-            var datos = hojaCasos.getDataRange().getValues();
-
-            if (datos.length <= 1) {
-                Logger.log("La hoja Casos está vacía (solo headers)");
-                return {
-                    success: true,
-                    data: {
-                        casos: [],
-                        total: 0,
-                    },
-                    mensaje: "No hay casos creados",
-                };
-            }
-
-            var headers = datos[0];
-
-            for (var i = 1; i < datos.length; i++) {
-                var caso = {};
-                for (var j = 0; j < headers.length; j++) {
-                    var valor = datos[i][j];
-
-                    if (valor instanceof Date) {
-                        caso[headers[j]] = valor.toISOString();
-                    } else {
-                        caso[headers[j]] = valor;
-                    }
-                }
-                todosCasos.push(caso);
-            }
-
-            Logger.log(
-                'Casos encontrados en hoja "Casos": ' + todosCasos.length
-            );
         }
 
         // Excluir casos eliminados por defecto
@@ -253,19 +192,22 @@ function aplicarFiltrosCasos(casos, filtros) {
 
     if (filtros.prioridad && filtros.prioridad !== "Todas") {
         resultado = resultado.filter(function (caso) {
-            return caso.Prioridad === filtros.prioridad;
+            // Normalizar para comparación (manejar con y sin acento)
+            var prioridadCaso = (caso.Prioridad || "")
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "");
+            var prioridadFiltro = (filtros.prioridad || "")
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "");
+            return prioridadCaso === prioridadFiltro;
         });
     }
 
     if (filtros.estado && filtros.estado !== "Todos") {
         resultado = resultado.filter(function (caso) {
             return caso.Estado === filtros.estado;
-        });
-    }
-
-    if (filtros.soloFlujoCritico === true) {
-        resultado = resultado.filter(function (caso) {
-            return caso.FlujoCritico === "Si" || caso.FlujoCritico === "Sí";
         });
     }
 
@@ -607,7 +549,9 @@ function eliminarCaso(sheetUrl, casoId) {
         var usuario = Session.getActiveUser().getEmail();
         var fechaEliminacion = new Date().toISOString();
 
+        // Marcar como eliminado en lugar de borrar la fila
         return actualizarCaso(sheetUrl, casoId, {
+            EstadoDiseño: "Eliminado",
             Estado: "Eliminado",
             Notas: "Eliminado el " + fechaEliminacion + " por " + usuario,
         });
@@ -631,6 +575,7 @@ function restaurarCaso(sheetUrl, casoId) {
         var fechaRestauracion = new Date().toISOString();
 
         return actualizarCaso(sheetUrl, casoId, {
+            EstadoDiseño: "Pendiente",
             Estado: "Pendiente",
             Notas: "Restaurado el " + fechaRestauracion + " por " + usuario,
         });
@@ -695,19 +640,20 @@ function crearCaso(datosCaso) {
             datosCaso.scenarioWhen || "", // K - ScenarioWhen
             datosCaso.scenarioThen || "", // L - ScenarioThen
             datosCaso.precondiciones || "", // M - Precondiciones
-            datosCaso.flujoCritico ? "Si" : "No", // N - FlujoCritico
-            datosCaso.candidatoRegresion ? "Si" : "No", // O - CandidatoRegresion
-            "Pendiente", // P - EstadoDiseño
-            new Date(), // Q - FechaCreacion
-            usuario, // R - CreadoPor
-            "", // S - FechaUltimaEjecucion
-            "Sin ejecutar", // T - ResultadoUltimaEjecucion ← CORREGIDO
-            "", // U - ComentariosEjecucion (NUEVO)
-            "", // V - EvidenciasURL (NUEVO)
-            "", // W - LinkTrelloHU
-            "", // X - LinkBugRelacionado
-            casoURI, // Y - CasoURI
-            "", // Z - Notas
+            datosCaso.candidatoRegresion ? "Si" : "No", // N - CandidatoRegresion
+            "Pendiente", // O - EstadoDiseño
+            new Date(), // P - FechaCreacion
+            usuario, // Q - CreadoPor
+            "", // R - FechaUltimaEjecucion
+            "Sin ejecutar", // S - ResultadoUltimaEjecucion ← CORREGIDO
+            "", // T - ComentariosEjecucion (NUEVO)
+            "", // U - EvidenciasURL (NUEVO)
+            "", // V - Ambiente
+            "", // W - Navegador
+            "", // X - LinkTrelloHU
+            "", // Y - LinkBugRelacionado
+            casoURI, // Z - CasoURI
+            "", // AA - Notas
         ];
 
         // Alinear fila de creación al orden de headers de la hoja destino
@@ -728,16 +674,17 @@ function crearCaso(datosCaso) {
             ScenarioWhen: datosCaso.scenarioWhen || "",
             ScenarioThen: datosCaso.scenarioThen || "",
             Precondiciones: datosCaso.precondiciones || "",
-            FlujoCritico: datosCaso.flujoCritico ? "Si" : "No",
             CandidatoRegresion: datosCaso.candidatoRegresion ? "Si" : "No",
-            EstadoDiseño: "Pendiente",
-            Estado: "Pendiente",
+            EstadoDiseño: datosCaso.estadoDiseño || "Pendiente",
+            Estado: datosCaso.estadoDiseño || "Pendiente",
             FechaCreacion: new Date(),
             CreadoPor: usuario,
             FechaUltimaEjecucion: "",
             ResultadoUltimaEjecucion: "Sin ejecutar",
             ComentariosEjecucion: "",
             EvidenciasURL: "",
+            Ambiente: "",
+            Navegador: "",
             LinkTrelloHU: "",
             LinkBugRelacionado: "",
             CasoURI: casoURI,
@@ -776,6 +723,7 @@ function crearCaso(datosCaso) {
  */
 function generarIdCasoSimplificado(hojaConfig) {
     try {
+        var spreadsheet = hojaConfig.getParent();
         var datos = hojaConfig.getDataRange().getValues();
         var claveContador = "ultimo_caso_id_global";
         var ultimoId = 0;
@@ -798,12 +746,56 @@ function generarIdCasoSimplificado(hojaConfig) {
                 "Contador global de casos (IDs simplificados)",
             ]);
             ultimoId = 0;
-        } else {
-            // Actualizar contador existente
-            hojaConfig.getRange(filaContador, 2).setValue(ultimoId + 1);
+            filaContador = hojaConfig.getLastRow();
         }
 
-        var nuevoNumero = ultimoId + 1;
+        // Buscar IDs existentes en todas las hojas para encontrar huecos
+        var idsExistentes = {};
+        var todasLasHojas = spreadsheet.getSheets();
+        var hojasExcluidas = ["Config", "Bugs", "Ejecuciones"];
+
+        for (var h = 0; h < todasLasHojas.length; h++) {
+            var hoja = todasLasHojas[h];
+            if (hojasExcluidas.indexOf(hoja.getName()) > -1) continue;
+
+            var datosHoja = hoja.getDataRange().getValues();
+            if (datosHoja.length <= 1) continue;
+
+            var headers = datosHoja[0];
+            var indexID = headers.indexOf("ID");
+            if (indexID === -1) continue;
+
+            for (var i = 1; i < datosHoja.length; i++) {
+                var idCaso = datosHoja[i][indexID];
+                if (
+                    idCaso &&
+                    typeof idCaso === "string" &&
+                    idCaso.startsWith("TC-")
+                ) {
+                    var numero = parseInt(idCaso.replace("TC-", ""));
+                    if (!isNaN(numero)) {
+                        idsExistentes[numero] = true;
+                    }
+                }
+            }
+        }
+
+        // Buscar el primer ID disponible (hueco)
+        var nuevoNumero = null;
+        for (var num = 1; num <= ultimoId; num++) {
+            if (!idsExistentes[num]) {
+                nuevoNumero = num;
+                Logger.log("♻️ Reutilizando ID disponible: TC-" + nuevoNumero);
+                break;
+            }
+        }
+
+        // Si no hay huecos, usar el siguiente número
+        if (nuevoNumero === null) {
+            nuevoNumero = ultimoId + 1;
+            hojaConfig.getRange(filaContador, 2).setValue(nuevoNumero);
+            Logger.log("➕ Generando nuevo ID: TC-" + nuevoNumero);
+        }
 
         // Formato simplificado: TC-1, TC-2, TC-3...
         return "TC-" + nuevoNumero;
@@ -886,6 +878,47 @@ function crearNuevaHoja(sheetUrl, nombreHoja) {
             headers = hojaBase
                 .getRange(1, 1, 1, hojaBase.getLastColumn())
                 .getValues()[0];
+
+            // Copiar el formato completo de la fila de headers desde la hoja base
+            var rangoHeadersBase = hojaBase.getRange(1, 1, 1, headers.length);
+            var rangoHeadersNueva = nuevaHoja.getRange(1, 1, 1, headers.length);
+
+            // Copiar valores
+            rangoHeadersNueva.setValues([headers]);
+
+            // Copiar todos los estilos de formato
+            rangoHeadersNueva.setBackgrounds(rangoHeadersBase.getBackgrounds());
+            rangoHeadersNueva.setFontColors(rangoHeadersBase.getFontColors());
+            rangoHeadersNueva.setFontWeights(rangoHeadersBase.getFontWeights());
+            rangoHeadersNueva.setFontSizes(rangoHeadersBase.getFontSizes());
+            rangoHeadersNueva.setFontFamilies(
+                rangoHeadersBase.getFontFamilies()
+            );
+            rangoHeadersNueva.setHorizontalAlignments(
+                rangoHeadersBase.getHorizontalAlignments()
+            );
+            rangoHeadersNueva.setVerticalAlignments(
+                rangoHeadersBase.getVerticalAlignments()
+            );
+            rangoHeadersNueva.setWraps(rangoHeadersBase.getWraps());
+            rangoHeadersNueva.setBorder(
+                true,
+                true,
+                true,
+                true,
+                true,
+                true,
+                "#ffffff",
+                SpreadsheetApp.BorderStyle.SOLID
+            );
+
+            // Copiar ancho de columnas de la hoja base
+            for (var i = 1; i <= headers.length; i++) {
+                nuevaHoja.setColumnWidth(i, hojaBase.getColumnWidth(i));
+            }
+
+            // Copiar altura de fila de headers
+            nuevaHoja.setRowHeight(1, hojaBase.getRowHeight(1));
         } else {
             // Fallback si no existe hoja base (compatibilidad)
             headers = [
@@ -902,34 +935,249 @@ function crearNuevaHoja(sheetUrl, nombreHoja) {
                 "ScenarioWhen",
                 "ScenarioThen",
                 "Precondiciones",
-                "FlujoCritico",
                 "CandidatoRegresion",
-                "Estado",
+                "EstadoDiseño",
                 "FechaCreacion",
                 "CreadoPor",
                 "FechaUltimaEjecucion",
                 "ResultadoUltimaEjecucion",
+                "ComentariosEjecucion",
+                "EvidenciasURL",
+                "Ambiente",
+                "Navegador",
                 "LinkTrelloHU",
                 "LinkBugRelacionado",
                 "CasoURI",
                 "Notas",
             ];
+            nuevaHoja.getRange(1, 1, 1, headers.length).setValues([headers]);
+
+            // Aplicar formato consistente a los headers (igual que hoja Casos original)
+            nuevaHoja
+                .getRange(1, 1, 1, headers.length)
+                .setBackground("#0f172a")
+                .setFontColor("#ffffff")
+                .setFontWeight("bold")
+                .setFontSize(11)
+                .setFontFamily("Nunito")
+                .setHorizontalAlignment("center")
+                .setVerticalAlignment("middle")
+                .setWrap(false);
+
+            // Configurar altura de fila para headers
+            nuevaHoja.setRowHeight(1, 30);
+
+            // Configurar ancho de columnas exactamente como en la hoja Casos original
+            nuevaHoja.setColumnWidth(1, 100); // ID
+            nuevaHoja.setColumnWidth(2, 150); // Hoja
+            nuevaHoja.setColumnWidth(3, 300); // Titulo
+            nuevaHoja.setColumnWidth(4, 400); // Descripcion
+            nuevaHoja.setColumnWidth(19, 150); // ResultadoUltimaEjecucion
+            nuevaHoja.setColumnWidth(20, 300); // ComentariosEjecucion
+            nuevaHoja.setColumnWidth(21, 400); // EvidenciasURL
+            nuevaHoja.setColumnWidth(22, 120); // Ambiente
+            nuevaHoja.setColumnWidth(23, 120); // Navegador
+            nuevaHoja.setColumnWidth(22, 400); // EvidenciasURL
+
+            // Configurar resto de columnas con ancho estándar
+            for (var i = 5; i <= 19; i++) {
+                nuevaHoja.setColumnWidth(i, 200);
+            }
+            for (var i = 23; i <= headers.length; i++) {
+                nuevaHoja.setColumnWidth(i, 200);
+            }
         }
-        nuevaHoja.getRange(1, 1, 1, headers.length).setValues([headers]);
-
-        nuevaHoja
-            .getRange(1, 1, 1, headers.length)
-            .setBackground("#0f172a")
-            .setFontColor("#ffffff")
-            .setFontWeight("bold");
-
-        nuevaHoja.setColumnWidth(1, 100);
-        nuevaHoja.setColumnWidth(2, 150);
-        nuevaHoja.setColumnWidth(3, 300);
-        nuevaHoja.setColumnWidth(4, 400);
 
         nuevaHoja.setFrozenRows(1);
         nuevaHoja.setFrozenColumns(1);
+
+        // Aplicar validaciones y formato condicional (badges)
+        try {
+            var lastRowEstimate = 2000;
+            var rules = nuevaHoja.getConditionalFormatRules() || [];
+
+            // Prioridad (columna 6: F)
+            var rangoPrioridad = nuevaHoja.getRange(2, 6, lastRowEstimate);
+            var validPrio = SpreadsheetApp.newDataValidation()
+                .requireValueInList(["Crítica", "Alta", "Media", "Baja"], true)
+                .setAllowInvalid(false)
+                .build();
+            rangoPrioridad.setDataValidation(validPrio);
+
+            rules.push(
+                SpreadsheetApp.newConditionalFormatRule()
+                    .whenTextEqualTo("Crítica")
+                    .setBackground("#fecaca")
+                    .setFontColor("#7f1d1d")
+                    .setRanges([rangoPrioridad])
+                    .build()
+            );
+            rules.push(
+                SpreadsheetApp.newConditionalFormatRule()
+                    .whenTextEqualTo("Alta")
+                    .setBackground("#fee2e2")
+                    .setFontColor("#991b1b")
+                    .setRanges([rangoPrioridad])
+                    .build()
+            );
+            rules.push(
+                SpreadsheetApp.newConditionalFormatRule()
+                    .whenTextEqualTo("Media")
+                    .setBackground("#fef3c7")
+                    .setFontColor("#92400e")
+                    .setRanges([rangoPrioridad])
+                    .build()
+            );
+            rules.push(
+                SpreadsheetApp.newConditionalFormatRule()
+                    .whenTextEqualTo("Baja")
+                    .setBackground("#d1fae5")
+                    .setFontColor("#065f46")
+                    .setRanges([rangoPrioridad])
+                    .build()
+            );
+
+            // EstadoDiseño (columna 15: O)
+            var rangoEstadoDiseño = nuevaHoja.getRange(2, 15, lastRowEstimate);
+            var validEstDiseño = SpreadsheetApp.newDataValidation()
+                .requireValueInList(
+                    ["Pendiente", "En Progreso", "Completado", "Eliminado"],
+                    true
+                )
+                .setAllowInvalid(false)
+                .build();
+            rangoEstadoDiseño.setDataValidation(validEstDiseño);
+
+            rules.push(
+                SpreadsheetApp.newConditionalFormatRule()
+                    .whenTextEqualTo("Completado")
+                    .setBackground("#d1fae5")
+                    .setFontColor("#065f46")
+                    .setRanges([rangoEstadoDiseño])
+                    .build()
+            );
+            rules.push(
+                SpreadsheetApp.newConditionalFormatRule()
+                    .whenTextEqualTo("Pendiente")
+                    .setBackground("#fef3c7")
+                    .setFontColor("#92400e")
+                    .setRanges([rangoEstadoDiseño])
+                    .build()
+            );
+            rules.push(
+                SpreadsheetApp.newConditionalFormatRule()
+                    .whenTextEqualTo("En Progreso")
+                    .setBackground("#dbeafe")
+                    .setFontColor("#1e40af")
+                    .setRanges([rangoEstadoDiseño])
+                    .build()
+            );
+            rules.push(
+                SpreadsheetApp.newConditionalFormatRule()
+                    .whenTextEqualTo("Eliminado")
+                    .setBackground("#fee2e2")
+                    .setFontColor("#991b1b")
+                    .setRanges([rangoEstadoDiseño])
+                    .build()
+            );
+
+            // ResultadoUltimaEjecucion (columna 19: S)
+            var rangoResultado = nuevaHoja.getRange(2, 19, lastRowEstimate);
+            var validResultado = SpreadsheetApp.newDataValidation()
+                .requireValueInList(
+                    [
+                        "OK",
+                        "No OK",
+                        "No_OK",
+                        "Ejecutando",
+                        "Bloqueado",
+                        "Descartado",
+                        "Sin ejecutar",
+                    ],
+                    true
+                )
+                .setAllowInvalid(false)
+                .build();
+            rangoResultado.setDataValidation(validResultado);
+
+            rules.push(
+                SpreadsheetApp.newConditionalFormatRule()
+                    .whenTextEqualTo("OK")
+                    .setBackground("#d1fae5")
+                    .setFontColor("#065f46")
+                    .setRanges([rangoResultado])
+                    .build()
+            );
+            rules.push(
+                SpreadsheetApp.newConditionalFormatRule()
+                    .whenTextEqualTo("No OK")
+                    .setBackground("#fee2e2")
+                    .setFontColor("#991b1b")
+                    .setRanges([rangoResultado])
+                    .build()
+            );
+            rules.push(
+                SpreadsheetApp.newConditionalFormatRule()
+                    .whenTextEqualTo("No_OK")
+                    .setBackground("#fee2e2")
+                    .setFontColor("#991b1b")
+                    .setRanges([rangoResultado])
+                    .build()
+            );
+            rules.push(
+                SpreadsheetApp.newConditionalFormatRule()
+                    .whenTextEqualTo("Ejecutando")
+                    .setBackground("#fed7aa")
+                    .setFontColor("#92400e")
+                    .setRanges([rangoResultado])
+                    .build()
+            );
+            rules.push(
+                SpreadsheetApp.newConditionalFormatRule()
+                    .whenTextEqualTo("Bloqueado")
+                    .setBackground("#fef3c7")
+                    .setFontColor("#92400e")
+                    .setRanges([rangoResultado])
+                    .build()
+            );
+            rules.push(
+                SpreadsheetApp.newConditionalFormatRule()
+                    .whenTextEqualTo("Descartado")
+                    .setBackground("#f1f5f9")
+                    .setFontColor("#94a3b8")
+                    .setRanges([rangoResultado])
+                    .build()
+            );
+            rules.push(
+                SpreadsheetApp.newConditionalFormatRule()
+                    .whenTextEqualTo("Sin ejecutar")
+                    .setBackground("#f1f5f9")
+                    .setFontColor("#64748b")
+                    .setRanges([rangoResultado])
+                    .build()
+            );
+
+            // CandidatoRegresion (columna 14: N) - Si/Sí
+            var rangoRegresion = nuevaHoja.getRange(2, 14, lastRowEstimate);
+            rules.push(
+                SpreadsheetApp.newConditionalFormatRule()
+                    .whenTextContains("Si")
+                    .setBackground("#dbeafe")
+                    .setFontColor("#1e40af")
+                    .setRanges([rangoRegresion])
+                    .build()
+            );
+
+            nuevaHoja.setConditionalFormatRules(rules);
+            Logger.log(
+                "✅ Validaciones y formato condicional aplicados a nueva hoja"
+            );
+        } catch (e) {
+            Logger.log(
+                "⚠️ No se pudo aplicar formato condicional en nueva hoja: " +
+                    e.toString()
+            );
+        }
 
         Logger.log("Hoja creada exitosamente: " + nombreHoja);
 
@@ -1030,11 +1278,25 @@ function actualizarEstadoEjecucion(sheetUrl, casoId, datosEjecucion) {
         Logger.log("Datos recibidos: " + JSON.stringify(datosEjecucion));
 
         const datosActualizados = {
-            ResultadoUltimaEjecucion: datosEjecucion.estadoEjecucion, // ← Columna T
-            ComentariosEjecucion: datosEjecucion.comentarios || "", // ← Columna U (nueva)
-            EvidenciasURL: datosEjecucion.evidencias.join("\n"), // ← Columna V (nueva)
-            FechaUltimaEjecucion: new Date(), // ← Columna S
+            ResultadoUltimaEjecucion: datosEjecucion.estadoEjecucion, // ← Columna S
+            ComentariosEjecucion: datosEjecucion.comentarios || "", // ← Columna T
+            EvidenciasURL: datosEjecucion.evidencias.join("\n"), // ← Columna U
+            Ambiente: datosEjecucion.ambiente || "", // ← Columna V
+            Navegador: datosEjecucion.navegador || "", // ← Columna W
+            FechaUltimaEjecucion: new Date(), // ← Columna R
         };
+
+        // Si hay bugs vinculados, guardarlos en LinkBugRelacionado
+        if (
+            datosEjecucion.bugsVinculados &&
+            datosEjecucion.bugsVinculados.length > 0
+        ) {
+            datosActualizados.LinkBugRelacionado =
+                datosEjecucion.bugsVinculados.join(", ");
+            Logger.log(
+                "🐛 Bugs vinculados: " + datosActualizados.LinkBugRelacionado
+            );
+        }
 
         Logger.log("Actualizando campos: " + JSON.stringify(datosActualizados));
 
@@ -1203,10 +1465,11 @@ function obtenerResumenEjecucionCasos_INTERNAL(sheetUrl) {
                         resumen.total++;
                         Logger.log("    ✅ Contado como: OK");
                         break;
+                    case "No OK":
                     case "No_OK":
                         resumen.noOk++;
                         resumen.total++;
-                        Logger.log("    ✅ Contado como: No_OK");
+                        Logger.log("    ✅ Contado como: No OK");
                         break;
                     case "Descartado":
                         resumen.descartados++;
@@ -1235,7 +1498,7 @@ function obtenerResumenEjecucionCasos_INTERNAL(sheetUrl) {
         Logger.log("✅ RESUMEN FINAL:");
         Logger.log("   Total (sin descartados): " + resumen.total);
         Logger.log("   OK: " + resumen.ok);
-        Logger.log("   No_OK: " + resumen.noOk);
+        Logger.log("   No OK: " + resumen.noOk);
         Logger.log("   Bloqueados: " + resumen.bloqueados);
         Logger.log("   Sin ejecutar: " + resumen.sinEjecutar);
         Logger.log("   Ejecutando: " + resumen.ejecutando);

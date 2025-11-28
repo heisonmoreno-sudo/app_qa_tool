@@ -15,26 +15,30 @@
     /* ═══════════════════════════════════════════════════════ */
 
     .trello-config-card {
-        background: linear-gradient(135deg, #0079bf 0%, #026aa7 100%);
+        background: linear-gradient(135deg, #74a1d1 0%, #5a87bb 100%);
         color: white;
-        padding: 1.5rem;
+        padding: 2rem;
         border-radius: 12px;
-        margin-bottom: 1.5rem;
+        margin-bottom: 2rem;
+        font-family: "Nunito", sans-serif;
     }
 
     .trello-config-card h3 {
-        margin: 0 0 0.5rem 0;
+        margin: 0 0 0.75rem 0;
         font-size: 1.3rem;
+        font-weight: 700;
+        font-family: "Nunito", sans-serif;
     }
 
     .trello-status {
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.5rem 1rem;
+        padding: 0.75rem 1.5rem;
         border-radius: 20px;
         font-weight: 600;
         font-size: 0.9rem;
+        font-family: "Nunito", sans-serif;
     }
 
     .trello-status.connected {
@@ -48,20 +52,21 @@
     }
 
     .trello-help-box {
-        background: #eff6ff;
-        border-left: 4px solid #3b82f6;
-        padding: 1rem;
+        background: #f0f5fb;
+        border-left: 4px solid #74a1d1;
+        padding: 1.5rem;
         border-radius: 8px;
-        margin: 1rem 0;
+        margin: 1.5rem 0;
+        font-family: "Nunito", sans-serif;
     }
 
     .trello-help-box ul {
-        margin: 0.5rem 0 0 1.5rem;
+        margin: 0.75rem 0 0 1.5rem;
         line-height: 1.8;
     }
 
     .trello-connect-btn {
-        background: linear-gradient(135deg, #0079bf 0%, #026aa7 100%);
+        background: linear-gradient(135deg, #74a1d1 0%, #5a87bb 100%);
         color: white;
         border: none;
         padding: 1rem 2rem;
@@ -73,7 +78,8 @@
         align-items: center;
         gap: 0.75rem;
         transition: all 0.3s;
-        box-shadow: 0 4px 12px rgba(0, 121, 191, 0.3);
+        box-shadow: 0 4px 12px rgba(116, 161, 209, 0.3);
+        font-family: "Nunito", sans-serif;
     }
 
     .trello-connect-btn:hover {
@@ -130,23 +136,96 @@
     .trello-disconnect-btn:hover {
         background: #dc2626;
     }
+
+    /* ═══════════════════════════════════════════════════════ */
+    /* RESPONSIVE DESIGN                                        */
+    /* ═══════════════════════════════════════════════════════ */
+
+    @media (max-width: 640px) {
+        .trello-config-card {
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .trello-config-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .trello-user-card {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+            padding: 1.25rem;
+        }
+
+        .trello-avatar {
+            width: 45px;
+            height: 45px;
+            font-size: 1.2rem;
+        }
+
+        .trello-connect-btn {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .trello-disconnect-btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.9rem;
+        }
+    }
+
+    @media (min-width: 641px) and (max-width: 1024px) {
+        .trello-config-card {
+            padding: 1.75rem;
+        }
+
+        .trello-user-card {
+            flex-direction: row;
+            padding: 1.5rem;
+        }
+
+        .trello-connect-btn {
+            padding: 0.875rem 1.75rem;
+        }
+    }
+
+    @media (min-width: 1025px) {
+        .trello-config-card {
+            padding: 2rem;
+        }
+
+        .trello-user-card {
+            flex-direction: row;
+            padding: 1.5rem;
+        }
+
+        .trello-connect-btn {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+        }
+    }
 </style>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 <!-- MODAL DE CONFIGURACIÓN DE TRELLO                                            -->
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 
-<div id="modalConfigTrello" class="modal-overlay">
+<div
+    id="modalConfigTrello"
+    class="modal-overlay"
+    style="z-index: var(--z-confirmation)"
+>
     <div class="modal" style="max-width: 700px">
         <div class="modal-header">
             <h3 class="modal-title">
                 <span>🔗</span>
                 <span>Configurar Integración con Trello</span>
             </h3>
-            <button
-                class="modal-close"
-                onclick="cerrarModal('modalConfigTrello')"
-            >
+            <button class="modal-close" onclick="cerrarModalConfigTrello()">
                 ✕
             </button>
         </div>
@@ -443,7 +522,7 @@
      * Abre el modal de configuración de Trello
      */
     function abrirModalConfigTrello() {
-        console.log("🔗 Abriendo configuración de Trello...");
+        // Abriendo configuración de Trello
 
         // Verificar estado actual
         verificarEstadoTrelloOAuth();
@@ -459,10 +538,26 @@
     }
 
     /**
+     * Cierra el modal de configuración de Trello y restaura scroll
+     */
+    function cerrarModalConfigTrello() {
+        // ⭐ IMPORTANTE: Restaurar scroll antes de cerrar modal
+        document.body.style.overflow = "auto";
+
+        if (typeof cerrarModal === "function") {
+            cerrarModal("modalConfigTrello");
+        } else {
+            document
+                .getElementById("modalConfigTrello")
+                .classList.remove("active");
+        }
+    }
+
+    /**
      * Verifica si el usuario ya está autorizado con Trello
      */
     function verificarEstadoTrelloOAuth() {
-        console.log("🔍 Verificando estado de autorización...");
+        // Verificando estado de autorización de Trello
 
         // Verificar si Trello está disponible
         if (typeof Trello === "undefined") {
@@ -475,10 +570,10 @@
         google.script.run
             .withSuccessHandler(function (response) {
                 if (response.success && response.configurado) {
-                    console.log("✅ Usuario ya autorizado");
+                    // Usuario ya autorizado
                     mostrarEstadoConectado(response.usuario);
                 } else {
-                    console.log("⚠️ Usuario no autorizado");
+                    // Usuario no autorizado
                     mostrarEstadoDesconectado();
                 }
             })
@@ -493,7 +588,7 @@
      * Abre la página de autorización de Trello en nueva pestaña
      */
     function abrirAutorizacionTrello() {
-        console.log("🔐 Abriendo autorización de Trello...");
+        // Abrir flujo de autorización de Trello
 
         // Construir URL de autorización simple
         const scope = "read,write";
@@ -512,12 +607,31 @@
             "&key=" +
             window.TRELLO_APP_KEY;
 
-        console.log("🔗 Abriendo URL de autorización en nueva pestaña...");
+        // Abriendo URL de autorización en nueva pestaña
 
         // Abrir en nueva pestaña
-        window.open(authUrl, "_blank");
+        const popup = window.open(authUrl, "_blank");
 
-        // Mostrar instrucción
+        // ⭐ IMPORTANTE: Monitorear cuando el usuario vuelve del popup
+        // para restaurar el scroll de la barra lateral
+        const checkPopupClosed = setInterval(function () {
+            // Si el popup se cerró
+            if (popup && popup.closed) {
+                clearInterval(checkPopupClosed);
+
+                // Restaurar scroll del body (en caso de que esté bloqueado)
+                document.body.style.overflow = "auto";
+
+                // Mostrar instrucción para pegar el token
+                mostrarToast(
+                    "👉 Copia el token que te muestra Trello y pégalo aquí",
+                    "info",
+                    5000
+                );
+            }
+        }, 500);
+
+        // También mostrar instrucción inmediatamente
         mostrarToast(
             "👉 Copia el token que te muestra Trello y pégalo aquí",
             "info",
@@ -533,21 +647,21 @@
         const token = tokenInput.value.trim();
 
         if (!token) {
-            mostrarToast("⚠️ Por favor pega el token de Trello", "warning");
+            mostrarToast("Por favor pega el token de Trello", "warning");
             tokenInput.focus();
             return;
         }
 
         if (token.length < 64) {
             mostrarToast(
-                "⚠️ El token parece incompleto. Debe tener al menos 64 caracteres.",
+                "El token parece incompleto. Debe tener al menos 64 caracteres.",
                 "warning"
             );
             tokenInput.focus();
             return;
         }
 
-        console.log("💾 Guardando token manualmente...");
+        // Guardando token manualmente
         mostrarSpinner("Guardando conexión con Trello...");
 
         google.script.run
@@ -555,7 +669,7 @@
                 ocultarSpinner();
 
                 if (response.success) {
-                    console.log("✅ Token guardado exitosamente");
+                    // Token guardado exitosamente
 
                     // Limpiar input
                     tokenInput.value = "";
@@ -588,7 +702,7 @@
      * Desconecta la cuenta de Trello
      */
     function desconectarTrello() {
-        console.log("🚪 Desconectando de Trello...");
+        // Desconectando de Trello
 
         if (confirm("¿Estás seguro de que quieres desconectar Trello?")) {
             // Limpiar autorización local
@@ -599,8 +713,8 @@
             // Limpiar del backend (usamos un token vacío)
             google.script.run
                 .withSuccessHandler(function (response) {
-                    console.log("✅ Desconectado");
-                    mostrarToast("✅ Desconectado de Trello", "success");
+                    // Desconectado de Trello
+                    mostrarToast("Desconectado de Trello", "success");
                     mostrarEstadoDesconectado();
                 })
                 .withFailureHandler(function (error) {
@@ -665,7 +779,7 @@
                     "⚠️ Trello Client.js no se cargó. Verifica la API Key en el script."
                 );
             } else {
-                console.log("✅ Trello Client.js cargado correctamente");
+                // Trello Client.js cargado correctamente
             }
         }, 1000);
     });
@@ -683,8 +797,8 @@
         fetch(url)
             .then((response) => response.json())
             .then((member) => {
-                console.log("👤 Usuario obtenido:", member.fullName);
-                mostrarToast("✅ ¡Conectado exitosamente a Trello!", "success");
+                // Usuario de Trello obtenido: member.fullName
+                mostrarToast("¡Conectado exitosamente a Trello!", "success");
                 mostrarEstadoConectado(member.fullName, member.email);
 
                 // Abrir modal de configuración para mostrar el estado
@@ -701,5 +815,5 @@
             });
     }
 
-    console.log("✅ Frontend_Components_Trello_Config.html (OAuth) cargado");
+    // Frontend_Components_Trello_Config.html (OAuth) cargado
 </script>

@@ -17,21 +17,42 @@
     .breadcrumb {
         padding: 1rem 0;
         font-size: 0.9rem;
-        color: #64748b;
+        color: #515151;
+        font-family: "Nunito", sans-serif;
     }
 
     .breadcrumb a {
-        color: #3b82f6;
+        color: #74a1d1;
         text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s ease;
     }
 
     .breadcrumb a:hover {
         text-decoration: underline;
+        color: #515151;
+    }
+
+    /* Botón de breadcrumb: pequeño, sutil, estilo pill */
+    .breadcrumb .btn {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.95rem;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        background: #f8fafc;
+        color: #374151;
+    }
+
+    .breadcrumb .btn:hover {
+        background: #eef2f7;
     }
 
     .filtros-container {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(5, 1fr);
         gap: 1rem;
         margin-bottom: 1.5rem;
     }
@@ -45,7 +66,8 @@
     .input-group label {
         font-size: 0.9rem;
         font-weight: 600;
-        color: #475569;
+        color: #515151;
+        font-family: "Nunito", sans-serif;
     }
 
     .checkbox-group {
@@ -53,12 +75,7 @@
         align-items: center;
         gap: 0.5rem;
         padding: 0.5rem 0;
-    }
-
-    .checkbox-group input[type="checkbox"] {
-        width: 1.25rem;
-        height: 1.25rem;
-        cursor: pointer;
+        font-family: "Nunito", sans-serif;
     }
 
     .advertencia-hoja {
@@ -78,6 +95,34 @@
         width: 80px;
     }
 
+    /* Mejoras de legibilidad: evitar que headers se partan en varias líneas
+           y centrar verticalmente el contenido de celdas. Mantener manejo
+           de overflow para textos largos mediante ellipsis. */
+    .table th {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: middle;
+        font-size: 0.825rem;
+        padding: 0.9rem 0.8rem;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    /* Celda utilizada cuando no hay datos: ocupa todo el ancho y centra el mensaje */
+    .table-empty-cell {
+        text-align: center;
+        padding: 2.5rem 1rem;
+        color: #64748b;
+        font-size: 1rem;
+        font-weight: 600;
+        min-height: 180px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
     .indicador-critico,
     .indicador-regresion {
         font-size: 1.2rem;
@@ -104,24 +149,30 @@
 
     .detalle-label {
         font-weight: 600;
-        color: #475569;
+        color: #74a1d1;
+        font-family: "Nunito", sans-serif;
     }
 
     .detalle-valor {
-        color: #1e293b;
+        color: #515151;
+        font-family: "Nunito", sans-serif;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
     }
 
     .detalle-seccion {
-        margin-top: 1.5rem;
-        padding-top: 1.5rem;
-        border-top: 1px solid #e2e8f0;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid #d0d0d0;
     }
 
     .detalle-seccion-titulo {
         font-size: 1.1rem;
         font-weight: 700;
-        color: #334155;
-        margin-bottom: 1rem;
+        color: #515151;
+        margin-bottom: 1.5rem;
+        font-family: "Nunito", sans-serif;
     }
 
     /* ═══════════════════════════════════════════════════════ */
@@ -144,12 +195,72 @@
     }
 
     #modalConfiguracion.modal-overlay {
-        z-index: var(--z-modal);
+        z-index: var(--z-confirmation);
     }
 
     /* Modal de crear hoja (se abre desde modal de caso, debe estar encima) */
     #modalCrearHoja.modal-overlay {
         z-index: var(--z-modal-nested);
+    }
+
+    /* ═══════════════════════════════════════════════════════ */
+    /* RESPONSIVE DESIGN                                        */
+    /* ═══════════════════════════════════════════════════════ */
+
+    /* Mobile (hasta 640px) */
+    @media (max-width: 640px) {
+        .casos-container {
+            padding: 0 0.5rem;
+        }
+
+        .filtros-container {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .table th:nth-child(6),
+        .table td:nth-child(6),
+        .table th:nth-child(7),
+        .table td:nth-child(7) {
+            width: auto;
+        }
+
+        .btn-icon {
+            padding: 0.3rem 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .detalle-grid {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+
+        .detalle-label {
+            font-weight: 700;
+        }
+    }
+
+    /* Tablet (641px - 1024px) */
+    @media (min-width: 641px) and (max-width: 1024px) {
+        .filtros-container {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .detalle-grid {
+            grid-template-columns: 120px 1fr;
+        }
+    }
+
+    /* Desktop (1024px+) */
+    @media (min-width: 1025px) {
+        .filtros-container {
+            grid-template-columns: repeat(5, 1fr);
+        }
+
+        .detalle-grid {
+            grid-template-columns: 150px 1fr;
+        }
     }
 </style>
 
@@ -158,1047 +269,1300 @@
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 
 <div id="casosScreen" class="casos-container hidden">
-    <!-- Breadcrumb -->
-    <div class="breadcrumb">
-        🏠
-        <a href="#" onclick="volverAlDashboard(); return false;">Inicio</a> &gt;
-        Casos
-    </div>
-
-    <!-- Header con botones -->
-    <div class="card">
-        <div
-            style="
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 1.5rem;
-            "
-        >
-            <h2 style="font-size: 1.75rem; font-weight: 700">
-                📋 Gestión de Casos
-            </h2>
-            <div style="display: flex; gap: 0.75rem">
-                <button
-                    class="btn btn-secondary"
-                    onclick="abrirModalConfiguracion()"
-                >
-                    <span>⚙️</span>
-                    <span>Configuración de carpetas drive</span>
-                </button>
-                <button class="btn btn-primary" onclick="abrirModalCrearCaso()">
-                    <span>➕</span>
-                    <span>Crear Caso</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Banner de estado de configuración -->
-        <div
-            id="bannerConfigCarpetas"
-            class="hidden"
-            style="margin-bottom: 1.5rem"
-        ></div>
-
-        <!-- Filtros -->
-        <div class="filtros-container">
-            <div class="input-group">
-                <label>🔍 Buscar por título</label>
-                <input
-                    type="text"
-                    id="filtroBusqueda"
-                    class="form-input"
-                    placeholder="Buscar..."
-                    onkeyup="aplicarFiltrosEnTiempoReal()"
-                />
-            </div>
-
-            <div class="input-group">
-                <label>📂 Hoja/Módulo</label>
-                <select
-                    id="filtroHoja"
-                    class="form-select"
-                    onchange="aplicarFiltrosEnTiempoReal()"
-                >
-                    <option value="Todas">Todas las hojas</option>
-                </select>
-            </div>
-
-            <div class="input-group">
-                <label>⚡ Prioridad</label>
-                <select
-                    id="filtroPrioridad"
-                    class="form-select"
-                    onchange="aplicarFiltrosEnTiempoReal()"
-                >
-                    <option value="Todas">Todas</option>
-                    <option value="Critica">Crítica</option>
-                    <option value="Alta">Alta</option>
-                    <option value="Media">Media</option>
-                    <option value="Baja">Baja</option>
-                </select>
-            </div>
-
-            <div class="input-group">
-                <label>📝 Estado Diseño</label>
-                <select
-                    id="filtroEstadoDiseño"
-                    class="form-select"
-                    onchange="aplicarFiltrosEnTiempoReal()"
-                >
-                    <option value="Todos">Todos</option>
-                    <option value="Pendiente">Pendiente</option>
-                    <option value="En diseno">En diseño</option>
-                    <option value="OK">OK</option>
-                    <option value="No_OK">No_OK</option>
-                    <option value="Eliminado">Eliminado</option>
-                </select>
-            </div>
-
-            <div class="input-group">
-                <label>⚡ Estado Ejecución</label>
-                <select
-                    id="filtroEstadoEjecucion"
-                    class="form-select"
-                    onchange="aplicarFiltrosEnTiempoReal()"
-                >
-                    <option value="Todos">Todos</option>
-                    <option value="Sin ejecutar">Sin ejecutar</option>
-                    <option value="Ejecutando">Ejecutando</option>
-                    <option value="OK">OK</option>
-                    <option value="No_OK">No_OK</option>
-                    <option value="Bloqueado">Bloqueado</option>
-                    <option value="Descartado">Descartado</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- Checkboxes de filtros especiales -->
-        <div
-            style="
-                display: flex;
-                gap: 2rem;
-                margin-bottom: 1rem;
-                flex-wrap: wrap;
-                align-items: center;
-            "
-        >
-            <div class="checkbox-group">
-                <input
-                    type="checkbox"
-                    id="filtroFlujoCritico"
-                    onchange="aplicarFiltrosEnTiempoReal()"
-                />
-                <label for="filtroFlujoCritico">⭐ Solo flujos críticos</label>
-            </div>
-
-            <div class="checkbox-group">
-                <input
-                    type="checkbox"
-                    id="filtroCandidatosRegresion"
-                    onchange="aplicarFiltrosEnTiempoReal()"
-                />
-                <label for="filtroCandidatosRegresion"
-                    >🔄 Solo candidatos a regresión</label
-                >
-            </div>
-
-            <div class="checkbox-group">
-                <input
-                    type="checkbox"
-                    id="filtroMostrarEliminados"
-                    onchange="toggleMostrarEliminados()"
-                />
-                <label for="filtroMostrarEliminados"
-                    >👻 Mostrar eliminados</label
-                >
-            </div>
-
-            <!-- Botón limpiar filtros -->
-            <button
-                class="btn btn-secondary btn-sm"
-                onclick="limpiarFiltros()"
-                style="margin-left: auto"
-            >
-                <span>🧹</span>
-                <span>Limpiar Filtros</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- ════════════════════════════════════════════════════════════════════════ -->
+    <!-- ════════════════════════════════════════════════════════════════════════════════ -->
     <!-- RESUMEN DE EJECUCIÓN / BARRA DE PROGRESO                                -->
-    <!-- ════════════════════════════════════════════════════════════════════════ -->
-    <div
-        id="resumenEjecucion"
-        class="card"
-        style="margin-bottom: 1.5rem; display: none"
-    >
-        <h3
+    <!-- ════════════════════════════════════════════════════════════════════════════════ -->
+    <div id="resumenEjecucion" class="card" style="margin-bottom: 1.5rem">
+        <div
             style="
-                font-size: 1.1rem;
-                font-weight: 600;
-                color: #334155;
-                margin-bottom: 0.75rem;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 1rem;
             "
         >
-            Progreso de Ejecución
-        </h3>
+            <h3
+                style="
+                    font-size: 1.1rem;
+                    font-weight: 600;
+                    color: #334155;
+                    margin: 0;
+                "
+            >
+                📊 Progreso de Ejecución
+            </h3>
+            <div
+                id="porcentajeGlobal"
+                style="
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    color: #10b981;
+                    font-family: 'Courier New', monospace;
+                "
+            >
+                0%
+            </div>
+        </div>
 
+        <!-- Barra de progreso multinivel -->
         <div
             style="
                 position: relative;
                 background: #f1f5f9;
-                border-radius: 8px;
-                height: 20px;
+                border-radius: 10px;
+                height: 28px;
                 overflow: hidden;
+                box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+                margin-bottom: 1rem;
+            "
+        >
+            <div style="display: flex; height: 100%; position: relative">
+                <div
+                    id="barraEjecucionOK"
+                    style="
+                        background: linear-gradient(
+                            135deg,
+                            #10b981 0%,
+                            #22c55e 100%
+                        );
+                        height: 100%;
+                        width: 0%;
+                        transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+                        position: relative;
+                        overflow: hidden;
+                    "
+                    title="Casos OK"
+                >
+                    <div
+                        style="
+                            position: absolute;
+                            inset: 0;
+                            background: linear-gradient(
+                                90deg,
+                                transparent,
+                                rgba(255, 255, 255, 0.2),
+                                transparent
+                            );
+                            animation: shimmer 2s infinite;
+                        "
+                    ></div>
+                </div>
+                <div
+                    id="barraEjecucionNoOK"
+                    style="
+                        background: linear-gradient(
+                            135deg,
+                            #ef4444 0%,
+                            #dc2626 100%
+                        );
+                        height: 100%;
+                        width: 0%;
+                        transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+                    "
+                    title="Casos con Fallo"
+                ></div>
+                <div
+                    id="barraEjecucionBloqueado"
+                    style="
+                        background: linear-gradient(
+                            135deg,
+                            #f59e0b 0%,
+                            #d97706 100%
+                        );
+                        height: 100%;
+                        width: 0%;
+                        transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+                    "
+                    title="Casos Bloqueados"
+                ></div>
+            </div>
+        </div>
+
+        <!-- Estadísticas detalladas -->
+        <div
+            style="
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 0.75rem;
+                margin-bottom: 0.5rem;
             "
         >
             <div
-                id="barraEjecucionOK"
+                id="statOK"
                 style="
-                    background: linear-gradient(90deg, #10b981, #22c55e);
-                    height: 100%;
-                    width: 0%;
-                    transition: width 0.6s ease;
+                    background: linear-gradient(
+                        135deg,
+                        #ecfdf5 0%,
+                        #d1fae5 100%
+                    );
+                    border-left: 3px solid #10b981;
+                    padding: 0.75rem;
+                    border-radius: 6px;
                 "
-            ></div>
+            >
+                <div
+                    style="
+                        font-size: 0.75rem;
+                        color: #059669;
+                        font-weight: 600;
+                        margin-bottom: 0.25rem;
+                    "
+                >
+                    ✅ OK
+                </div>
+                <div
+                    style="font-size: 1.25rem; font-weight: 700; color: #047857"
+                >
+                    0
+                </div>
+            </div>
+
+            <div
+                id="statNoOK"
+                style="
+                    background: linear-gradient(
+                        135deg,
+                        #fef2f2 0%,
+                        #fee2e2 100%
+                    );
+                    border-left: 3px solid #ef4444;
+                    padding: 0.75rem;
+                    border-radius: 6px;
+                "
+            >
+                <div
+                    style="
+                        font-size: 0.75rem;
+                        color: #dc2626;
+                        font-weight: 600;
+                        margin-bottom: 0.25rem;
+                    "
+                >
+                    ❌ Fallos
+                </div>
+                <div
+                    style="font-size: 1.25rem; font-weight: 700; color: #b91c1c"
+                >
+                    0
+                </div>
+            </div>
+
+            <div
+                id="statBloqueado"
+                style="
+                    background: linear-gradient(
+                        135deg,
+                        #fffbeb 0%,
+                        #fef3c7 100%
+                    );
+                    border-left: 3px solid #f59e0b;
+                    padding: 0.75rem;
+                    border-radius: 6px;
+                "
+            >
+                <div
+                    style="
+                        font-size: 0.75rem;
+                        color: #d97706;
+                        font-weight: 600;
+                        margin-bottom: 0.25rem;
+                    "
+                >
+                    🚫 Bloqueados
+                </div>
+                <div
+                    style="font-size: 1.25rem; font-weight: 700; color: #b45309"
+                >
+                    0
+                </div>
+            </div>
+
+            <div
+                id="statPendiente"
+                style="
+                    background: linear-gradient(
+                        135deg,
+                        #f8fafc 0%,
+                        #e2e8f0 100%
+                    );
+                    border-left: 3px solid #64748b;
+                    padding: 0.75rem;
+                    border-radius: 6px;
+                "
+            >
+                <div
+                    style="
+                        font-size: 0.75rem;
+                        color: #475569;
+                        font-weight: 600;
+                        margin-bottom: 0.25rem;
+                    "
+                >
+                    ⏳ Pendientes
+                </div>
+                <div
+                    style="font-size: 1.25rem; font-weight: 700; color: #334155"
+                >
+                    0
+                </div>
+            </div>
         </div>
 
         <div
             id="textoResumenEjecucion"
             style="
                 margin-top: 0.5rem;
-                font-size: 0.9rem;
-                color: #475569;
+                font-size: 0.85rem;
+                color: #64748b;
                 text-align: center;
+                font-style: italic;
             "
         >
             Cargando resumen...
         </div>
     </div>
 
-    <!-- ════════════════════════════════════════════════════════════════════════ -->
-    <!-- BOTÓN DE REGRESIONES                                                     -->
-    <!-- ════════════════════════════════════════════════════════════════════════ -->
-    <div class="card" style="margin-bottom: 1.5rem; text-align: center">
-        <button
-            class="btn btn-primary"
-            onclick="mostrarRegresiones()"
-            style="font-size: 1rem; padding: 0.75rem 1.5rem"
-        >
-            <span>🔁</span>
-            <span>Ejecución de Regresiones</span>
-        </button>
-    </div>
-
-    <!-- Tabla de casos (Desktop) -->
-    <div class="table-container desktop-only">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Hoja/Módulo</th>
-                    <th>Título</th>
-                    <th>Prioridad</th>
-                    <th>Est. Diseño</th>
-                    <th>Est. Ejecución</th>
-                    <th>Crítico</th>
-                    <th>Regresión</th>
-                    <th style="width: 180px">Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="tablaCasos">
-                <tr>
-                    <td
-                        colspan="9"
-                        style="
-                            text-align: center;
-                            padding: 2rem;
-                            color: var(--text-tertiary);
-                        "
-                    >
-                        Cargando casos...
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Cards de casos (Mobile) -->
-    <div id="casosCards" class="casos-cards mobile-only">
-        <div class="text-center text-secondary" style="padding: 2rem">
-            Cargando casos...
-        </div>
-    </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════════════════════ -->
-<!-- MODAL: CONFIGURACIÓN DEL SISTEMA                                            -->
-<!-- ═══════════════════════════════════════════════════════════════════════════ -->
-
-<div id="modalConfiguracion" class="modal-overlay">
-    <div class="modal" style="max-width: 800px">
-        <div class="modal-header">
-            <h3 class="modal-title">⚙️ Configuración del Sistema</h3>
-            <button
-                class="modal-close"
-                onclick="cerrarModal('modalConfiguracion')"
-            >
-                ✕
-            </button>
-        </div>
-
-        <div class="modal-body">
-            <!-- Status actual (se llena dinámicamente) -->
-            <div id="statusConfigModal" class="hidden"></div>
-
-            <!-- Carpetas Drive -->
-            <div style="margin-bottom: 2rem">
-                <h4
-                    style="
-                        font-size: 1.1rem;
-                        font-weight: 600;
-                        margin-bottom: 1rem;
-                        color: #1e293b;
-                    "
-                >
-                    📁 Carpetas de Evidencias en Google Drive
-                </h4>
-
-                <p style="color: #64748b; margin-bottom: 1.5rem">
-                    Configura dónde se guardarán automáticamente las evidencias
-                    de tus pruebas y bugs. Puedes cambiar estas carpetas en
-                    cualquier momento.
-                </p>
-
-                <!-- Ejecuciones -->
-                <div class="form-group">
-                    <label class="form-label"
-                        >⚡ Carpeta de Evidencias de Ejecuciones</label
-                    >
-                    <input
-                        type="url"
-                        id="configCarpetaEjecuciones"
-                        class="form-input"
-                        placeholder="https://drive.google.com/drive/folders/xxxxx"
-                    />
-                    <p class="form-help">
-                        📸 Aquí se guardarán los screenshots, videos y
-                        documentos de las pruebas ejecutadas
-                    </p>
-                </div>
-
-                <!-- Bugs -->
-                <div class="form-group">
-                    <label class="form-label"
-                        >🐛 Carpeta de Evidencias de Bugs</label
-                    >
-                    <input
-                        type="url"
-                        id="configCarpetaBugs"
-                        class="form-input"
-                        placeholder="https://drive.google.com/drive/folders/xxxxx"
-                    />
-                    <p class="form-help">
-                        🐞 Aquí se guardarán las evidencias de los bugs
-                        reportados
-                    </p>
-                </div>
-            </div>
-
-            <!-- Ayuda -->
+    <!-- ════════════════════════════════════════════════════════════════════════════ -->
+    <!-- GESTIÓN DE CASOS CON LISTADO INTEGRADO                                 -->
+    <!-- ════════════════════════════════════════════════════════════════════════════ -->
+    <div class="card">
             <div
                 style="
-                    background: linear-gradient(
-                        135deg,
-                        #eff6ff 0%,
-                        #dbeafe 100%
-                    );
-                    padding: 1.5rem;
-                    border-radius: 8px;
-                    border-left: 4px solid #3b82f6;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 1.5rem;
                 "
             >
-                <div style="display: flex; align-items: start; gap: 1rem">
-                    <span style="font-size: 2rem">💡</span>
-                    <div>
-                        <strong
-                            style="
-                                color: #1e40af;
-                                display: block;
-                                margin-bottom: 0.5rem;
-                            "
-                        >
-                            ¿Cómo obtener la URL de tu carpeta?
-                        </strong>
-                        <ol
-                            style="
-                                margin: 0.5rem 0 0 1.5rem;
-                                color: #475569;
-                                font-size: 0.9rem;
-                                line-height: 1.6;
-                            "
-                        >
-                            <li>
-                                Abre <strong>Google Drive</strong> en tu
-                                navegador
-                            </li>
-                            <li>
-                                Crea una carpeta nueva (o abre una existente)
-                            </li>
-                            <li>
-                                Copia la <strong>URL completa</strong> de la
-                                barra de direcciones
-                            </li>
-                            <li>Pégala en el campo correspondiente arriba</li>
-                            <li>Click en <strong>"💾 Guardar"</strong></li>
-                        </ol>
-                        <p
-                            style="
-                                margin: 0.75rem 0 0 0;
-                                color: #64748b;
-                                font-size: 0.85rem;
-                            "
-                        >
-                            💡 <strong>Tip:</strong> Puedes usar la misma
-                            carpeta para ambas si lo prefieres
-                        </p>
-                    </div>
+                <h2 style="font-size: 1.75rem; font-weight: 700">
+                    📋 Gestión de Casos
+                </h2>
+                <div style="display: flex; gap: 0.75rem">
+                    <button
+                        class="btn btn-primary"
+                        onclick="abrirModalCrearCaso()"
+                    >
+                        <span>➕</span>
+                        <span>Crear Caso</span>
+                    </button>
                 </div>
             </div>
-        </div>
 
-        <div class="modal-footer">
-            <button
-                class="btn btn-primary"
-                onclick="guardarConfiguracionSistema()"
-            >
-                <span>💾</span>
-                <span>Guardar Configuración</span>
-            </button>
-            <button
-                class="btn btn-secondary"
-                onclick="cerrarModal('modalConfiguracion')"
-            >
-                Cancelar
-            </button>
-        </div>
-    </div>
-</div>
+            <!-- Banner de estado de configuración -->
+            <div
+                id="bannerConfigCarpetas"
+                class="hidden"
+                style="margin-bottom: 1.5rem"
+            ></div>
 
-<!-- ═══════════════════════════════════════════════════════════════════════════ -->
-<!-- MODAL: DETALLE DE CASO                                                      -->
-<!-- ═══════════════════════════════════════════════════════════════════════════ -->
-
-<div id="modalDetalleCaso" class="modal-overlay">
-    <div class="modal" style="max-width: 800px">
-        <div class="modal-header">
-            <h3 class="modal-title">
-                <span id="detalleCasoIcono">📋</span>
-                <span id="detalleCasoTitulo">Detalle del Caso</span>
-            </h3>
-            <button
-                class="modal-close"
-                onclick="cerrarModal('modalDetalleCaso')"
-            >
-                ✕
-            </button>
-        </div>
-
-        <div class="modal-body">
-            <div id="detalleCasoContenido">
-                <!-- Contenido dinámico -->
-            </div>
-        </div>
-
-        <div class="modal-footer">
-            <button
-                id="btnEditarCasoDetalle"
-                class="btn btn-primary"
-                onclick="editarCasoDesdeDetalle()"
-            >
-                ✏️ Editar
-            </button>
-            <button
-                id="btnEliminarCasoDetalle"
-                class="btn btn-danger"
-                onclick="eliminarCasoDesdeDetalle()"
-            >
-                🗑️ Eliminar
-            </button>
-            <button
-                id="btnRestaurarCasoDetalle"
-                class="btn btn-success hidden"
-                onclick="restaurarCasoDesdeDetalle()"
-            >
-                ↩️ Restaurar
-            </button>
-            <button
-                class="btn btn-secondary"
-                onclick="cerrarModal('modalDetalleCaso')"
-            >
-                Cerrar
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════════════════════ -->
-<!-- MODAL: CREAR/EDITAR CASO                                                    -->
-<!-- ═══════════════════════════════════════════════════════════════════════════ -->
-
-<div id="modalCrearCaso" class="modal-overlay">
-    <div class="modal">
-        <div class="modal-header">
-            <h3 class="modal-title" id="tituloModalCaso">
-                ➕ Nuevo Caso de Prueba
-            </h3>
-            <button class="modal-close" onclick="cerrarModalCaso()">✕</button>
-        </div>
-
-        <div class="modal-body">
-            <form id="formCrearCaso" onsubmit="guardarCaso(); return false;">
-                <input type="hidden" id="casoIdEdicion" value="" />
-                <input type="hidden" id="casoHojaOriginal" value="" />
-
-                <div class="form-group">
-                    <label class="form-label">Hoja/Módulo</label>
-                    <select
-                        id="casoHoja"
-                        class="form-select"
-                        onchange="manejarCambioHoja()"
-                    >
-                        <option value="">Usar hoja "Casos" (default)</option>
-                    </select>
-                    <p class="form-help">
-                        Si no seleccionas una hoja, el caso se guardará en
-                        "Casos"
-                    </p>
-
-                    <div id="advertenciaHoja" class="advertencia-hoja hidden">
-                        <strong>⚠️ No has seleccionado una hoja</strong><br />
-                        El caso se guardará en la hoja "Casos" por defecto.
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label required">Formato</label>
-                    <select
-                        id="casoFormato"
-                        class="form-select"
-                        required
-                        onchange="cambiarFormatoCaso()"
-                    >
-                        <option value="Clasico">Clásico</option>
-                        <option value="Gherkin">Gherkin</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label required"
-                        >Título (mín. 10 caracteres)</label
-                    >
+            <!-- Filtros -->
+            <div class="filtros-container">
+                <div class="input-group">
+                    <label>🔍 Buscar por título</label>
                     <input
                         type="text"
-                        id="casoTitulo"
+                        id="filtroBusqueda"
                         class="form-input"
-                        required
-                        minlength="10"
-                        placeholder="Ej: Login con usuario válido"
+                        placeholder="Buscar..."
+                        onkeyup="aplicarFiltrosEnTiempoReal()"
                     />
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label required"
-                        >Descripción (mín. 10 caracteres)</label
+                <div class="input-group">
+                    <label>📂 Hoja/Módulo</label>
+                    <select
+                        id="filtroHoja"
+                        class="form-select"
+                        onchange="aplicarFiltrosEnTiempoReal()"
                     >
-                    <textarea
-                        id="casoDescripcion"
-                        class="form-textarea"
-                        required
-                        minlength="10"
-                        placeholder="Descripción detallada..."
-                    ></textarea>
+                        <option value="Todas">Todas las hojas</option>
+                    </select>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label required">Prioridad</label>
-                    <select id="casoPrioridad" class="form-select" required>
-                        <option value="Critica">🔴 Crítica</option>
+                <div class="input-group">
+                    <label>⚡ Prioridad</label>
+                    <select
+                        id="filtroPrioridad"
+                        class="form-select"
+                        onchange="aplicarFiltrosEnTiempoReal()"
+                    >
+                        <option value="Todas">Todas</option>
+                        <option value="Crítica">🔴 Crítica</option>
                         <option value="Alta">🟠 Alta</option>
                         <option value="Media">🟡 Media</option>
                         <option value="Baja">🟢 Baja</option>
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Tipo de Prueba</label>
-                    <select id="casoTipoPrueba" class="form-select">
-                        <option value="Funcional">Funcional</option>
-                        <option value="Happy Path">Happy Path</option>
-                        <option value="Edge Case">Edge Case</option>
-                        <option value="API">API</option>
-                        <option value="Performance">Performance</option>
+                <div class="input-group">
+                    <label>📝 Estado Diseño</label>
+                    <select
+                        id="filtroEstadoDiseño"
+                        class="form-select"
+                        onchange="aplicarFiltrosEnTiempoReal()"
+                    >
+                        <option value="Todos">Todos</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="En Progreso">En Progreso</option>
+                        <option value="Completado">Completado</option>
+                        <option value="Eliminado">Eliminado</option>
                     </select>
                 </div>
 
-                <!-- Campos para formato Clásico -->
-                <div id="camposClasico">
-                    <div class="form-group">
-                        <label class="form-label required">Pasos</label>
-                        <textarea
-                            id="casoPasos"
-                            class="form-textarea"
-                            placeholder="1. Paso uno&#10;2. Paso dos&#10;3. Paso tres..."
-                        ></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label required"
-                            >Resultado Esperado</label
-                        >
-                        <textarea
-                            id="casoResultadoEsperado"
-                            class="form-textarea"
-                            placeholder="Describe el resultado esperado..."
-                        ></textarea>
-                    </div>
+                <div class="input-group">
+                    <label>⚡ Estado Ejecución</label>
+                    <select
+                        id="filtroEstadoEjecucion"
+                        class="form-select"
+                        onchange="aplicarFiltrosEnTiempoReal()"
+                    >
+                        <option value="Todos">Todos</option>
+                        <option value="Sin ejecutar">Sin ejecutar</option>
+                        <option value="Ejecutando">En progreso</option>
+                        <option value="OK">OK</option>
+                        <option value="No OK">Fallo</option>
+                        <option value="Bloqueado">Bloqueado</option>
+                        <option value="Descartado">Descartado</option>
+                    </select>
                 </div>
+            </div>
 
-                <!-- Campos para formato Gherkin -->
-                <div id="camposGherkin" class="hidden">
-                    <div class="form-group">
-                        <label class="form-label required">Given (Dado)</label>
-                        <textarea
-                            id="casoGiven"
-                            class="form-textarea"
-                            placeholder="Dado que el usuario está en la página de login"
-                        ></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label required">When (Cuando)</label>
-                        <textarea
-                            id="casoWhen"
-                            class="form-textarea"
-                            placeholder="Cuando ingresa credenciales válidas"
-                        ></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label required"
-                            >Then (Entonces)</label
-                        >
-                        <textarea
-                            id="casoThen"
-                            class="form-textarea"
-                            placeholder="Entonces debe ser redirigido al dashboard"
-                        ></textarea>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Precondiciones</label>
-                    <textarea
-                        id="casoPrecondiciones"
-                        class="form-textarea"
-                        placeholder="Condiciones previas necesarias..."
-                    ></textarea>
-                </div>
-
-                <div class="form-group">
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="casoFlujoCritico" />
-                        <label for="casoFlujoCritico">⭐ Flujo Crítico</label>
-                    </div>
-
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="casoCandidatoRegresion" />
-                        <label for="casoCandidatoRegresion"
-                            >🔄 Candidato a Regresión</label
-                        >
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <div class="modal-footer">
-            <button type="submit" form="formCrearCaso" class="btn btn-primary">
-                💾 Guardar Caso
-            </button>
-            <button
-                type="button"
-                class="btn btn-secondary"
-                onclick="cerrarModalCaso()"
+            <!-- Checkboxes de filtros especiales -->
+            <div
+                style="
+                    display: flex;
+                    gap: 2rem;
+                    margin-bottom: 1rem;
+                    flex-wrap: wrap;
+                    align-items: center;
+                "
             >
-                Cancelar
-            </button>
+                <div class="checkbox-group">
+                    <input
+                        type="checkbox"
+                        id="filtroCandidatosRegresion"
+                        onchange="aplicarFiltrosEnTiempoReal()"
+                    />
+                    <label for="filtroCandidatosRegresion"
+                        >🔄 Solo Regresión</label
+                    >
+                </div>
+
+                <div class="checkbox-group">
+                    <input
+                        type="checkbox"
+                        id="filtroMostrarEliminados"
+                        onchange="toggleMostrarEliminados()"
+                    />
+                    <label for="filtroMostrarEliminados"
+                        >👻 Mostrar eliminados</label
+                    >
+                </div>
+
+                <!-- Botón limpiar filtros -->
+                <button
+                    class="btn btn-secondary btn-sm"
+                    onclick="limpiarFiltros()"
+                    style="margin-left: auto"
+                >
+                    <span>🧹</span>
+                    <span>Limpiar Filtros</span>
+                </button>
+            </div>
+
+            <style>
+                @keyframes shimmer {
+                    0% {
+                        transform: translateX(-100%);
+                    }
+                    100% {
+                        transform: translateX(100%);
+                    }
+                }
+            </style>
+
+            <!-- Tabla de casos (Desktop) -->
+            <div class="table-container desktop-only" style="margin-top: 1.5rem;">
+                <table class="table" style="width: 100%; table-layout: fixed;">
+                    <thead>
+                        <tr>
+                            <th style="width: 70px">ID</th>
+                            <th style="width: 180px">Hoja/Módulo</th>
+                            <th style="min-width: 200px">Título</th>
+                            <th style="width: 140px; text-align: center">
+                                Prioridad
+                            </th>
+                            <th style="width: 140px; text-align: center">
+                                Est. Diseño
+                            </th>
+                            <th style="width: 150px; text-align: center">
+                                Est. Ejecución
+                            </th>
+                            <th style="width: 80px; text-align: center">
+                                Bugs
+                            </th>
+                            <th
+                                style="
+                                    width: 120px;
+                                    min-width: 120px;
+                                    max-width: 120px;
+                                    text-align: center;
+                                "
+                            >
+                                Acciones
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaCasos">
+                        <tr>
+                            <td colspan="8" class="table-empty-cell">
+                                No hay casos registrados
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Cards de casos (Mobile) -->
+            <div id="casosCards" class="casos-cards mobile-only" style="margin-top: 1.5rem;">
+                <div class="text-center text-secondary" style="padding: 2rem">
+                    No hay casos registrados
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- ═══════════════════════════════════════════════════════════════════════════ -->
-<!-- MODAL: CREAR NUEVA HOJA                                                     -->
-<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!-- MODAL: CONFIGURACIÓN DEL SISTEMA                                            -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 
-<div id="modalCrearHoja" class="modal-overlay">
-    <div class="modal" style="max-width: 600px">
-        <div class="modal-header">
-            <h3 class="modal-title">📑 Crear Nueva Hoja</h3>
-            <button class="modal-close" onclick="cerrarModalCrearHoja()">
-                ✕
-            </button>
-        </div>
+    <div id="modalConfiguracion" class="modal-overlay">
+        <div class="modal" style="max-width: 800px">
+            <div class="modal-header">
+                <h3 class="modal-title">⚙️ Configuración del Sistema</h3>
+                <button
+                    class="modal-close"
+                    onclick="cerrarModal('modalConfiguracion')"
+                >
+                    ✕
+                </button>
+            </div>
 
-        <div class="modal-body">
-            <form id="formCrearHoja" onsubmit="crearHojaNueva(); return false;">
+            <div class="modal-body">
+                <!-- Status actual (se llena dinámicamente) -->
+                <div id="statusConfigModal" class="hidden"></div>
+
+                <!-- Carpetas Drive -->
+                <div style="margin-bottom: 2rem">
+                    <h4
+                        style="
+                            font-size: 1.1rem;
+                            font-weight: 600;
+                            margin-bottom: 1rem;
+                            color: #1e293b;
+                        "
+                    >
+                        📁 Carpetas de Evidencias en Google Drive
+                    </h4>
+
+                    <p style="color: #64748b; margin-bottom: 1.5rem">
+                        Configura dónde se guardarán automáticamente las
+                        evidencias de tus pruebas y bugs. Puedes cambiar estas
+                        carpetas en cualquier momento.
+                    </p>
+
+                    <!-- Ejecuciones -->
+                    <div class="form-group">
+                        <label class="form-label"
+                            >⚡ Carpeta de Evidencias de Ejecuciones</label
+                        >
+                        <input
+                            type="url"
+                            id="configCarpetaEjecuciones"
+                            class="form-input"
+                            placeholder="https://drive.google.com/drive/folders/xxxxx"
+                        />
+                        <p class="form-help">
+                            📸 Aquí se guardarán los screenshots, videos y
+                            documentos de las pruebas ejecutadas
+                        </p>
+                    </div>
+
+                    <!-- Bugs -->
+                    <div class="form-group">
+                        <label class="form-label"
+                            >🐛 Carpeta de Evidencias de Bugs</label
+                        >
+                        <input
+                            type="url"
+                            id="configCarpetaBugs"
+                            class="form-input"
+                            placeholder="https://drive.google.com/drive/folders/xxxxx"
+                        />
+                        <p class="form-help">
+                            🐞 Aquí se guardarán las evidencias de los bugs
+                            reportados
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Ayuda -->
                 <div
                     style="
-                        background: #f8fafc;
-                        padding: 1rem;
+                        background: linear-gradient(
+                            135deg,
+                            #eff6ff 0%,
+                            #dbeafe 100%
+                        );
+                        padding: 1.5rem;
                         border-radius: 8px;
-                        margin-bottom: 1rem;
+                        border-left: 4px solid #3b82f6;
                     "
                 >
-                    <strong style="display: block; margin-bottom: 0.5rem"
-                        >📋 Hojas existentes:</strong
-                    >
-                    <div
-                        id="listaHojasExistentes"
-                        style="color: #64748b; font-size: 0.9rem"
-                    >
-                        Cargando...
+                    <div style="display: flex; align-items: start; gap: 1rem">
+                        <span style="font-size: 2rem">💡</span>
+                        <div>
+                            <strong
+                                style="
+                                    color: #1e40af;
+                                    display: block;
+                                    margin-bottom: 0.5rem;
+                                "
+                            >
+                                ¿Cómo obtener la URL de tu carpeta?
+                            </strong>
+                            <ol
+                                style="
+                                    margin: 0.5rem 0 0 1.5rem;
+                                    color: #475569;
+                                    font-size: 0.9rem;
+                                    line-height: 1.6;
+                                "
+                            >
+                                <li>
+                                    Abre <strong>Google Drive</strong> en tu
+                                    navegador
+                                </li>
+                                <li>
+                                    Crea una carpeta nueva (o abre una
+                                    existente)
+                                </li>
+                                <li>
+                                    Copia la <strong>URL completa</strong> de la
+                                    barra de direcciones
+                                </li>
+                                <li>
+                                    Pégala en el campo correspondiente arriba
+                                </li>
+                                <li>Click en <strong>"💾 Guardar"</strong></li>
+                            </ol>
+                            <p
+                                style="
+                                    margin: 0.75rem 0 0 0;
+                                    color: #64748b;
+                                    font-size: 0.85rem;
+                                "
+                            >
+                                💡 <strong>Tip:</strong> Puedes usar la misma
+                                carpeta para ambas si lo prefieres
+                            </p>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="form-group">
-                    <label class="form-label required">Nombre de la hoja</label>
-                    <input
-                        type="text"
-                        id="nombreNuevaHoja"
-                        class="form-input"
-                        required
-                        placeholder="Ej: Login, Pagos, Carrito"
-                        minlength="2"
-                        maxlength="50"
-                        oninput="validarNombreHoja()"
-                    />
+            <div class="modal-footer">
+                <button
+                    class="btn btn-primary"
+                    onclick="guardarConfiguracionSistema()"
+                >
+                    <span>💾</span>
+                    <span>Guardar Configuración</span>
+                </button>
+                <button
+                    class="btn btn-secondary"
+                    onclick="cerrarModal('modalConfiguracion')"
+                >
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
 
-                    <div
-                        id="advertenciaNombreHoja"
-                        class="hidden advertencia-hoja"
-                    >
-                        <strong>⚠️ Nombre similar detectado</strong>
-                        <p
-                            id="mensajeNombreSimilar"
-                            style="margin: 0.25rem 0 0 0"
-                        ></p>
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!-- MODAL: DETALLE DE CASO                                                      -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+    <div id="modalDetalleCaso" class="modal-overlay">
+        <div class="modal" style="max-width: 800px; overflow-x: hidden;">
+            <div class="modal-header">
+                <h3
+                    class="modal-title"
+                    style="
+                        word-wrap: break-word;
+                        overflow-wrap: break-word;
+                        white-space: normal;
+                    "
+                >
+                    <span id="detalleCasoIcono">📋</span>
+                    <span id="detalleCasoTitulo">Detalle del Caso</span>
+                </h3>
+                <button
+                    class="modal-close"
+                    onclick="cerrarModal('modalDetalleCaso')"
+                >
+                    ✕
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div id="detalleCasoContenido">
+                    <!-- Contenido dinámico -->
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button
+                    id="btnEditarCasoDetalle"
+                    class="btn btn-primary"
+                    onclick="editarCasoDesdeDetalle()"
+                >
+                    ✏️ Editar
+                </button>
+                <button
+                    id="btnEliminarCasoDetalle"
+                    class="btn btn-danger"
+                    onclick="eliminarCasoDesdeDetalle()"
+                >
+                    🗑️ Eliminar
+                </button>
+                <button
+                    id="btnRestaurarCasoDetalle"
+                    class="btn btn-success hidden"
+                    onclick="restaurarCasoDesdeDetalle()"
+                >
+                    ↩️ Restaurar
+                </button>
+                <button
+                    class="btn btn-secondary"
+                    onclick="cerrarModal('modalDetalleCaso')"
+                >
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!-- MODAL: CREAR/EDITAR CASO                                                    -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+    <div id="modalCrearCaso" class="modal-overlay">
+        <div class="modal" style="max-width: 1000px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="tituloModalCaso">
+                    ➕ Nuevo Caso de Prueba
+                </h3>
+                <button class="modal-close" onclick="cerrarModalCaso()">
+                    ✕
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form
+                    id="formCrearCaso"
+                    onsubmit="guardarCaso(); return false;"
+                >
+                    <input type="hidden" id="casoIdEdicion" value="" />
+                    <input type="hidden" id="casoHojaOriginal" value="" />
+
+                    <div class="form-group">
+                        <label class="form-label">Hoja/Módulo</label>
+                        <select
+                            id="casoHoja"
+                            class="form-select"
+                            onchange="manejarCambioHoja()"
+                        >
+                            <option value="">
+                                Usar hoja "Casos" (default)
+                            </option>
+                        </select>
+                        <p class="form-help">
+                            Si no seleccionas una hoja, el caso se guardará en
+                            "Casos"
+                        </p>
+
+                        <div
+                            id="advertenciaHoja"
+                            class="advertencia-hoja hidden"
+                        >
+                            <strong>⚠️ No has seleccionado una hoja</strong
+                            ><br />
+                            El caso se guardará en la hoja "Casos" por defecto.
+                        </div>
                     </div>
 
-                    <p class="form-help">
-                        Se creará una nueva pestaña en tu Google Sheet
-                    </p>
-                </div>
-            </form>
-        </div>
+                    <div class="form-group">
+                        <label class="form-label required">Formato</label>
+                        <select
+                            id="casoFormato"
+                            class="form-select"
+                            required
+                            onchange="cambiarFormatoCaso()"
+                        >
+                            <option value="Clasico">Clásico</option>
+                            <option value="Gherkin">Gherkin</option>
+                        </select>
+                    </div>
 
-        <div class="modal-footer">
-            <button
-                type="submit"
-                form="formCrearHoja"
-                class="btn btn-primary"
-                id="btnCrearHoja"
-            >
-                ✅ Crear Hoja
-            </button>
-            <button
-                type="button"
-                class="btn btn-secondary"
-                onclick="cerrarModalCrearHoja()"
-            >
-                Cancelar
-            </button>
+                    <div class="form-group">
+                        <label class="form-label required"
+                            >Título (mín. 10 caracteres)</label
+                        >
+                        <input
+                            type="text"
+                            id="casoTitulo"
+                            class="form-input"
+                            required
+                            minlength="10"
+                            placeholder="Ej: Login con usuario válido"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required"
+                            >Descripción (mín. 10 caracteres)</label
+                        >
+                        <textarea
+                            id="casoDescripcion"
+                            class="form-textarea"
+                            required
+                            minlength="10"
+                            placeholder="Descripción detallada..."
+                        ></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">Prioridad</label>
+                        <select id="casoPrioridad" class="form-select" required>
+                            <option value="Crítica">🔴 Crítica</option>
+                            <option value="Alta">🟠 Alta</option>
+                            <option value="Media">🟡 Media</option>
+                            <option value="Baja">🟢 Baja</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">Estado Diseño</label>
+                        <select
+                            id="casoEstadoDiseño"
+                            class="form-select"
+                            required
+                        >
+                            <option value="Pendiente">⏳ Pendiente</option>
+                            <option value="En Progreso">🔄 En Progreso</option>
+                            <option value="Completado">✅ Completado</option>
+                        </select>
+                        <p class="form-help">
+                            Indica el nivel de completitud del diseño de este
+                            caso
+                        </p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Tipo de Prueba</label>
+                        <select id="casoTipoPrueba" class="form-select">
+                            <option value="Funcional">Funcional</option>
+                            <option value="Happy Path">Happy Path</option>
+                            <option value="Edge Case">Edge Case</option>
+                            <option value="API">API</option>
+                            <option value="Performance">Performance</option>
+                        </select>
+                    </div>
+
+                    <!-- Campos para formato Clásico -->
+                    <div id="camposClasico">
+                        <div class="form-group">
+                            <label class="form-label required">Pasos</label>
+                            <textarea
+                                id="casoPasos"
+                                class="form-textarea"
+                                required
+                                placeholder="1. Paso uno&#10;2. Paso dos&#10;3. Paso tres..."
+                            ></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label required"
+                                >Resultado Esperado</label
+                            >
+                            <textarea
+                                id="casoResultadoEsperado"
+                                class="form-textarea"
+                                required
+                                placeholder="Describe el resultado esperado..."
+                            ></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Campos para formato Gherkin -->
+                    <div id="camposGherkin" class="hidden">
+                        <div class="form-group">
+                            <label class="form-label required"
+                                >Given (Dado)</label
+                            >
+                            <textarea
+                                id="casoGiven"
+                                class="form-textarea"
+                                placeholder="Dado que el usuario está en la página de login"
+                            ></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label required"
+                                >When (Cuando)</label
+                            >
+                            <textarea
+                                id="casoWhen"
+                                class="form-textarea"
+                                placeholder="Cuando ingresa credenciales válidas"
+                            ></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label required"
+                                >Then (Entonces)</label
+                            >
+                            <textarea
+                                id="casoThen"
+                                class="form-textarea"
+                                placeholder="Entonces debe ser redirigido al dashboard"
+                            ></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Precondiciones</label>
+                        <textarea
+                            id="casoPrecondiciones"
+                            class="form-textarea"
+                            placeholder="Condiciones previas necesarias..."
+                        ></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input
+                                type="checkbox"
+                                id="casoCandidatoRegresion"
+                            />
+                            <label for="casoCandidatoRegresion"
+                                >🔄 Regresión</label
+                            >
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button
+                    type="submit"
+                    form="formCrearCaso"
+                    class="btn btn-primary"
+                >
+                    💾 Guardar Caso
+                </button>
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    onclick="cerrarModalCaso()"
+                >
+                    Cancelar
+                </button>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- ═══════════════════════════════════════════════════════════════════════════ -->
-<!-- MODAL: CONFIRMACIÓN PERSONALIZADA                                           -->
-<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!-- MODAL: CREAR NUEVA HOJA                                                     -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 
-<div id="modalConfirmApp" class="modal-overlay">
-    <div class="modal" style="max-width: 450px">
-        <div class="modal-header" style="border-bottom: none">
-            <h3 class="modal-title">
-                <span id="confirmAppIcon">⚠️</span>
-                <span id="confirmAppTitle">Confirmar</span>
-            </h3>
-        </div>
+    <div id="modalCrearHoja" class="modal-overlay">
+        <div class="modal" style="max-width: 600px">
+            <div class="modal-header">
+                <h3 class="modal-title">📑 Crear Nueva Hoja</h3>
+                <button class="modal-close" onclick="cerrarModalCrearHoja()">
+                    ✕
+                </button>
+            </div>
 
-        <div class="modal-body">
-            <p
-                id="confirmAppMessage"
-                style="color: #64748b; font-size: 1rem; line-height: 1.6"
-            >
-                ¿Deseas continuar?
-            </p>
-        </div>
+            <div class="modal-body">
+                <form
+                    id="formCrearHoja"
+                    onsubmit="crearHojaNueva(); return false;"
+                >
+                    <div
+                        style="
+                            background: #f8fafc;
+                            padding: 1rem;
+                            border-radius: 8px;
+                            margin-bottom: 1rem;
+                        "
+                    >
+                        <strong style="display: block; margin-bottom: 0.5rem"
+                            >📋 Hojas existentes:</strong
+                        >
+                        <div
+                            id="listaHojasExistentes"
+                            style="color: #64748b; font-size: 0.9rem"
+                        >
+                            Cargando...
+                        </div>
+                    </div>
 
-        <div class="modal-footer" style="border-top: none">
-            <button id="confirmAppBtnOk" class="btn btn-primary">
-                Aceptar
-            </button>
-            <button id="confirmAppBtnCancel" class="btn btn-secondary">
-                Cancelar
-            </button>
+                    <div class="form-group">
+                        <label class="form-label required"
+                            >Nombre de la hoja</label
+                        >
+                        <input
+                            type="text"
+                            id="nombreNuevaHoja"
+                            class="form-input"
+                            required
+                            placeholder="Ej: Login, Pagos, Carrito"
+                            minlength="2"
+                            maxlength="50"
+                            oninput="validarNombreHoja()"
+                        />
+
+                        <div
+                            id="advertenciaNombreHoja"
+                            class="hidden advertencia-hoja"
+                        >
+                            <strong>⚠️ Nombre similar detectado</strong>
+                            <p
+                                id="mensajeNombreSimilar"
+                                style="margin: 0.25rem 0 0 0"
+                            ></p>
+                        </div>
+
+                        <p class="form-help">
+                            Se creará una nueva pestaña en tu Google Sheet
+                        </p>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button
+                    type="submit"
+                    form="formCrearHoja"
+                    class="btn btn-primary"
+                    id="btnCrearHoja"
+                >
+                    ✅ Crear Hoja
+                </button>
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    onclick="cerrarModalCrearHoja()"
+                >
+                    Cancelar
+                </button>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    // ===================================================================
-    // CONFIGURACIÓN DEL SISTEMA
-    // ===================================================================
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!-- MODAL: CONFIRMACIÓN PERSONALIZADA                                           -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 
-    function abrirModalConfiguracion() {
-        console.log("⚙️ Abriendo modal de configuración");
-        cargarConfiguracionActual();
-        abrirModal("modalConfiguracion");
-    }
+    <div id="modalConfirmApp" class="modal-overlay">
+        <div class="modal" style="max-width: 450px">
+            <div class="modal-header" style="border-bottom: none">
+                <h3 class="modal-title">
+                    <span id="confirmAppIcon">⚠️</span>
+                    <span id="confirmAppTitle">Confirmar</span>
+                </h3>
+            </div>
 
-    function cargarConfiguracionActual() {
-        console.log("📥 Cargando configuración actual...");
-        mostrarSpinner();
+            <div class="modal-body">
+                <p
+                    id="confirmAppMessage"
+                    style="color: #64748b; font-size: 1rem; line-height: 1.6"
+                >
+                    ¿Deseas continuar?
+                </p>
+            </div>
 
-        const urlActual = window.currentSheetUrl || currentSheetUrl;
+            <div class="modal-footer" style="border-top: none">
+                <button id="confirmAppBtnOk" class="btn btn-primary">
+                    Aceptar
+                </button>
+                <button id="confirmAppBtnCancel" class="btn btn-secondary">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
 
-        if (!urlActual) {
-            ocultarSpinner();
-            mostrarToast("No hay Sheet conectado", "error");
-            return;
+    <script>
+        // ===================================================================
+        // CONFIGURACIÓN DEL SISTEMA
+        // ===================================================================
+
+        function abrirModalConfiguracion() {
+            console.log("⚙️ Abriendo modal de configuración");
+            abrirModal("modalConfiguracion");
+            cargarConfiguracionActual();
         }
 
-        // Guardar sheetUrl para que backend la use
-        google.script.run
-            .withSuccessHandler(function () {
-                // Ahora sí cargar config
-                google.script.run
-                    .withSuccessHandler(function (response) {
-                        ocultarSpinner();
+        function cargarConfiguracionActual() {
+            console.log("📥 Cargando configuración actual...");
+            mostrarSpinner();
 
-                        if (response.success) {
-                            console.log(
-                                "✅ Configuración cargada:",
-                                response.carpetas
-                            );
+            const urlActual = window.currentSheetUrl || currentSheetUrl;
 
-                            // Llenar inputs con valores actuales
-                            document.getElementById(
-                                "configCarpetaEjecuciones"
-                            ).value = response.carpetas.ejecuciones || "";
-                            document.getElementById("configCarpetaBugs").value =
-                                response.carpetas.bugs || "";
-
-                            // Mostrar status visual
-                            mostrarStatusConfigActual(response.carpetas);
-                        } else {
-                            console.warn("⚠️ No se pudo cargar configuración");
-                        }
-                    })
-                    .withFailureHandler(function (error) {
-                        ocultarSpinner();
-                        console.error("❌ Error:", error);
-                        mostrarToast("Error al cargar configuración", "error");
-                    })
-                    .obtenerConfiguracionCarpetas();
-            })
-            .withFailureHandler(function (error) {
+            if (!urlActual) {
                 ocultarSpinner();
-                mostrarToast("Error al preparar configuración", "error");
-            })
-            .prepararSheetUrl(urlActual);
-    }
+                mostrarToast("No hay Sheet conectado", "error");
+                return;
+            }
 
-    function guardarConfiguracionSistema() {
-        console.log("💾 Guardando configuración...");
+            // Guardar sheetUrl para que backend la use
+            google.script.run
+                .withSuccessHandler(function () {
+                    // Ahora sí cargar config
+                    google.script.run
+                        .withSuccessHandler(function (response) {
+                            ocultarSpinner();
 
-        const urlActual = window.currentSheetUrl || currentSheetUrl;
+                            if (response.success) {
+                                console.log(
+                                    "✅ Configuración cargada:",
+                                    response.carpetas
+                                );
 
-        if (!urlActual) {
-            mostrarToast("No hay Sheet conectado", "error");
-            return;
-        }
+                                // Llenar inputs con valores actuales
+                                document.getElementById(
+                                    "configCarpetaEjecuciones"
+                                ).value = response.carpetas.ejecuciones || "";
+                                document.getElementById(
+                                    "configCarpetaBugs"
+                                ).value = response.carpetas.bugs || "";
 
-        const carpetas = {
-            ejecuciones: document
-                .getElementById("configCarpetaEjecuciones")
-                .value.trim(),
-            bugs: document.getElementById("configCarpetaBugs").value.trim(),
-        };
-
-        if (!carpetas.ejecuciones && !carpetas.bugs) {
-            mostrarToast("Ingresa al menos una carpeta", "warning");
-            return;
-        }
-
-        mostrarSpinner();
-
-        // Guardar sheetUrl en Properties
-        google.script.run
-            .withSuccessHandler(function () {
-                // Ahora guardar carpetas
-                google.script.run
-                    .withSuccessHandler(function (response) {
-                        ocultarSpinner();
-
-                        if (response.success) {
-                            console.log("✅ Configuración guardada");
+                                // Mostrar status visual
+                                mostrarStatusConfigActual(response.carpetas);
+                            } else {
+                                console.warn(
+                                    "⚠️ No se pudo cargar configuración"
+                                );
+                            }
+                        })
+                        .withFailureHandler(function (error) {
+                            ocultarSpinner();
+                            console.error("❌ Error:", error);
                             mostrarToast(
-                                "✅ Configuración guardada correctamente",
-                                "success"
+                                "Error al cargar configuración",
+                                "error"
                             );
-                            cerrarModal("modalConfiguracion");
-
-                            // Actualizar badge y banner
-                            actualizarIndicadorConfig();
-
-                            const volverACaso =
-                                sessionStorage.getItem("volverAEjecucion");
-                            if (volverACaso) {
-                                sessionStorage.removeItem("volverAEjecucion");
-                                setTimeout(function () {
-                                    if (
-                                        typeof abrirModalEjecucion ===
-                                        "function"
-                                    ) {
-                                        abrirModalEjecucion(volverACaso);
-                                    }
-                                }, 800);
-                            }
-                        } else {
-                            console.error("❌ Error:", response.mensaje);
-                            mostrarToast("Error: " + response.mensaje, "error");
-                        }
-                    })
-                    .withFailureHandler(function (error) {
-                        ocultarSpinner();
-                        console.error("❌ Error:", error);
-                        mostrarToast("Error: " + error.message, "error");
-                    })
-                    .guardarConfiguracionCarpetas(carpetas);
-            })
-            .withFailureHandler(function (error) {
-                ocultarSpinner();
-                mostrarToast("Error al preparar configuración", "error");
-            })
-            .prepararSheetUrl(urlActual);
-    }
-
-    function mostrarStatusConfigActual(carpetas) {
-        const statusDiv = document.getElementById("statusConfigModal");
-
-        if (!statusDiv) return;
-
-        let html =
-            '<div style="background: #f0f9ff; padding: 1rem; border-radius: 8px; border-left: 4px solid #0ea5e9; margin-bottom: 1.5rem;">';
-        html += '<div style="font-size: 0.9rem; color: #0c4a6e;">';
-        html += "<strong>📁 Configuración Actual:</strong><br>";
-
-        if (carpetas.ejecuciones) {
-            html +=
-                '<div style="margin-top: 0.5rem;">⚡ Ejecuciones: <strong>Configurada</strong></div>';
-        } else {
-            html +=
-                '<div style="margin-top: 0.5rem; color: #64748b;">⚡ Ejecuciones: Sin configurar</div>';
+                        })
+                        .obtenerConfiguracionCarpetas();
+                })
+                .withFailureHandler(function (error) {
+                    ocultarSpinner();
+                    mostrarToast("Error al preparar configuración", "error");
+                })
+                .prepararSheetUrl(urlActual);
         }
 
-        if (carpetas.bugs) {
-            html +=
-                '<div style="margin-top: 0.25rem;">🐛 Bugs: <strong>Configurada</strong></div>';
-        } else {
-            html +=
-                '<div style="margin-top: 0.25rem; color: #64748b;">🐛 Bugs: Sin configurar</div>';
-        }
+        function guardarConfiguracionSistema() {
+            console.log("💾 Guardando configuración...");
 
-        html += "</div></div>";
+            const urlActual = window.currentSheetUrl || currentSheetUrl;
 
-        statusDiv.innerHTML = html;
-        statusDiv.classList.remove("hidden");
-    }
+            if (!urlActual) {
+                mostrarToast("No hay Sheet conectado", "error");
+                return;
+            }
 
-    function actualizarIndicadorConfig() {
-        const urlActual = window.currentSheetUrl || currentSheetUrl;
+            const carpetas = {
+                ejecuciones: document
+                    .getElementById("configCarpetaEjecuciones")
+                    .value.trim(),
+                bugs: document.getElementById("configCarpetaBugs").value.trim(),
+            };
 
-        if (!urlActual) return;
+            if (!carpetas.ejecuciones && !carpetas.bugs) {
+                mostrarToast("Ingresa al menos una carpeta", "warning");
+                return;
+            }
 
-        // Guardar sheetUrl
-        google.script.run
-            .withSuccessHandler(function () {
-                google.script.run
-                    .withSuccessHandler(function (response) {
-                        if (response.success) {
-                            const carpetas = response.carpetas;
-                            const tieneConfig =
-                                carpetas.ejecuciones || carpetas.bugs;
+            mostrarSpinner();
 
-                            // Actualizar badge en botón
-                            const btnConfig = document.querySelector(
-                                'button[onclick="abrirModalConfiguracion()"]'
-                            );
-                            if (btnConfig) {
-                                if (tieneConfig) {
-                                    btnConfig.innerHTML =
-                                        "<span>⚙️</span><span>Configuración ✅</span>";
-                                } else {
-                                    btnConfig.innerHTML =
-                                        "<span>⚙️</span><span>Configuración</span>";
+            // Guardar sheetUrl en Properties
+            google.script.run
+                .withSuccessHandler(function () {
+                    // Ahora guardar carpetas
+                    google.script.run
+                        .withSuccessHandler(function (response) {
+                            ocultarSpinner();
+
+                            if (response.success) {
+                                console.log("✅ Configuración guardada");
+                                mostrarToast(
+                                    "✅ Configuración guardada correctamente",
+                                    "success"
+                                );
+                                cerrarModal("modalConfiguracion");
+
+                                // Actualizar badge y banner
+                                actualizarIndicadorConfig();
+
+                                const volverACaso =
+                                    sessionStorage.getItem("volverAEjecucion");
+                                if (volverACaso) {
+                                    sessionStorage.removeItem(
+                                        "volverAEjecucion"
+                                    );
+                                    setTimeout(function () {
+                                        if (
+                                            typeof abrirModalEjecucion ===
+                                            "function"
+                                        ) {
+                                            abrirModalEjecucion(volverACaso);
+                                        }
+                                    }, 800);
                                 }
+                            } else {
+                                console.error("❌ Error:", response.mensaje);
+                                mostrarToast(
+                                    "Error: " + response.mensaje,
+                                    "error"
+                                );
                             }
-
-                            // Actualizar/crear banner
-                            actualizarBannerConfig(carpetas);
-                        }
-                    })
-                    .obtenerConfiguracionCarpetas();
-            })
-            .prepararSheetUrl(urlActual);
-    }
-
-    function actualizarBannerConfig(carpetas) {
-        let banner = document.getElementById("bannerConfigCarpetas");
-
-        if (!banner) {
-            console.warn("⚠️ Banner no encontrado en DOM");
-            return;
+                        })
+                        .withFailureHandler(function (error) {
+                            ocultarSpinner();
+                            console.error("❌ Error:", error);
+                            mostrarToast("Error: " + error.message, "error");
+                        })
+                        .guardarConfiguracionCarpetas(carpetas);
+                })
+                .withFailureHandler(function (error) {
+                    ocultarSpinner();
+                    mostrarToast("Error al preparar configuración", "error");
+                })
+                .prepararSheetUrl(urlActual);
         }
 
-        const tieneEjecuciones =
-            carpetas.ejecuciones && carpetas.ejecuciones !== "";
-        const tieneBugs = carpetas.bugs && carpetas.bugs !== "";
+        function mostrarStatusConfigActual(carpetas) {
+            const statusDiv = document.getElementById("statusConfigModal");
 
-        console.log("🎨 Renderizando banner:");
-        console.log("  - Ejecuciones:", tieneEjecuciones ? "SÍ" : "NO");
-        console.log("  - Bugs:", tieneBugs ? "SÍ" : "NO");
+            if (!statusDiv) return;
 
-        let html = "";
-        let bgColor = "";
-        let borderColor = "";
-        let textColor = "";
-        let icon = "";
-        let titulo = "";
-        let mensaje = "";
+            let html =
+                '<div style="background: #f0f9ff; padding: 1rem; border-radius: 8px; border-left: 4px solid #0ea5e9; margin-bottom: 1.5rem;">';
+            html += '<div style="font-size: 0.9rem; color: #0c4a6e;">';
+            html += "<strong>📁 Configuración Actual:</strong><br>";
 
-        // ═══════════════════════════════════════════════════════════
-        // ESCENARIO 1: NINGUNA CONFIGURADA
-        // ═══════════════════════════════════════════════════════════
-        if (!tieneEjecuciones && !tieneBugs) {
-            bgColor = "#fef3c7";
-            borderColor = "#f59e0b";
-            textColor = "#92400e";
-            icon = "⚠️";
-            titulo = "No has configurado carpetas para evidencias";
-            mensaje = `
+            if (carpetas.ejecuciones) {
+                html +=
+                    '<div style="margin-top: 0.5rem;">⚡ Ejecuciones: <strong>Configurada</strong></div>';
+            } else {
+                html +=
+                    '<div style="margin-top: 0.5rem; color: #64748b;">⚡ Ejecuciones: Sin configurar</div>';
+            }
+
+            if (carpetas.bugs) {
+                html +=
+                    '<div style="margin-top: 0.25rem;">🐛 Bugs: <strong>Configurada</strong></div>';
+            } else {
+                html +=
+                    '<div style="margin-top: 0.25rem; color: #64748b;">🐛 Bugs: Sin configurar</div>';
+            }
+
+            html += "</div></div>";
+
+            statusDiv.innerHTML = html;
+            statusDiv.classList.remove("hidden");
+        }
+
+        function actualizarIndicadorConfig() {
+            const urlActual = window.currentSheetUrl || currentSheetUrl;
+
+            if (!urlActual) return;
+
+            // Guardar sheetUrl
+            google.script.run
+                .withSuccessHandler(function () {
+                    google.script.run
+                        .withSuccessHandler(function (response) {
+                            if (response.success) {
+                                const carpetas = response.carpetas;
+                                const tieneConfig =
+                                    carpetas.ejecuciones || carpetas.bugs;
+
+                                // Actualizar configuración global
+                                window.configuracionSistema = {
+                                    carpeta_evidencias_ejecuciones: carpetas.ejecuciones || "",
+                                    carpeta_evidencias_bugs: carpetas.bugs || ""
+                                };
+                                console.log("✅ window.configuracionSistema actualizado:", window.configuracionSistema);
+
+                                // Actualizar badge en botón del menú de usuario
+                                const btnConfigText = document.getElementById('btnConfigText');
+                                if (btnConfigText) {
+                                    if (tieneConfig) {
+                                        btnConfigText.textContent = "Configuración ✅";
+                                    } else {
+                                        btnConfigText.textContent = "Configuración";
+                                    }
+                                }
+
+                                // Actualizar/crear banner
+                                actualizarBannerConfig(carpetas);
+                            }
+                        })
+                        .obtenerConfiguracionCarpetas();
+                })
+                .prepararSheetUrl(urlActual);
+        }
+
+        function actualizarBannerConfig(carpetas) {
+            let banner = document.getElementById("bannerConfigCarpetas");
+
+            if (!banner) {
+                console.warn("⚠️ Banner no encontrado en DOM");
+                return;
+            }
+
+            const tieneEjecuciones =
+                carpetas.ejecuciones && carpetas.ejecuciones !== "";
+            const tieneBugs = carpetas.bugs && carpetas.bugs !== "";
+
+            console.log("🎨 Renderizando banner:");
+            console.log("  - Ejecuciones:", tieneEjecuciones ? "SÍ" : "NO");
+            console.log("  - Bugs:", tieneBugs ? "SÍ" : "NO");
+
+            let html = "";
+            let bgColor = "";
+            let borderColor = "";
+            let textColor = "";
+            let icon = "";
+            let titulo = "";
+            let mensaje = "";
+
+            // ═══════════════════════════════════════════════════════════
+            // ESCENARIO 1: NINGUNA CONFIGURADA
+            // ═══════════════════════════════════════════════════════════
+            if (!tieneEjecuciones && !tieneBugs) {
+                bgColor = "#fef3c7";
+                borderColor = "#f59e0b";
+                textColor = "#92400e";
+                icon = "⚠️";
+                titulo = "No has configurado carpetas para evidencias";
+                mensaje = `
       <div style="margin-top: 0.5rem; line-height: 1.6;">
         Necesitas configurar las carpetas de Drive donde se guardarán:
         <ul style="margin: 0.5rem 0 0 1.5rem; list-style: none; padding: 0;">
@@ -1207,18 +1571,18 @@
         </ul>
       </div>
     `;
-        }
+            }
 
-        // ═══════════════════════════════════════════════════════════
-        // ESCENARIO 2: SOLO EJECUCIONES CONFIGURADA
-        // ═══════════════════════════════════════════════════════════
-        else if (tieneEjecuciones && !tieneBugs) {
-            bgColor = "#fef3c7";
-            borderColor = "#f59e0b";
-            textColor = "#92400e";
-            icon = "⚠️";
-            titulo = "Configuración incompleta";
-            mensaje = `
+            // ═══════════════════════════════════════════════════════════
+            // ESCENARIO 2: SOLO EJECUCIONES CONFIGURADA
+            // ═══════════════════════════════════════════════════════════
+            else if (tieneEjecuciones && !tieneBugs) {
+                bgColor = "#fef3c7";
+                borderColor = "#f59e0b";
+                textColor = "#92400e";
+                icon = "⚠️";
+                titulo = "Configuración incompleta";
+                mensaje = `
       <div style="margin-top: 0.5rem; line-height: 1.6;">
         <div style="margin-bottom: 0.5rem;">
           <strong>Estado actual:</strong>
@@ -1229,18 +1593,18 @@
         </ul>
       </div>
     `;
-        }
+            }
 
-        // ═══════════════════════════════════════════════════════════
-        // ESCENARIO 3: SOLO BUGS CONFIGURADA
-        // ═══════════════════════════════════════════════════════════
-        else if (!tieneEjecuciones && tieneBugs) {
-            bgColor = "#fef3c7";
-            borderColor = "#f59e0b";
-            textColor = "#92400e";
-            icon = "⚠️";
-            titulo = "Configuración incompleta";
-            mensaje = `
+            // ═══════════════════════════════════════════════════════════
+            // ESCENARIO 3: SOLO BUGS CONFIGURADA
+            // ═══════════════════════════════════════════════════════════
+            else if (!tieneEjecuciones && tieneBugs) {
+                bgColor = "#fef3c7";
+                borderColor = "#f59e0b";
+                textColor = "#92400e";
+                icon = "⚠️";
+                titulo = "Configuración incompleta";
+                mensaje = `
       <div style="margin-top: 0.5rem; line-height: 1.6;">
         <div style="margin-bottom: 0.5rem;">
           <strong>Estado actual:</strong>
@@ -1251,87 +1615,288 @@
         </ul>
       </div>
     `;
-        }
+            }
 
-        // ═══════════════════════════════════════════════════════════
-        // ESCENARIO 4: AMBAS CONFIGURADAS ✅
-        // ═══════════════════════════════════════════════════════════
-        else if (tieneEjecuciones && tieneBugs) {
-            bgColor = "#ecfdf5";
-            borderColor = "#10b981";
-            textColor = "#065f46";
-            icon = "✅";
-            titulo = "Carpetas configuradas correctamente";
-            mensaje = `
-      <div style="margin-top: 0.5rem; line-height: 1.6;">
-        <div style="margin-bottom: 0.5rem;">
-          <strong>Tus carpetas de evidencias están listas:</strong>
+            // ═══════════════════════════════════════════════════════════
+            // ESCENARIO 4: AMBAS CONFIGURADAS ✅
+            // ═══════════════════════════════════════════════════════════
+            else if (tieneEjecuciones && tieneBugs) {
+                bgColor = "#ecfdf5";
+                borderColor = "#10b981";
+                textColor = "#065f46";
+                icon = "✅";
+                titulo = "Carpetas configuradas correctamente";
+                mensaje = `
+      <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
+        <div>
+          <a href="${carpetas.ejecuciones}" target="_blank" 
+             style="color: #059669; text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.9rem; width: fit-content;"
+             onmouseover="this.style.textDecoration='underline'"
+             onmouseout="this.style.textDecoration='none'"
+             title="Abrir carpeta de Ejecuciones en Drive">
+            📁 Evidencias de Ejecuciones - Ver carpeta 🔗
+          </a>
         </div>
-        <ul style="margin: 0.25rem 0 0 1.5rem; list-style: none; padding: 0;">
-          <li style="margin: 0.25rem 0;">
-            ✅ <strong>Evidencias de Ejecuciones</strong> - 
-            <a href="${carpetas.ejecuciones}" target="_blank" 
-               style="color: #059669; text-decoration: none; border-bottom: 1px solid #059669;"
-               title="Abrir carpeta en Drive">
-              Ver carpeta 🔗
-            </a>
-          </li>
-          <li style="margin: 0.25rem 0;">
-            ✅ <strong>Evidencias de Bugs</strong> - 
-            <a href="${carpetas.bugs}" target="_blank" 
-               style="color: #059669; text-decoration: none; border-bottom: 1px solid #059669;"
-               title="Abrir carpeta en Drive">
-              Ver carpeta 🔗
-            </a>
-          </li>
-        </ul>
+        <div>
+          <a href="${carpetas.bugs}" target="_blank" 
+             style="color: #059669; text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.9rem; width: fit-content;"
+             onmouseover="this.style.textDecoration='underline'"
+             onmouseout="this.style.textDecoration='none'"
+             title="Abrir carpeta de Bugs en Drive">
+            📁 Evidencias de Bugs - Ver carpeta 🔗
+          </a>
+        </div>
       </div>
     `;
-        }
+            }
 
-        // ═══════════════════════════════════════════════════════════
-        // CONSTRUIR HTML FINAL
-        // ═══════════════════════════════════════════════════════════
-        html = `
-    <div style="background: ${bgColor}; padding: 1rem 1.25rem; border-radius: 8px; border-left: 4px solid ${borderColor};">
-      <div style="display: flex; align-items: start; gap: 1rem; margin-bottom: 0.75rem;">
-        <span style="font-size: 1.5rem; line-height: 1;">${icon}</span>
-        <div style="flex: 1;">
-          <div style="font-size: 0.95rem; color: ${textColor};">
-            <strong style="font-size: 1rem;">${titulo}</strong>
-            ${mensaje}
-          </div>
+            // ═══════════════════════════════════════════════════════════
+            // CONSTRUIR HTML FINAL
+            // ═══════════════════════════════════════════════════════════
+            html = `
+    <div style="background: ${bgColor}; padding: 0.875rem 1rem; border-radius: 8px; border-left: 4px solid ${borderColor};">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span style="font-size: 1.25rem; line-height: 1;">${icon}</span>
+        <div style="flex: 1; font-size: 0.9rem; color: ${textColor};">
+          <strong style="font-size: 0.95rem;">${titulo}</strong>
+          ${mensaje}
         </div>
       </div>
       
-      <!-- Nota informativa (siempre visible) -->
+      ${
+          !tieneEjecuciones || !tieneBugs
+              ? `<!-- Nota y botón para casos incompletos -->
       <div style="border-top: 1px solid ${borderColor}40; margin-top: 0.75rem; padding-top: 0.75rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
         <div style="font-size: 0.85rem; color: ${textColor}; opacity: 0.9;">
           💡 <strong>Tip:</strong> Puedes cambiar las carpetas en cualquier momento desde Configuración
         </div>
-        <button class="btn btn-sm ${
-            tieneEjecuciones && tieneBugs ? "btn-secondary" : "btn-primary"
-        }" 
+        <button class="btn btn-sm btn-primary" 
                 onclick="abrirModalConfiguracion()" 
                 style="font-size: 0.85rem; padding: 0.5rem 1rem; white-space: nowrap;">
-          ${
-              tieneEjecuciones && tieneBugs
-                  ? "⚙️ Cambiar Carpetas"
-                  : "⚙️ Configurar Ahora"
-          }
+          ⚙️ Configurar Ahora
         </button>
-      </div>
+      </div>`
+              : ""
+      }
     </div>
   `;
 
-        banner.innerHTML = html;
-        banner.classList.remove("hidden");
-    }
+            banner.innerHTML = html;
+            banner.classList.remove("hidden");
+        }
 
-    // Exportar funciones
-    window.abrirModalConfiguracion = abrirModalConfiguracion;
-    window.guardarConfiguracionSistema = guardarConfiguracionSistema;
-    window.actualizarIndicadorConfig = actualizarIndicadorConfig;
+        // Exportar funciones
+        window.abrirModalConfiguracion = abrirModalConfiguracion;
+        window.guardarConfiguracionSistema = guardarConfiguracionSistema;
+        window.actualizarIndicadorConfig = actualizarIndicadorConfig;
 
-    console.log("✅ Frontend_Components_Casos_UI.html cargado");
-</script>
+        // ═══════════════════════════════════════════════════════════════════
+        // FUNCIÓN MEJORADA: ACTUALIZAR BARRA DE PROGRESO DE EJECUCIÓN
+        // ═══════════════════════════════════════════════════════════════════
+        function actualizarBarraEjecucion() {
+            console.log("📊 [Barra] actualizarBarraEjecucion llamada");
+
+            const url = recuperarSheetUrl();
+            if (!url) {
+                console.warn("⚠️ [Barra] No hay URL disponible");
+                return;
+            }
+
+            const resumenDiv = document.getElementById("resumenEjecucion");
+            if (!resumenDiv) {
+                console.warn("⚠️ [Barra] No se encontró resumenEjecucion");
+                return;
+            }
+
+            console.log("🔄 [Barra] Llamando a obtenerResumenEjecucion...");
+
+            google.script.run
+                .withSuccessHandler(function (response) {
+                    console.log("✅ [Barra] Respuesta recibida:", response);
+
+                    if (!response || !response.success || !response.data) {
+                        // Mostrar mensaje por defecto si no hay datos
+                        const textoResumen = document.getElementById(
+                            "textoResumenEjecucion"
+                        );
+                        if (textoResumen) {
+                            textoResumen.innerHTML =
+                                "📋 No hay casos para ejecutar aún";
+                        }
+                        return;
+                    }
+
+                    const datos = response.data;
+                    const total = datos.total || 0;
+
+                    // Siempre mantener visible el resumen
+                    resumenDiv.style.display = "block";
+
+                    if (total === 0) {
+                        // Mostrar mensaje cuando no hay casos
+                        const porcentajeGlobal =
+                            document.getElementById("porcentajeGlobal");
+                        if (porcentajeGlobal) {
+                            porcentajeGlobal.textContent = "0%";
+                            porcentajeGlobal.style.color = "#94a3b8";
+                        }
+
+                        const textoResumen = document.getElementById(
+                            "textoResumenEjecucion"
+                        );
+                        if (textoResumen) {
+                            textoResumen.innerHTML =
+                                "📋 No hay casos para ejecutar aún";
+                        }
+
+                        // Resetear barras
+                        const barraOK =
+                            document.getElementById("barraEjecucionOK");
+                        const barraNoOK =
+                            document.getElementById("barraEjecucionNoOK");
+                        const barraBloqueado = document.getElementById(
+                            "barraEjecucionBloqueado"
+                        );
+                        if (barraOK) barraOK.style.width = "0%";
+                        if (barraNoOK) barraNoOK.style.width = "0%";
+                        if (barraBloqueado) barraBloqueado.style.width = "0%";
+
+                        // Resetear stats
+                        [
+                            "statOK",
+                            "statNoOK",
+                            "statBloqueado",
+                            "statPendiente",
+                        ].forEach((id) => {
+                            const stat = document.getElementById(id);
+                            if (stat) {
+                                const numEl =
+                                    stat.querySelector("div:last-child");
+                                if (numEl) numEl.textContent = "0";
+                            }
+                        });
+
+                        return;
+                    }
+
+                    // Calcular porcentajes
+                    const porcentajeOK =
+                        total > 0 ? Math.round((datos.ok / total) * 100) : 0;
+                    const porcentajeNoOK =
+                        total > 0 ? Math.round((datos.noOk / total) * 100) : 0;
+                    const porcentajeBloqueado =
+                        total > 0
+                            ? Math.round((datos.bloqueados / total) * 100)
+                            : 0;
+                    const pendientes = datos.sinEjecutar + datos.ejecutando;
+
+                    // Actualizar porcentaje global
+                    const porcentajeGlobal =
+                        document.getElementById("porcentajeGlobal");
+                    if (porcentajeGlobal) {
+                        porcentajeGlobal.textContent = porcentajeOK + "%";
+                        porcentajeGlobal.style.color =
+                            porcentajeOK >= 80
+                                ? "#10b981"
+                                : porcentajeOK >= 50
+                                ? "#f59e0b"
+                                : "#ef4444";
+                    }
+
+                    // Actualizar barras de progreso
+                    const barraOK = document.getElementById("barraEjecucionOK");
+                    const barraNoOK =
+                        document.getElementById("barraEjecucionNoOK");
+                    const barraBloqueado = document.getElementById(
+                        "barraEjecucionBloqueado"
+                    );
+
+                    if (barraOK) barraOK.style.width = porcentajeOK + "%";
+                    if (barraNoOK) barraNoOK.style.width = porcentajeNoOK + "%";
+                    if (barraBloqueado)
+                        barraBloqueado.style.width = porcentajeBloqueado + "%";
+
+                    // Actualizar estadísticas
+                    const statOK = document.getElementById("statOK");
+                    const statNoOK = document.getElementById("statNoOK");
+                    const statBloqueado =
+                        document.getElementById("statBloqueado");
+                    const statPendiente =
+                        document.getElementById("statPendiente");
+
+                    if (statOK) {
+                        const numEl = statOK.querySelector("div:last-child");
+                        if (numEl) numEl.textContent = datos.ok || 0;
+                    }
+                    if (statNoOK) {
+                        const numEl = statNoOK.querySelector("div:last-child");
+                        if (numEl) numEl.textContent = datos.noOk || 0;
+                    }
+                    if (statBloqueado) {
+                        const numEl =
+                            statBloqueado.querySelector("div:last-child");
+                        if (numEl) numEl.textContent = datos.bloqueados || 0;
+                    }
+                    if (statPendiente) {
+                        const numEl =
+                            statPendiente.querySelector("div:last-child");
+                        if (numEl) numEl.textContent = pendientes;
+                    }
+
+                    // Actualizar texto resumen
+                    const textoResumen = document.getElementById(
+                        "textoResumenEjecucion"
+                    );
+                    if (textoResumen) {
+                        let estado = "";
+                        if (porcentajeOK === 100) {
+                            estado =
+                                "🎉 ¡Todos los casos pasaron exitosamente!";
+                        } else if (porcentajeOK >= 80) {
+                            estado = "✨ Progreso excelente - casi listo";
+                        } else if (porcentajeOK >= 50) {
+                            estado = "⚡ Avanzando bien - continúa ejecutando";
+                        } else if (total === pendientes) {
+                            estado =
+                                "🚀 Comienza a ejecutar casos para ver el progreso";
+                        } else {
+                            estado = "📊 Ejecución en progreso";
+                        }
+
+                        textoResumen.innerHTML = `
+                        ${estado}<br>
+                        <span style="font-size: 0.8rem; color: #94a3b8;">
+                            ${
+                                datos.ok + datos.noOk + datos.bloqueados
+                            } de ${total} casos ejecutados
+                            ${
+                                datos.descartados > 0
+                                    ? ` • ${datos.descartados} descartados`
+                                    : ""
+                            }
+                        </span>
+                    `;
+                    }
+                })
+                .withFailureHandler(function (error) {
+                    console.error(
+                        "Error actualizando barra de ejecución:",
+                        error
+                    );
+                    // Mostrar mensaje de error en lugar de "Cargando resumen..."
+                    const textoResumen = document.getElementById(
+                        "textoResumenEjecucion"
+                    );
+                    if (textoResumen) {
+                        textoResumen.innerHTML =
+                            "📋 No hay casos para ejecutar aún";
+                    }
+                })
+                .obtenerResumenEjecucion(url);
+        }
+
+        window.actualizarBarraEjecucion = actualizarBarraEjecucion;
+
+        console.log("✅ Frontend_Components_Casos_UI.html cargado");
+    </script>
+</div>

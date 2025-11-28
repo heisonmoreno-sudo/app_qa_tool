@@ -56,8 +56,8 @@
                         return;
                     }
 
-                    // Si es No_OK: exigir bug vinculado (con bypass reciente)
-                    if (resultado === "No_OK") {
+                    // Si es No OK: exigir bug vinculado (con bypass reciente)
+                    if (resultado === "No OK" || resultado === "No_OK") {
                         // Si se acaba de crear un bug para este caso, permitir guardar sin esperar la lectura del Sheet
                         try {
                             const ub = window.__ultimoBugCreado;
@@ -86,8 +86,8 @@
                                 if (cnt === 0) {
                                     if (typeof mostrarToast === "function")
                                         mostrarToast(
-                                            "Debes reportar o vincular un bug para casos No_OK",
-                                            "warning"
+                                            "Debes reportar o vincular un bug para casos No OK",
+                                            "error"
                                         );
                                     if (
                                         typeof reportarBugDesdeCaso ===
@@ -135,10 +135,13 @@
                 try {
                     const alerta = document.getElementById("alertBugRequerido");
                     if (alerta)
-                        alerta.classList[r === "No_OK" ? "remove" : "add"](
-                            "hidden"
-                        );
-                    if (r === "No_OK" && typeof mostrarToast === "function") {
+                        alerta.classList[
+                            r === "No OK" || r === "No_OK" ? "remove" : "add"
+                        ]("hidden");
+                    if (
+                        (r === "No OK" || r === "No_OK") &&
+                        typeof mostrarToast === "function"
+                    ) {
                         mostrarToast(
                             "Debes reportar o vincular un bug para este caso",
                             "warning"
@@ -155,33 +158,24 @@
             wrapGuardarEjecucion();
             wrapSeleccionarResultado();
 
-            // Inyectar botón "Historial de Bugs" junto a "Limpiar Filtros" si aún no existe
+            // Mostrar botones en el header solo si estamos en la pantalla de casos
             try {
-                var btns = Array.from(document.querySelectorAll("button"));
-                var btnLimpiar = btns.find(function (b) {
-                    return (
-                        (b.textContent || "").indexOf("Limpiar Filtros") > -1
-                    );
-                });
-                if (
-                    btnLimpiar &&
-                    !document.getElementById("btnHistorialBugs")
-                ) {
-                    var nuevo = document.createElement("button");
-                    nuevo.className = "btn btn-secondary btn-sm";
-                    nuevo.id = "btnHistorialBugs";
-                    nuevo.type = "button";
-                    nuevo.style.marginLeft = "0.5rem";
-                    nuevo.style.background = "#fee2e2";
-                    nuevo.style.borderColor = "#fecaca";
-                    nuevo.style.color = "#991b1b";
-                    nuevo.textContent = "🐛 Historial de Bugs";
-                    nuevo.onclick = function () {
-                        if (typeof mostrarPanelBugs === "function")
-                            mostrarPanelBugs();
-                    };
-                    var cont = btnLimpiar.parentElement || document.body;
-                    cont.appendChild(nuevo);
+                var casosScreen = document.getElementById("casosScreen");
+                var btnRegresionesHeader = document.getElementById(
+                    "btnRegresionesHeader"
+                );
+                var btnHistorialBugsHeader = document.getElementById(
+                    "btnHistorialBugsHeader"
+                );
+
+                // Solo mostrar si la pantalla de casos está visible
+                if (casosScreen && !casosScreen.classList.contains("hidden")) {
+                    if (btnRegresionesHeader) {
+                        btnRegresionesHeader.style.display = "inline-block";
+                    }
+                    if (btnHistorialBugsHeader) {
+                        btnHistorialBugsHeader.style.display = "inline-block";
+                    }
                 }
             } catch (e) {
                 /* silencioso */

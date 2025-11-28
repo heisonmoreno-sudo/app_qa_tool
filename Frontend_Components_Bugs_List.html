@@ -1,9 +1,10 @@
 <!--
   FRONTEND_COMPONENTS_BUGS_LIST.HTML
+  ARCHIVO LEGACY - NO USAR (usar Frontend_Components_Bugs_List2.html)
   Listado / histórico de bugs con filtros y acciones
 -->
 
-<div id="bugsScreen" class="hidden" style="padding: 1rem">
+<div id="bugsScreenOLD_DEPRECATED" class="hidden" style="padding: 1rem">
     <div class="card" style="margin-top: 0.5rem">
         <div
             class="card-header"
@@ -49,12 +50,12 @@
                     id="bugFiltroBusqueda"
                     class="input-field"
                     placeholder="Buscar por título o descripción"
-                    oninput="cargarBugs()"
+                    oninput="try{localStorage.setItem('qaPage_bugs','1')}catch(e){};cargarBugs()"
                 />
                 <select
                     id="bugFiltroEstado"
                     class="input-field"
-                    onchange="cargarBugs()"
+                    onchange="try{localStorage.setItem('qaPage_bugs','1')}catch(e){};cargarBugs()"
                 >
                     <option value="Todos">Estado: Todos</option>
                     <option value="Abierto">Abierto</option>
@@ -63,7 +64,7 @@
                 <select
                     id="bugFiltroSeveridad"
                     class="input-field"
-                    onchange="cargarBugs()"
+                    onchange="try{localStorage.setItem('qaPage_bugs','1')}catch(e){};cargarBugs()"
                 >
                     <option value="Todas">Severidad: Todas</option>
                     <option value="Crítica">Crítica</option>
@@ -74,7 +75,7 @@
                 <select
                     id="bugFiltroConCaso"
                     class="input-field"
-                    onchange="cargarBugs()"
+                    onchange="try{localStorage.setItem('qaPage_bugs','1')}catch(e){};cargarBugs()"
                 >
                     <option value="Todos">Relación: Todos</option>
                     <option value="ConCaso">Con Caso</option>
@@ -105,13 +106,16 @@
 <script>
     function mostrarPanelBugs() {
         try {
-            console.log("🐛 [Bugs] Abrir historial");
+            // Mostrar panel de Bugs (registro del usuario)
         } catch (e) {}
         const bugsScreen = document.getElementById("bugsScreen");
         const casosScreen = document.getElementById("casosScreen");
         if (casosScreen) casosScreen.classList.add("hidden");
         if (bugsScreen) bugsScreen.classList.remove("hidden");
         try {
+            try {
+                localStorage.setItem("qaLastScreen", "bugs");
+            } catch (e) {}
             cargarBugs();
         } catch (e) {
             console.error("🐛 Error cargarBugs init:", e);
@@ -149,21 +153,18 @@
         if (severidad && severidad !== "Todas") filtros.severidad = severidad;
         if (relacion === "ConCaso") filtros.conCaso = true;
         else if (relacion === "SinCaso") filtros.conCaso = false;
-        console.log("🐛 [Bugs] Listar con filtros:", filtros);
+        // Listar bugs con filtros: filtros
         if (typeof mostrarSpinner === "function") mostrarSpinner();
         google.script.run
             .withSuccessHandler(function (res) {
-                console.log("🐛 [Bugs] Respuesta listarBugs:", res);
+                // Respuesta de listarBugs recibida
                 if (!res) {
                     console.warn(
                         "🐛 [Bugs] api_listarBugs devolvió null; intento fallback listarBugs"
                     );
                     google.script.run
                         .withSuccessHandler(function (r2) {
-                            console.log(
-                                "🐛 [Bugs] Respuesta listarBugs (fallback):",
-                                r2
-                            );
+                            // Respuesta listarBugs (fallback)
                             if (typeof ocultarSpinner === "function")
                                 ocultarSpinner();
                             if (!r2 || !r2.success) {
@@ -172,12 +173,14 @@
                                         "No se pudieron listar bugs (fallback)",
                                         "error"
                                     );
-                                renderizarTablaBugs([]);
+                                window.__ultimoListadoBugs = [];
+                                renderizarTablaBugsPaged([]);
                                 return;
                             }
-                            renderizarTablaBugs(
-                                r2.data && r2.data.bugs ? r2.data.bugs : []
-                            );
+                            var _bugs_fb =
+                                r2.data && r2.data.bugs ? r2.data.bugs : [];
+                            window.__ultimoListadoBugs = _bugs_fb;
+                            renderizarTablaBugsPaged(_bugs_fb);
                         })
                         .withFailureHandler(function (e2) {
                             if (typeof ocultarSpinner === "function")
@@ -188,7 +191,8 @@
                             );
                             mostrarToast &&
                                 mostrarToast("Error listando bugs", "error");
-                            renderizarTablaBugs([]);
+                            window.__ultimoListadoBugs = [];
+                            renderizarTablaBugsPaged([]);
                         })
                         .listarBugs(url, filtros);
                     return;
@@ -201,12 +205,13 @@
                                 (res.mensaje || ""),
                             "error"
                         );
-                    renderizarTablaBugs([]);
+                    window.__ultimoListadoBugs = [];
+                    renderizarTablaBugsPaged([]);
                     return;
                 }
-                renderizarTablaBugs(
-                    res.data && res.data.bugs ? res.data.bugs : []
-                );
+                var _bugs = res.data && res.data.bugs ? res.data.bugs : [];
+                window.__ultimoListadoBugs = _bugs;
+                renderizarTablaBugsPaged(_bugs);
             })
             .withFailureHandler(function (err) {
                 if (typeof ocultarSpinner === "function") ocultarSpinner();
@@ -221,14 +226,131 @@
             .api_listarBugs(url, filtros);
     }
 
+    // ===================================================================
+    // Paginación cliente para Bugs
+    // ===================================================================
+    function _leerEstadoPaginacionBugs() {
+        var page = parseInt(localStorage.getItem("qaPage_bugs")) || 1;
+        var pageSize = parseInt(localStorage.getItem("qaPageSize_bugs")) || 20;
+        return { page: page, pageSize: pageSize };
+    }
+
+    function _guardarEstadoPaginacionBugs(page, pageSize) {
+        try {
+            localStorage.setItem("qaPage_bugs", String(page));
+            localStorage.setItem("qaPageSize_bugs", String(pageSize));
+        } catch (e) {}
+    }
+
+    function renderizarTablaBugsPaged(bugs) {
+        var tbody = document.getElementById("tablaBugs");
+        if (!tbody) return;
+
+        var estado = _leerEstadoPaginacionBugs();
+        var page = estado.page || 1;
+        var pageSize = estado.pageSize || 20;
+
+        var total = Array.isArray(bugs) ? bugs.length : 0;
+        var totalPages = Math.max(1, Math.ceil(total / pageSize));
+        if (page > totalPages) page = totalPages;
+        if (page < 1) page = 1;
+
+        var start = (page - 1) * pageSize;
+        var end = start + pageSize;
+        var slice = Array.isArray(bugs) ? bugs.slice(start, end) : [];
+
+        // Reuse existing renderer
+        renderizarTablaBugs(slice);
+
+        // Pagination controls
+        var table = tbody.closest("table") || tbody.parentElement;
+        if (table) {
+            var paginationId = "bugsPagination";
+            var existing = document.getElementById(paginationId);
+            if (!existing) {
+                existing = document.createElement("div");
+                existing.id = paginationId;
+                existing.style =
+                    "display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0.5rem 0;";
+                table.parentElement.insertBefore(existing, table);
+            }
+
+            var leftHtml =
+                '<div style="display:flex;gap:0.5rem;align-items:center">';
+            leftHtml +=
+                '<button class="btn btn-sm btn-secondary" onclick="(function(){ _paginaAnteriorBugs(); })()">◀️</button>';
+            leftHtml +=
+                '<span id="bugsPageInfo" style="font-weight:600"> Página ' +
+                page +
+                " / " +
+                totalPages +
+                " </span>";
+            leftHtml +=
+                '<button class="btn btn-sm btn-secondary" onclick="(function(){ _paginaSiguienteBugs(); })()">▶️</button>';
+            leftHtml += "</div>";
+
+            var rightHtml =
+                '<div style="display:flex;gap:0.5rem;align-items:center">';
+            rightHtml +=
+                '<label style="font-size:0.85rem;color:#374151">Tamaño:</label>';
+            rightHtml +=
+                '<select id="bugsPageSizeSelect" class="input-field" style="width:90px">';
+            [10, 20, 30].forEach(function (s) {
+                rightHtml +=
+                    '<option value="' +
+                    s +
+                    '"' +
+                    (s === pageSize ? " selected" : "") +
+                    ">" +
+                    s +
+                    "</option>";
+            });
+            rightHtml += "</select>";
+            rightHtml += "</div>";
+
+            existing.innerHTML = leftHtml + rightHtml;
+
+            var select = document.getElementById("bugsPageSizeSelect");
+            if (select) {
+                select.onchange = function () {
+                    var newSize = parseInt(this.value) || 20;
+                    _guardarEstadoPaginacionBugs(1, newSize);
+                    renderizarTablaBugsPaged(window.__ultimoListadoBugs || []);
+                };
+            }
+        }
+
+        _guardarEstadoPaginacionBugs(page, pageSize);
+    }
+
+    function _paginaAnteriorBugs() {
+        var st = _leerEstadoPaginacionBugs();
+        var p = Math.max(1, st.page - 1);
+        _guardarEstadoPaginacionBugs(p, st.pageSize);
+        renderizarTablaBugsPaged(window.__ultimoListadoBugs || []);
+    }
+
+    function _paginaSiguienteBugs() {
+        var st = _leerEstadoPaginacionBugs();
+        var pageSize = st.pageSize || 20;
+        var total = Array.isArray(window.__ultimoListadoBugs)
+            ? window.__ultimoListadoBugs.length
+            : 0;
+        var totalPages = Math.max(1, Math.ceil(total / pageSize));
+        var p = Math.min(totalPages, st.page + 1);
+        _guardarEstadoPaginacionBugs(p, pageSize);
+        renderizarTablaBugsPaged(window.__ultimoListadoBugs || []);
+    }
+
     function renderizarTablaBugs(bugs) {
         const tbody = document.getElementById("tablaBugs");
         if (!tbody) return;
         if (!bugs || bugs.length === 0) {
             tbody.innerHTML =
-                '<tr><td colspan="8" style="text-align:center; padding:1rem; color:#64748b;">Sin bugs para mostrar</td></tr>';
+                '<tr><td colspan="8" class="table-empty-cell">Sin bugs para mostrar</td></tr>';
             return;
         }
+
         let html = "";
         bugs.forEach(function (b) {
             const id = b.ID || "";
@@ -259,13 +381,29 @@
                       })
                       .join("<br>")
                 : "";
+
+            const evidenciasRaw = b.EvidenciasURL || "";
+            const tieneEvidencias =
+                evidenciasRaw && String(evidenciasRaw).trim() !== "";
+            const trelloUrl =
+                b.TrelloCardURL || b.LinkTrello || b.LinkTrelloHU || "";
+
             html +=
                 "<tr>" +
                 "<td>" +
                 id +
                 "</td>" +
                 "<td>" +
-                titulo +
+                (trelloUrl
+                    ? '<a href="' +
+                      trelloUrl +
+                      '" target="_blank" style="font-weight:600;">' +
+                      titulo +
+                      "</a>"
+                    : titulo) +
+                (tieneEvidencias
+                    ? ' <span title="Tiene evidencias" style="background:#fee2e2;color:#991b1b;padding:2px 6px;border-radius:12px;font-size:0.8rem;margin-left:6px;">📎</span>'
+                    : "") +
                 "</td>" +
                 "<td>" +
                 badge +
@@ -287,9 +425,9 @@
                 id +
                 "')\">Ver/Editar</button>" +
                 (estado === "Abierto"
-                    ? '<button class="btn btn-success btn-sm" onclick="cambiarEstadoBugUI(\'' +
+                    ? '<button class="btn btn-success btn-sm" onclick="abrirModalCerrarBug(\'' +
                       id +
-                      "','Cerrado')\">Cerrar</button>"
+                      "')\">Cerrar</button>"
                     : '<button class="btn btn-primary btn-sm" onclick="cambiarEstadoBugUI(\'' +
                       id +
                       "','Abierto')\">Abrir</button>") +
@@ -299,6 +437,7 @@
                 "</td>" +
                 "</tr>";
         });
+
         tbody.innerHTML = html;
     }
 
@@ -336,14 +475,14 @@
                       titulo: "Eliminar Bug",
                       icono: "⚠️",
                       mensaje:
-                          "Al eliminar este bug, los casos vinculados que estén en No_OK y sin otros bugs abiertos pasarán a <strong>Sin ejecutar</strong>. ¿Confirmás?",
+                          "Al eliminar este bug, los casos vinculados que estén en No OK y sin otros bugs abiertos pasarán a <strong>Sin ejecutar</strong>. ¿Confirmás?",
                       textoOk: "Sí, eliminar",
                       textoCancelar: "Cancelar",
                   })
                 : confirm(
                       "Eliminar bug " +
                           bugId +
-                          "? Los casos con No_OK podrían pasar a Sin ejecutar."
+                          "? Los casos con No OK podrían pasar a Sin ejecutar."
                   );
         if (!confirmar) return;
         const url =
@@ -360,7 +499,7 @@
                         mostrarToast("Bug eliminado", "success");
                     cargarBugs();
                     if (typeof cargarTodosLosCasos === "function")
-                        setTimeout(() => cargarTodosLosCasos(), 400);
+                        cargarTodosLosCasos();
                 } else {
                     if (typeof mostrarToast === "function")
                         mostrarToast("Error: " + (r?.mensaje || ""), "error");
@@ -381,7 +520,8 @@
     window.mostrarPanelBugs = mostrarPanelBugs;
     window.ocultarPanelBugs = ocultarPanelBugs;
     window.cargarBugs = cargarBugs;
-    window.renderizarTablaBugs = renderizarTablaBugs;
+    window.renderizarTablaBugs = renderizarTablaBugsPaged;
+    window.renderizarTablaBugsPaged = renderizarTablaBugsPaged;
     window.cambiarEstadoBugUI = cambiarEstadoBugUI;
     window.eliminarBugUI = eliminarBugUI;
 </script>

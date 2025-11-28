@@ -32,7 +32,6 @@
         google.script.run
             .withSuccessHandler(function (response) {
                 ocultarSpinner();
-
                 if (response.success) {
                     console.log("✅ [CRUD] Detalle obtenido");
                     window.casoActualDetalle = response.data;
@@ -66,7 +65,7 @@
             ? "👻"
             : "📋";
         document.getElementById("detalleCasoTitulo").textContent =
-            caso.ID + ": " + caso.Titulo;
+            "Detalle del Caso";
 
         // Función helper para sanitizar valores
         const safe = function (val) {
@@ -84,11 +83,11 @@
             safe(caso.Hoja || "Casos") +
             "</div>";
         html +=
-            '<div class="detalle-label">📋 Título:</div><div class="detalle-valor"><strong>' +
+            '<div class="detalle-label">📋 Título:</div><div class="detalle-valor" style="word-wrap: break-word; overflow-wrap: break-word; white-space: normal; max-width: 100%;"><strong>' +
             safe(caso.Titulo) +
             "</strong></div>";
         html +=
-            '<div class="detalle-label">📝 Descripción:</div><div class="detalle-valor">' +
+            '<div class="detalle-label">📝 Descripción:</div><div class="detalle-valor" style="word-wrap: break-word; overflow-wrap: break-word; white-space: normal; max-width: 100%;">' +
             safe(caso.Descripcion) +
             "</div>";
         html +=
@@ -111,14 +110,88 @@
             '<div class="detalle-label">🎯 Tipo de Prueba:</div><div class="detalle-valor">' +
             safe(caso.TipoPrueba) +
             "</div>";
+
+        // Mostrar Ambiente y Navegador si existen
+        if (caso.Ambiente || caso.Navegador) {
+            html +=
+                '<div class="detalle-label">🖥️ Ambiente:</div><div class="detalle-valor">' +
+                safe(caso.Ambiente || "No especificado") +
+                "</div>";
+            html +=
+                '<div class="detalle-label">🌐 Navegador:</div><div class="detalle-valor">' +
+                safe(caso.Navegador || "No especificado") +
+                "</div>";
+        }
+
         html += "</div>";
+
+        // Evidencias de última ejecución
+        if (caso.EvidenciasURL && caso.EvidenciasURL.trim() !== "") {
+            html += '<div class="detalle-seccion">';
+            html +=
+                '<div class="detalle-seccion-titulo">📸 Evidencias de Última Ejecución</div>';
+            html +=
+                '<div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">';
+
+            const evidencias = caso.EvidenciasURL.split(/\r?\n/).filter(
+                function (url) {
+                    return url && url.trim();
+                }
+            );
+
+            evidencias.forEach(function (url, index) {
+                const nombreArchivo = extraerNombreArchivo(url);
+                const iconoInfo = obtenerIconoYTipo(url);
+                const btnId = "evidencia-btn-" + Date.now() + "-" + index;
+
+                html +=
+                    '<a href="' +
+                    url +
+                    '" target="_blank" ' +
+                    'id="' +
+                    btnId +
+                    '" ' +
+                    'class="btn btn-secondary" ' +
+                    'style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; font-size: 0.9rem; text-decoration: none;" ' +
+                    'title="Abrir ' +
+                    nombreArchivo +
+                    '">' +
+                    '<span class="icono-evidencia" style="font-size: 1.3rem;">' +
+                    iconoInfo.icon +
+                    "</span>" +
+                    '<span style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' +
+                    safe(nombreArchivo) +
+                    "</span>" +
+                    "</a>";
+
+                // Si es Drive, actualizar el icono asíncronamente
+                if (url.toLowerCase().includes("drive.google.com")) {
+                    setTimeout(function () {
+                        obtenerIconoYTipo(url, function (iconoActualizado) {
+                            const btn = document.getElementById(btnId);
+                            if (btn) {
+                                const spanIcono =
+                                    btn.querySelector(".icono-evidencia");
+                                if (spanIcono) {
+                                    spanIcono.textContent =
+                                        iconoActualizado.icon;
+                                }
+                            }
+                        });
+                    }, 100 * index); // Escalonar las peticiones
+                }
+            });
+
+            html += "</div>";
+            html += "</div>";
+        }
 
         // Mostrar pasos según formato
         if (caso.Formato === "Clasico") {
             html += '<div class="detalle-seccion">';
             html += '<div class="detalle-seccion-titulo">📝 Pasos</div>';
             html +=
-                '<div style="white-space: pre-wrap; background: #f8fafc; padding: 1rem; border-radius: 6px;">' +
+                '<div style="white-space: pre-wrap; background: #f8fafc; padding: 1rem; border-radius: 6px; word-wrap: break-word; overflow-wrap: break-word; max-width: 100%;">' +
                 safe(caso.Pasos || "No especificados") +
                 "</div>";
             html += "</div>";
@@ -127,7 +200,7 @@
             html +=
                 '<div class="detalle-seccion-titulo">✅ Resultado Esperado</div>';
             html +=
-                '<div style="white-space: pre-wrap; background: #f8fafc; padding: 1rem; border-radius: 6px;">' +
+                '<div style="white-space: pre-wrap; background: #f8fafc; padding: 1rem; border-radius: 6px; word-wrap: break-word; overflow-wrap: break-word; max-width: 100%;">' +
                 safe(caso.ResultadoEsperado || "No especificado") +
                 "</div>";
             html += "</div>";
@@ -152,7 +225,7 @@
             html +=
                 '<div class="detalle-seccion-titulo">⚙️ Precondiciones</div>';
             html +=
-                '<div style="white-space: pre-wrap; background: #f8fafc; padding: 1rem; border-radius: 6px;">' +
+                '<div style="white-space: pre-wrap; background: #f8fafc; padding: 1rem; border-radius: 6px; word-wrap: break-word; overflow-wrap: break-word; max-width: 100%;">' +
                 safe(caso.Precondiciones) +
                 "</div>";
             html += "</div>";
@@ -164,13 +237,7 @@
             '<div class="detalle-seccion-titulo">ℹ️ Información Adicional</div>';
         html += '<div class="detalle-grid">';
         html +=
-            '<div class="detalle-label">⭐ Flujo Crítico:</div><div class="detalle-valor">' +
-            (caso.FlujoCritico === "Si" || caso.FlujoCritico === "Sí"
-                ? "✅ Sí"
-                : "❌ No") +
-            "</div>";
-        html +=
-            '<div class="detalle-label">🔄 Candidato Regresión:</div><div class="detalle-valor">' +
+            '<div class="detalle-label">🔄 Regresión:</div><div class="detalle-valor">' +
             (caso.CandidatoRegresion === "Si" ||
             caso.CandidatoRegresion === "Sí"
                 ? "✅ Sí"
@@ -198,7 +265,7 @@
             html += '<div class="detalle-seccion">';
             html += '<div class="detalle-seccion-titulo">📌 Notas</div>';
             html +=
-                '<div style="white-space: pre-wrap; background: #fef3c7; padding: 1rem; border-radius: 6px;">' +
+                '<div style="white-space: pre-wrap; background: #fef3c7; padding: 1rem; border-radius: 6px; word-wrap: break-word; overflow-wrap: break-word; max-width: 100%;">' +
                 safe(caso.Notas) +
                 "</div>";
             html += "</div>";
@@ -247,7 +314,6 @@
         google.script.run
             .withSuccessHandler(function (response) {
                 ocultarSpinner();
-
                 if (response.success) {
                     console.log("✅ [CRUD] Caso obtenido para edición");
                     cargarCasoEnFormulario(response.data);
@@ -284,11 +350,6 @@
      */
     function cargarCasoEnFormulario(caso) {
         console.log("📝 [CRUD] Cargando caso en formulario:", caso);
-
-        // Abrir modal
-        const modal = document.getElementById("modalCrearCaso");
-        modal.classList.add("active");
-        document.body.style.overflow = "hidden";
 
         // Cambiar título del modal
         document.getElementById("tituloModalCaso").textContent =
@@ -365,6 +426,17 @@
                     selectPrioridad.value = caso.Prioridad || "Media";
                 }
 
+                // Estado Diseño
+                const selectEstadoDiseño =
+                    document.getElementById("casoEstadoDiseño");
+                if (selectEstadoDiseño) {
+                    const estadoDiseño =
+                        caso.EstadoDiseño || caso.Estado || "Pendiente";
+                    selectEstadoDiseño.value = estadoDiseño;
+                    // Guardar el estado original para comparar luego
+                    window.estadoDiseñoOriginal = estadoDiseño;
+                }
+
                 // Tipo de prueba
                 const selectTipo = document.getElementById("casoTipoPrueba");
                 if (selectTipo) {
@@ -391,8 +463,6 @@
                     caso.Precondiciones || "";
 
                 // Checkboxes
-                document.getElementById("casoFlujoCritico").checked =
-                    caso.FlujoCritico === "Si" || caso.FlujoCritico === "Sí";
                 document.getElementById("casoCandidatoRegresion").checked =
                     caso.CandidatoRegresion === "Si" ||
                     caso.CandidatoRegresion === "Sí";
@@ -420,6 +490,11 @@
                 mostrarToast("Error al cargar datos del caso", "error");
             }
         }, 150);
+
+        // Abrir modal con toda la funcionalidad (trap de foco, cerrar al hacer clic fuera, etc.)
+        setTimeout(() => {
+            abrirModal("modalCrearCaso");
+        }, 200);
     }
 
     // ===================================================================
@@ -449,6 +524,12 @@
 
         // Resetear flag de cambios
         window.formularioTieneCambios = false;
+
+        // ⭐ IMPORTANTE: Recargar hojas disponibles para detectar cambios en el Sheet
+        // (Si el usuario borró una hoja en Excel, la app debe detectarlo)
+        if (typeof cargarHojasDisponibles === "function") {
+            cargarHojasDisponibles();
+        }
 
         // Configurar listeners de cambios
         const inputs = document.querySelectorAll(
@@ -526,9 +607,39 @@
         if (formato === "Gherkin") {
             camposClasico.classList.add("hidden");
             camposGherkin.classList.remove("hidden");
+
+            // Remover required de campos clásicos
+            document.getElementById("casoPasos").removeAttribute("required");
+            document
+                .getElementById("casoResultadoEsperado")
+                .removeAttribute("required");
+
+            // Agregar required a campos Gherkin
+            document
+                .getElementById("casoGiven")
+                .setAttribute("required", "required");
+            document
+                .getElementById("casoWhen")
+                .setAttribute("required", "required");
+            document
+                .getElementById("casoThen")
+                .setAttribute("required", "required");
         } else {
             camposClasico.classList.remove("hidden");
             camposGherkin.classList.add("hidden");
+
+            // Agregar required a campos clásicos
+            document
+                .getElementById("casoPasos")
+                .setAttribute("required", "required");
+            document
+                .getElementById("casoResultadoEsperado")
+                .setAttribute("required", "required");
+
+            // Remover required de campos Gherkin
+            document.getElementById("casoGiven").removeAttribute("required");
+            document.getElementById("casoWhen").removeAttribute("required");
+            document.getElementById("casoThen").removeAttribute("required");
         }
     }
 
@@ -540,12 +651,20 @@
      * Guarda el caso (crea nuevo o actualiza existente)
      */
     async function guardarCaso() {
+        // Validar campos requeridos del formulario
+        const form = document.getElementById("formCrearCaso");
+        if (form && !form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
         const formato = document.getElementById("casoFormato").value;
         const hojaSeleccionada = document.getElementById("casoHoja").value;
         const urlActual = recuperarSheetUrl();
         const casoIdEdicion = document.getElementById("casoIdEdicion").value;
         const hojaOriginal = document.getElementById("casoHojaOriginal").value;
         const modoEdicion = casoIdEdicion !== "";
+        const estadoDiseño = document.getElementById("casoEstadoDiseño").value;
 
         console.log(
             "💾 [CRUD] Guardando caso - Modo:",
@@ -553,10 +672,33 @@
         );
         console.log("  Hoja seleccionada:", hojaSeleccionada || "Casos");
         console.log("  Hoja original:", hojaOriginal);
+        console.log("  Estado Diseño:", estadoDiseño);
 
         if (!urlActual) {
             mostrarToast("Error: No hay Sheet conectado", "error");
             return;
+        }
+
+        // Validar si está cambiando a "Completado"
+        if (estadoDiseño === "Completado") {
+            // En modo edición, verificar el estado anterior
+            if (
+                modoEdicion &&
+                window.estadoDiseñoOriginal &&
+                window.estadoDiseñoOriginal !== "Completado"
+            ) {
+                const confirmar = await mostrarConfirmacionApp({
+                    titulo: "Marcar como Completado",
+                    mensaje:
+                        "¿Estás seguro de marcar este caso como <strong>Completado</strong>?<br><br>" +
+                        "Esto indica que el diseño del caso está finalizado y listo para ser ejecutado.",
+                    icono: "✅",
+                    textoOk: "Sí, Completar",
+                    textoCancelar: "Cancelar",
+                });
+
+                if (!confirmar) return;
+            }
         }
 
         // Validar si no hay hoja seleccionada en modo crear
@@ -657,24 +799,24 @@
                                         window.formularioTieneCambios = false;
                                         window.hojaRecienCreada = null;
                                         cerrarModal("modalCrearCaso");
-                                        cargarTodosLosCasos();
+                                        cargarTodosLosCasos(true); // skipSpinner
                                     } else {
                                         mostrarToast(
-                                            "⚠️ Caso movido pero no se pudieron actualizar todos los campos: " +
+                                            "Caso movido pero no se pudieron actualizar todos los campos: " +
                                                 responseActualizar.mensaje,
                                             "warning"
                                         );
-                                        cargarTodosLosCasos();
+                                        cargarTodosLosCasos(true); // skipSpinner
                                     }
                                 })
                                 .withFailureHandler(function (error) {
                                     ocultarSpinner();
                                     mostrarToast(
-                                        "⚠️ Caso movido pero error al actualizar: " +
+                                        "Caso movido pero error al actualizar: " +
                                             error.message,
                                         "warning"
                                     );
-                                    cargarTodosLosCasos();
+                                    cargarTodosLosCasos(true); // skipSpinner
                                 })
                                 .actualizarCaso(
                                     urlActual,
@@ -721,8 +863,9 @@
                             window.formularioTieneCambios = false;
                             window.hojaRecienCreada = null;
                             cerrarModal("modalCrearCaso");
-                            cargarTodosLosCasos();
+                            cargarTodosLosCasos(true); // skipSpinner
                         } else {
+                            ocultarSpinner();
                             mostrarToast("Error: " + response.mensaje, "error");
                         }
                     })
@@ -752,10 +895,9 @@
                 titulo: document.getElementById("casoTitulo").value,
                 descripcion: document.getElementById("casoDescripcion").value,
                 prioridad: document.getElementById("casoPrioridad").value,
+                estadoDiseño: document.getElementById("casoEstadoDiseño").value,
                 tipoPrueba: document.getElementById("casoTipoPrueba").value,
                 formatoCaso: formato,
-                flujoCritico:
-                    document.getElementById("casoFlujoCritico").checked,
                 candidatoRegresion: document.getElementById(
                     "casoCandidatoRegresion"
                 ).checked,
@@ -778,11 +920,14 @@
             }
 
             console.log("➕ [CRUD] Creando nuevo caso en hoja:", hojaFinal);
+            console.log("📦 [CRUD] Datos del caso:", datosCaso);
+
+            // Mostrar spinner inmediatamente para feedback al usuario
             mostrarSpinner();
 
             google.script.run
                 .withSuccessHandler(function (response) {
-                    ocultarSpinner();
+                    console.log("✅ [CRUD] Respuesta del servidor:", response);
 
                     if (response.success) {
                         const hojaUsada = response.data.hoja || "Casos";
@@ -793,14 +938,34 @@
                             ' creado exitosamente en hoja "' +
                             hojaUsada +
                             '"';
-                        mostrarToast(mensaje, "success");
+
+                        console.log(
+                            "💾 [CRUD] Caso creado exitosamente:",
+                            idCaso
+                        );
+                        console.log(
+                            "📋 [CRUD] Cerrando modal y recargando casos..."
+                        );
 
                         window.formularioTieneCambios = false;
                         window.hojaRecienCreada = null;
-
                         cerrarModal("modalCrearCaso");
-                        cargarTodosLosCasos();
+
+                        // Recargar casos inmediatamente - el backend ya confirmó el guardado
+                        if (typeof cargarTodosLosCasos === "function") {
+                            console.log(
+                                "🔄 [CRUD] Llamando a cargarTodosLosCasos..."
+                            );
+                            cargarTodosLosCasos(true); // true = skipSpinner (ya está visible)
+                            mostrarToast(mensaje, "success");
+                        } else {
+                            console.error(
+                                "❌ cargarTodosLosCasos no está disponible"
+                            );
+                            mostrarToast(mensaje, "success");
+                        }
                     } else {
+                        ocultarSpinner();
                         mostrarToast("Error: " + response.mensaje, "error");
                     }
                 })
@@ -825,11 +990,9 @@
             Titulo: document.getElementById("casoTitulo").value,
             Descripcion: document.getElementById("casoDescripcion").value,
             Prioridad: document.getElementById("casoPrioridad").value,
+            EstadoDiseño: document.getElementById("casoEstadoDiseño").value,
             TipoPrueba: document.getElementById("casoTipoPrueba").value,
             Precondiciones: document.getElementById("casoPrecondiciones").value,
-            FlujoCritico: document.getElementById("casoFlujoCritico").checked
-                ? "Si"
-                : "No",
             CandidatoRegresion: document.getElementById(
                 "casoCandidatoRegresion"
             ).checked
@@ -897,8 +1060,8 @@
 
                 if (response.success) {
                     console.log("✅ [CRUD] Caso eliminado");
-                    mostrarToast("✅ Caso eliminado correctamente", "success");
-                    cargarTodosLosCasos();
+                    mostrarToast("Caso eliminado correctamente", "success");
+                    cargarTodosLosCasos(true); // skipSpinner
                 } else {
                     mostrarToast("Error: " + response.mensaje, "error");
                 }
@@ -946,8 +1109,8 @@
 
                 if (response.success) {
                     console.log("✅ [CRUD] Caso restaurado");
-                    mostrarToast("✅ Caso restaurado correctamente", "success");
-                    cargarTodosLosCasos();
+                    mostrarToast("Caso restaurado correctamente", "success");
+                    cargarTodosLosCasos(true); // skipSpinner
                 } else {
                     mostrarToast("Error: " + response.mensaje, "error");
                 }
@@ -969,6 +1132,265 @@
         }
     }
 
+    /**
+     * Obtiene el icono y tipo basado en el tipo MIME
+     * @param {string} mimeType - Tipo MIME del archivo
+     * @returns {object} - {icon, tipo, extension}
+     */
+    function obtenerIconoPorMime(mimeType) {
+        if (!mimeType) return { icon: "📎", tipo: "Archivo", extension: "" };
+
+        const mime = mimeType.toLowerCase();
+
+        // Imágenes
+        if (mime.startsWith("image/")) {
+            const ext = mime.split("/")[1].toUpperCase();
+            return { icon: "🖼️", tipo: "Imagen", extension: ext };
+        }
+
+        // Videos
+        if (mime.startsWith("video/")) {
+            const ext = mime.split("/")[1].toUpperCase();
+            return { icon: "🎥", tipo: "Video", extension: ext };
+        }
+
+        // PDFs
+        if (mime === "application/pdf") {
+            return { icon: "📄", tipo: "Documento", extension: "PDF" };
+        }
+
+        // Documentos
+        if (
+            mime.includes("document") ||
+            mime.includes("msword") ||
+            mime.includes("text/")
+        ) {
+            return { icon: "📝", tipo: "Documento", extension: "DOC" };
+        }
+
+        // Hojas de cálculo
+        if (mime.includes("spreadsheet") || mime.includes("excel")) {
+            return { icon: "📊", tipo: "Hoja de cálculo", extension: "XLS" };
+        }
+
+        // Presentaciones
+        if (mime.includes("presentation") || mime.includes("powerpoint")) {
+            return { icon: "📽️", tipo: "Presentación", extension: "PPT" };
+        }
+
+        // Archivos comprimidos
+        if (
+            mime.includes("zip") ||
+            mime.includes("rar") ||
+            mime.includes("compressed")
+        ) {
+            return { icon: "📦", tipo: "Comprimido", extension: "ZIP" };
+        }
+
+        // Audio
+        if (mime.startsWith("audio/")) {
+            const ext = mime.split("/")[1].toUpperCase();
+            return { icon: "🎵", tipo: "Audio", extension: ext };
+        }
+
+        return { icon: "☁️", tipo: "Drive", extension: "" };
+    }
+
+    /**
+     * Obtiene el icono y tipo basado en la extensión del archivo o URL de Drive
+     * @param {string} url - URL del archivo
+     * @param {function} callback - Callback para respuesta asíncrona (opcional)
+     * @returns {object} - {icon, tipo, extension}
+     */
+    function obtenerIconoYTipo(url, callback) {
+        if (!url || typeof url !== "string") {
+            const resultado = { icon: "📎", tipo: "Archivo", extension: "" };
+            if (callback) callback(resultado);
+            return resultado;
+        }
+
+        const urlLower = url.toLowerCase();
+
+        // Si es Drive y tenemos callback, consultar el tipo MIME
+        if (urlLower.includes("drive.google.com") && callback) {
+            google.script.run
+                .withSuccessHandler(function (response) {
+                    if (response.success) {
+                        const iconoInfo = obtenerIconoPorMime(
+                            response.mimeType
+                        );
+                        callback(iconoInfo);
+                    } else {
+                        callback({ icon: "☁️", tipo: "Drive", extension: "" });
+                    }
+                })
+                .withFailureHandler(function () {
+                    callback({ icon: "☁️", tipo: "Drive", extension: "" });
+                })
+                .obtenerTipoArchivoDrive(url);
+
+            // Retornar temporalmente el icono de Drive
+            return { icon: "☁️", tipo: "Drive", extension: "" };
+        }
+
+        // Imágenes
+        if (/\.(jpg|jpeg|png|gif|bmp|webp|svg)($|\?|&)/.test(urlLower)) {
+            return {
+                icon: "🖼️",
+                tipo: "Imagen",
+                extension:
+                    urlLower
+                        .match(/\.(jpg|jpeg|png|gif|bmp|webp|svg)/i)?.[1]
+                        .toUpperCase() || "IMG",
+            };
+        }
+
+        // Videos
+        if (/\.(mp4|mov|avi|wmv|flv|mkv|webm)($|\?|&)/.test(urlLower)) {
+            return {
+                icon: "🎥",
+                tipo: "Video",
+                extension:
+                    urlLower
+                        .match(/\.(mp4|mov|avi|wmv|flv|mkv|webm)/i)?.[1]
+                        .toUpperCase() || "VIDEO",
+            };
+        }
+
+        // PDFs
+        if (/\.pdf($|\?|&)/.test(urlLower)) {
+            return { icon: "📄", tipo: "Documento", extension: "PDF" };
+        }
+
+        // Documentos
+        if (/\.(doc|docx|txt|rtf)($|\?|&)/.test(urlLower)) {
+            return {
+                icon: "📝",
+                tipo: "Documento",
+                extension:
+                    urlLower
+                        .match(/\.(doc|docx|txt|rtf)/i)?.[1]
+                        .toUpperCase() || "DOC",
+            };
+        }
+
+        // Hojas de cálculo
+        if (/\.(xls|xlsx|csv)($|\?|&)/.test(urlLower)) {
+            return {
+                icon: "📊",
+                tipo: "Hoja de cálculo",
+                extension:
+                    urlLower.match(/\.(xls|xlsx|csv)/i)?.[1].toUpperCase() ||
+                    "XLS",
+            };
+        }
+
+        // Presentaciones
+        if (/\.(ppt|pptx)($|\?|&)/.test(urlLower)) {
+            return {
+                icon: "📽️",
+                tipo: "Presentación",
+                extension:
+                    urlLower.match(/\.(ppt|pptx)/i)?.[1].toUpperCase() || "PPT",
+            };
+        }
+
+        // Archivos comprimidos
+        if (/\.(zip|rar|7z|tar|gz)($|\?|&)/.test(urlLower)) {
+            return {
+                icon: "📦",
+                tipo: "Archivo comprimido",
+                extension:
+                    urlLower
+                        .match(/\.(zip|rar|7z|tar|gz)/i)?.[1]
+                        .toUpperCase() || "ZIP",
+            };
+        }
+
+        // Archivos de audio
+        if (/\.(mp3|wav|ogg|m4a|flac)($|\?|&)/.test(urlLower)) {
+            return {
+                icon: "🎵",
+                tipo: "Audio",
+                extension:
+                    urlLower
+                        .match(/\.(mp3|wav|ogg|m4a|flac)/i)?.[1]
+                        .toUpperCase() || "AUDIO",
+            };
+        }
+
+        // Google Drive (si no tiene extensión específica)
+        if (urlLower.includes("drive.google.com")) {
+            return { icon: "☁️", tipo: "Drive", extension: "" };
+        }
+
+        // Por defecto
+        return { icon: "📎", tipo: "Archivo", extension: "" };
+    }
+
+    /**
+     * Extrae el nombre del archivo desde una URL de Google Drive
+     * @param {string} url - URL de Google Drive
+     * @returns {string} - Nombre del archivo o "Evidencia"
+     */
+    function extraerNombreArchivo(url) {
+        try {
+            // Intentar extraer el nombre del archivo desde el parámetro de la URL
+            // Las URLs de Google Drive tienen formato: https://drive.google.com/file/d/FILE_ID/view
+            // o pueden tener el nombre en algún parámetro
+
+            if (!url || typeof url !== "string") return "Evidencia";
+
+            // Si tiene extensión de archivo en la URL, extraer el nombre completo
+            const matchExt = url.match(
+                /\/([^\/]+\.(jpg|jpeg|png|gif|bmp|webp|svg|pdf|mp4|mov|avi|wmv|doc|docx|txt|xls|xlsx|zip|rar))(\?|$)/i
+            );
+            if (matchExt) {
+                // Decodificar el nombre del archivo
+                try {
+                    return decodeURIComponent(matchExt[1]);
+                } catch (e) {
+                    return matchExt[1];
+                }
+            }
+
+            // Si la URL contiene "id=" extraer el ID
+            const match = url.match(/[?&]id=([^&]+)/);
+            if (match) {
+                const iconoInfo = obtenerIconoYTipo(url);
+                return (
+                    iconoInfo.tipo +
+                    " " +
+                    match[1].substring(0, 8) +
+                    "..." +
+                    (iconoInfo.extension
+                        ? " (" + iconoInfo.extension + ")"
+                        : "")
+                );
+            }
+
+            // Si la URL contiene /d/ extraer el ID
+            const matchD = url.match(/\/d\/([^\/]+)/);
+            if (matchD) {
+                const iconoInfo = obtenerIconoYTipo(url);
+                return (
+                    iconoInfo.tipo +
+                    " " +
+                    matchD[1].substring(0, 8) +
+                    "..." +
+                    (iconoInfo.extension
+                        ? " (" + iconoInfo.extension + ")"
+                        : "")
+                );
+            }
+
+            return "Evidencia";
+        } catch (e) {
+            console.warn("Error extrayendo nombre de archivo:", e);
+            return "Evidencia";
+        }
+    }
+
     // ===================================================================
     // EXPORTAR FUNCIONES AL SCOPE GLOBAL
     // ===================================================================
@@ -984,6 +1406,9 @@
     window.eliminarCasoDesdeDetalle = eliminarCasoDesdeDetalle;
     window.restaurarCaso = restaurarCaso;
     window.restaurarCasoDesdeDetalle = restaurarCasoDesdeDetalle;
+    window.extraerNombreArchivo = extraerNombreArchivo;
+    window.obtenerIconoYTipo = obtenerIconoYTipo;
+    window.obtenerIconoPorMime = obtenerIconoPorMime;
 
     console.log("✅ Frontend_Components_Casos_CRUD.html cargado");
 </script>
